@@ -1,34 +1,27 @@
 #include "Game.h"
 #include "headers/Map.h"
 
-
-//*************** INIT ***************
-
 void Map::init()
 {
+	// floor texture
+	floor.LoadTexture("Map/floor2.bmp");
+	floor.SetTiling(true);
 
+	// set size of the game world
+	floor.SetSize(9000, 9000);
 }
 
-//*************** UPDATE ***************
-void Map::OnUpdate(long t)
+void Map::OnUpdate()
 {
-
 }
 
-//*************** 2D RENDER ***************
 void Map::OnDraw(CGraphics* g)
 {
 
 }
 
-//*************** 3D RENDER ***************
+
 void Map::OnRender3D(CGraphics* g)
 {
-
-}
-
-//*************** PLAYER CONTROLER ***************
-void Map::EnemyControl()
-{
-
+	floor.Draw(g);
 }

@@ -1,63 +1,64 @@
 #include "headers/MyGame.h"
 #include "headers/Player.h"
+#include "headers/PlayerInterface.h"
 #include "headers/Enemy.h"
 #include "headers/Map.h"
 
-Map* map = new Map();
-Player* player = new Player();
+
 
 //*************** INIT ***************
 void CMyGame::OnInitialize()
 {
-	gameOption = false;
-	player->init();
-	font.LoadDefault(); 
-	Light.Enable();
+
+	// Main Objects
+	map = new Map();
+	player = new Player();
+	playerInterface = new PlayerInterface();
+	enemy = new Enemy();
+
+	//music
+	mainBgMusic.Play("mainBg.wav");
+	mainBgMusic.SetVolume(35);
+
+	//StartScreen Models
 	InitSpritesAndModels();
+
+	//Main inits
+	player->init();
+	map->init();
+	playerInterface->init(Width,Height);
+
+	Light.Enable();
+	font.LoadDefault();
 }
 
 //*************** UPDATE ***************
 void CMyGame::OnUpdate() 
 {
 	if (IsMenuMode() || IsGameOver()) return;
-	player->OnUpdate(gameOption, GetTime(), IsKeyDown(SDLK_d) , IsKeyDown(SDLK_a) , IsKeyDown(SDLK_w), IsKeyDown(SDLK_s));
-    if (hbar.GetHealth() <= 0) GameOver();
-
-	//Map 2d
-	map2dExample.Update(GetTime());
+	player->OnUpdate(GetTime(), IsKeyDown(SDLK_d) , IsKeyDown(SDLK_a) , IsKeyDown(SDLK_w), IsKeyDown(SDLK_s));
 }
 
 //*************** 2D RENDER ***************
 void CMyGame::OnDraw(CGraphics* g)
 {
+
 	if (IsMenuMode())
 	{
-	 startScreen.Draw(g);
-	 return;
+		startScreen.Draw(g);
+		return;
 	}
 
-	hbar.Draw(g);
-
-	if (!gameOption) 
-	{
+	playerInterface->OnDraw(g);
 	
-		
-		player->OnDraw(g);
-		
-	}
 }
 
 //*************** 3D RENDER ***************
 void CMyGame::OnRender3D(CGraphics* g)
 { 
-	map2dExample.Draw(g);
-	
-	if (gameOption)
-	{
-		CameraControl(g);
-		floor.Draw(g);
-		player->OnRender3D(g, world);
-	}
+	CameraControl(g);
+	map->OnRender3D(g);
+	player->OnRender3D(g, world);
 
 	//ShowBoundingBoxes();
 	//ShowCoordinateSystem();
@@ -88,27 +89,10 @@ void CMyGame::CameraControl(CGraphics* g)
 
 void CMyGame::InitSpritesAndModels()
 {
-	// floor texture
-	floor.LoadTexture("Map/floor2.bmp");
-	floor.SetTiling(true);
-
 	// start screen
 	startScreen.LoadImage("startScreen.jpg");
-	startScreen.SetSize(1920,1080);
+	startScreen.SetSize((float)Width, (float)Height);
 	startScreen.SetPosition((float)Width / 2, (float)Height / 2);
-
-	// set size of the game world
-	floor.SetSize(9000, 9000);
-
-	// setup healthbar
-	hbar.SetSize(100, 15);
-	hbar.SetPosition(1820, 1050);
-	hbar.SetHealth(100);
-
-	//2Dmap
-	map2dExample.LoadImage("Map/mainbg.jpg");
-	map2dExample.SetSize(4000, 4000);
-	map2dExample.SetPosition(0 , 0);
 }
 
 //*************** KEYBOARD EVENTS ***************
@@ -118,13 +102,15 @@ void CMyGame::OnKeyDown(SDLKey sym, SDLMod mod, Uint16 unicode)
 	if (sym == SDLK_F4 && (mod & (KMOD_LALT | KMOD_RALT)))
 		StopGame();
 
-	//Restart
-	if (sym == SDLK_F1) {
-		gameOption = false;
+	//Start
+	if (sym == 13) {
+
 		StartGame();
+		mainBgMusic.Play("mainBg.wav");
 	}
-	if (sym == SDLK_F2) {
-		gameOption = true;
-		StartGame();
-	}
+}
+
+void CMyGame::OnRButtonDown(Uint16 x, Uint16 y)
+{
+	player->OnRButtonDown(ScreenToFloorCoordinate(x, y));
 }

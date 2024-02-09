@@ -1,14 +1,23 @@
 #pragma once
 #include "Game.h"
 
+//Forwward class declaration
+class Map;
+class Player;
+class PlayerInterface;
+class Enemy;
+
 class CMyGame : public CGame
 {
 private:
-    // Declare Sprites
-    CSprite startScreen , map2dExample;
-	CFloor floor;
+	CSprite startScreen;
 	CFont font;
-	CHealthBar hbar;
+
+	// Main Objects
+	Map* map;
+	Player* player;
+	PlayerInterface* playerInterface;
+	Enemy* enemy;
 
 	// Game Funtions
 	virtual void OnInitialize();
@@ -22,7 +31,8 @@ private:
 
 	// Keyboard Event Handlers
 	virtual void OnKeyDown(SDLKey sym, SDLMod mod, Uint16 unicode);
+	void  OnRButtonDown(Uint16 x, Uint16 y);
 
-	//bool for 2d or 3d Game
-	bool gameOption;
+	//sound
+	CSoundPlayer mainBgMusic;
 };
