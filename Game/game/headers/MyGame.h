@@ -10,7 +10,7 @@ class Enemy;
 class CMyGame : public CGame
 {
 private:
-	CSprite startScreen;
+	CSprite startScreen, mainMenushowControlers;
 	CFont font;
 
 	// Main Objects
@@ -26,6 +26,8 @@ private:
 	virtual void OnRender3D(CGraphics* g);
 	void CameraControl(CGraphics* g);
 
+	void MainMenyController(SDLKey sym);
+
 	//INIT SPRITES AND MODELS
 	void InitSpritesAndModels();
 
@@ -33,6 +35,13 @@ private:
 	virtual void OnKeyDown(SDLKey sym, SDLMod mod, Uint16 unicode);
 	void  OnRButtonDown(Uint16 x, Uint16 y);
 
+	//Game Modes
+	enum GameModes{MAIN_MENU, CHAR_STATS, SHOP, IN_GAME, CUTSCENE, SHOW_CONTROLLERS};
+	enum mainMenuOptions{NEW_GAME, CONTROLS, EXIT};
+	bool gameStarted;
+	int mainMenuOptionSelection;
+	void MaiMenuDraw(CGraphics* g);
+	int currentMenuState;
 	//sound
 	CSoundPlayer mainBgMusic;
 };

@@ -40,7 +40,6 @@ void Player::PlayerControl(bool Dkey, bool Akey, bool Wkey , bool Skey)
 	//Movement
 	if (playerModel.IsAutoMoving())
 	{
-		
 		playerModel.PlayAnimation("run", 7, true);
 	}
 	else
