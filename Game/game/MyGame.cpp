@@ -5,6 +5,7 @@
 #include "headers/Map.h"
 
 
+std::vector<Enemy*> AllEnemies; // to make proper enemies init
 
 //*************** INIT ***************
 void CMyGame::OnInitialize()
@@ -12,13 +13,20 @@ void CMyGame::OnInitialize()
 	currentMenuState = MAIN_MENU;
 	mainMenuOptionSelection = NEW_GAME;
 	gameStarted = false;
+
 	// Main Objects
+	delete map;
 	map = new Map();
+
+	delete player;
 	player = new Player();
+
+	delete playerInterface;
 	playerInterface = new PlayerInterface();
-	enemy = new Enemy();
+ 
 
 	//music
+	mainBgMusic.Stop();
 	mainBgMusic.Play("mainBg.wav");
 	mainBgMusic.SetVolume(35);
 
@@ -28,17 +36,60 @@ void CMyGame::OnInitialize()
 	//Main inits
 	player->init();
 	map->init();
+	
 	playerInterface->init(Width,Height);
 
 	Light.Enable();
 	font.LoadDefault();
+
+	//ENEMIES CREATION
+	
+	for (auto enemy : AllEnemies) {
+		delete enemy;
+	}
+
+	AllEnemies.clear();
+
+	for (int i = 0; i < 67; i++) 
+	{
+		AllEnemies.push_back(new Enemy());
+	}
+
+	int i = 400;
+	int z = 300;
+	bool enemyType = 0;
+	for (auto enemy : AllEnemies) {
+		enemy->init(i,100, z, enemyType);
+		i += 100;
+		z += 50 + rand() % 150;
+		enemyType = !enemyType;
+	}
+
+ 
 }
 
 //*************** UPDATE ***************
 void CMyGame::OnUpdate() 
 {
 	if (IsMenuMode() || IsGameOver()) return;
-	player->OnUpdate(GetTime(), IsKeyDown(SDLK_d) , IsKeyDown(SDLK_a) , IsKeyDown(SDLK_w), IsKeyDown(SDLK_s));
+	map->OnUpdate(GetTime());
+	player->OnUpdate(GetTime(), IsKeyDown(SDLK_d) , IsKeyDown(SDLK_a) , IsKeyDown(SDLK_w), IsKeyDown(SDLK_s), *map , AllEnemies);
+	playerInterface->OnUpdate(map->portal.GetHealth());
+
+	int i = 0;
+	for (auto enemy : AllEnemies) {
+		
+		enemy->OnUpdate(GetTime(), *player);
+
+		//* if regular enemie dead -> delete;
+		if (enemy->enemyModel.GetHealth() <= 0) {
+			AllEnemies.erase(AllEnemies.begin() + i);
+			delete enemy;
+		}
+		
+		i++;
+	}
+
 }
 
 //*************** 2D RENDER ***************
@@ -62,9 +113,14 @@ void CMyGame::OnRender3D(CGraphics* g)
 	CameraControl(g);
 	map->OnRender3D(g);
 	player->OnRender3D(g, world);
+	
 
-	//ShowBoundingBoxes();
-	//ShowCoordinateSystem();
+	for (auto enemy : AllEnemies) {
+		enemy->OnRender3D(g);
+	}
+
+	ShowBoundingBoxes();
+	ShowCoordinateSystem();
 }
 
 //*************** CAMERA ***************
@@ -109,13 +165,16 @@ void CMyGame::InitSpritesAndModels()
 
 void CMyGame::OnKeyDown(SDLKey sym, SDLMod mod, Uint16 unicode)
 {
+	//Player KeyBoard Controller
+	player->OnKeyDown(sym , currentMousePos);
+
 	//Start
 	MainMenyController(sym);
 }
 
 void CMyGame::OnRButtonDown(Uint16 x, Uint16 y)
 {
-	player->OnRButtonDown(ScreenToFloorCoordinate(x, y));
+	player->OnRButtonDown(ScreenToFloorCoordinate(x, y), currentMousePos, GetTime());
 }
 
 void CMyGame::MaiMenuDraw(CGraphics* g)
@@ -133,9 +192,10 @@ void CMyGame::MaiMenuDraw(CGraphics* g)
 	else 
 	{
 		startScreen.Draw(g);
-		font.DrawText((float)Width / 2 - 70.f, 420, "NEW GAME", mainMenuOptionSelection == NEW_GAME ? CColor::White() : CColor::LightGray(), 42);
-		font.DrawText((float)Width / 2 - 70.f, 350, "CONTROLS", mainMenuOptionSelection == CONTROLS ? CColor::White() : CColor::LightGray(), 42);
-		font.DrawText((float)Width / 2 - 70.f, 280, "EXIT", mainMenuOptionSelection == EXIT ? CColor::White() : CColor::LightGray(), 42);
+		font.DrawText((float)Width / 2 - 80.f, (float)Height / 2 + 80, "NEW GAME", mainMenuOptionSelection == NEW_GAME ? CColor::White() : CColor::LightGray(), 42);
+		font.DrawText((float)Width / 2 - 80.f, (float)Height / 2 , "LOAD GAME", CColor::Gray(), 42);
+		font.DrawText((float)Width / 2 - 80.f, (float)Height / 2 - 80  , "CONTROLS", mainMenuOptionSelection == CONTROLS ? CColor::White() : CColor::LightGray(), 42);
+		font.DrawText((float)Width / 2 - 40.f, (float)Height / 2 - 160, "EXIT", mainMenuOptionSelection == EXIT ? CColor::White() : CColor::LightGray(), 42);
 	}
 }
 
@@ -169,6 +229,7 @@ void CMyGame::MainMenyController(SDLKey sym)
 		//Start
 		if (sym == 13 && mainMenuOptionSelection == NEW_GAME)
 		{
+			OnInitialize();
 			StartGame();
 			gameStarted = true;
 			mainBgMusic.Play("mainBg.wav");
@@ -200,4 +261,10 @@ void CMyGame::MainMenyController(SDLKey sym)
 			if (mainMenuOptionSelection < 0)  mainMenuOptionSelection = 2;
 		}
 	}
+}
+
+
+void CMyGame::OnMouseMove(Uint16 x, Uint16 y, Sint16 relx, Sint16 rely, bool bLeft, bool bRight, bool bMiddle)
+{
+	currentMousePos = ScreenToFloorCoordinate(x, y);
 }

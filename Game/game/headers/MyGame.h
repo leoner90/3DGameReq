@@ -17,7 +17,7 @@ private:
 	Map* map;
 	Player* player;
 	PlayerInterface* playerInterface;
-	Enemy* enemy;
+	//Enemy* enemy;
 
 	// Game Funtions
 	virtual void OnInitialize();
@@ -44,4 +44,8 @@ private:
 	int currentMenuState;
 	//sound
 	CSoundPlayer mainBgMusic;
+
+
+	void  OnMouseMove(Uint16 x, Uint16 y, Sint16 relx, Sint16 rely, bool bLeft, bool bRight, bool bMiddle);
+	CVector currentMousePos;
 };

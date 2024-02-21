@@ -1,0 +1,10 @@
+# Material file for portal.obj
+
+newmtl test
+	Ns 0
+	d 1
+	illum 2
+	Kd -0.03 0.33 0.66
+	Ks 0.0 0.0 0.0
+	Ka 0.2 0.2 0.2
+
