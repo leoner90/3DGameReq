@@ -8,9 +8,9 @@
 void Player::init()
 {
 	//Player 3D
-	playerModel.LoadModel("test/test.obj");
-	playerModel.SetScale(3.5f);
-	playerModel.SetPosition(400, 100, 300);
+	playerModel.LoadModel("Player/Pp.md3");
+	playerModel.SetScale(30.5f);
+	playerModel.SetPosition(800, 100, 300);
 
 	//delete Shots
 	playerShots.delete_all();
@@ -85,6 +85,7 @@ void Player::PlayerControl(bool Dkey, bool Akey, bool Wkey , bool Skey)
 		//moving back/forward
 		if (Wkey)
 		{
+			playerModel.PlayAnimation(1, 12, 4, true);
 			playerModel.SetSpeed(500);
 			playerModel.PlayAnimation("run", 7, true);
 		}
@@ -110,7 +111,7 @@ void Player::PlayerControl(bool Dkey, bool Akey, bool Wkey , bool Skey)
 
 		if (playerModel.IsAutoMoving())
 		{
-			playerModel.PlayAnimation("run", 7, true);
+			 playerModel.PlayAnimation(1,19,12, true);
 		}
 		else
 		{
@@ -157,8 +158,8 @@ void Player::playerCollision(std::vector<Enemy*> AllEnemies)
 	for (auto enemy : AllEnemies) {
 		if (playerModel.HitTest(&enemy->enemyModel)) 
 		{
-			playerModel.SetSpeed(0);
-			playerModel.PlayAnimation("stand", 7, true);
+			//playerModel.SetSpeed(0);
+			//playerModel.PlayAnimation("stand", 7, true);
 		}
 	}
 

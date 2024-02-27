@@ -27,7 +27,7 @@ public:
 	//playerShots 
 	CModelList playerShots;
 	//3D Models
-	CModel playerModel;
+	CModelMd3 playerModel;
 
 	CModel bullet;
 	//Sounds

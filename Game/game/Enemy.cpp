@@ -9,7 +9,7 @@ void Enemy::init(int posX, int poxY, int posZ, int enemyType)
 {
 	localEnemyType = enemyType;
 	if (localEnemyType == 0)  enemyModel.LoadModel("cobra/cobra.md2");
-	else if(localEnemyType == 1) enemyModel.LoadModel("cobra/cobra.md2");
+	else if(localEnemyType == 1) enemyModel.LoadModel("Ogro/Ogro.md2");
 	
 	// enemy model
 	enemyModel.SetScale(3.5f); enemyModel.SetToFloor(0);
