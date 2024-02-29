@@ -14,5 +14,5 @@ public:
 	CModel portal;
 	CModel wallSegment;
 	CModel tree;
-	CModelList modelList;
+	CModelList modelList, mapCollision;
 };

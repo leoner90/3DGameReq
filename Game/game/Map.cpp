@@ -36,22 +36,15 @@ void Map::init()
 
 void Map::LoadData()
 {
-	// --- clear model lists ----
 	modelList.clear();
-
-	// set size of the game world (2000x2000)
 	floor.SetSize(15000, 15000);
 
 	// move gameworld so that it starts at 0,0 and extends in positive xz-direction
-	floor.SetPosition(floor.GetWidth() / 2, floor.GetDepth() / 2);
+	//floor.SetPosition(floor.GetWidth() / 2, floor.GetDepth() / 2);
 
-	// declaring new file
 	fstream myfile;
-	// opening file for reading
 	myfile.open("level3.txt", ios_base::in);
-
 	int type, x, y, z, rot;
-	// reading while the end of file has not been reached
 	bool neof; // not end of file
 	do
 	{
@@ -59,19 +52,19 @@ void Map::LoadData()
 
 		neof = myfile.good();
 		//cout << type << " " << x << " " << y << " " << z << " " << rot << endl;
-		if (neof) // if not end of file
+		if (neof) 
 		{
-			if (type == 1)   // wall segments
+			if (type == 1)  
 			{
 				CModel* pWall = wallSegment.Clone(); // clone wall segment
 				pWall->SetPosition((float)x, (float)y, (float)z);
 				pWall->SetRotation(float(rot));
 				pWall->SetToFloor(0);
-				pWall->SetStatus(1); // indicate the type of object
-				modelList.push_back(pWall);
+				pWall->SetStatus(-1); // indicate the type of object
+				mapCollision.push_back(pWall);
 			}
 
-			if (type == 3)   // wall segments
+			if (type == 3)  
 			{
 				CModel* newTree = tree.Clone(); // clone wall segment
 				newTree->SetPosition((float)x, (float)y, (float)z);
@@ -84,8 +77,6 @@ void Map::LoadData()
 		}
 	} while (neof);
 	myfile.close();
-	cout << "Level data loaded" << endl;
-
 }
 
 void Map::OnUpdate(int t)
