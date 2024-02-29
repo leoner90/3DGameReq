@@ -8,7 +8,7 @@ class Enemy
 public:
 	void init(int posX, int poxY, int posZ, int enemyType);
 	void OnUpdate(long t, Player& player, Map& map);
-	void OnDraw(CGraphics* g);
+	void OnDraw(CGraphics* g, CVector enemyPos);
 	void Attack();
 	void OnRender3D(CGraphics* g);
 	void EnemyGetDamage(float damage);
@@ -23,5 +23,7 @@ public:
 	float enemyMaxHp, enemyCurrentHp;
 	float enemyDamage;
 	bool isDead;
+
+	CHealthBar enemyHpbar;
 
 };

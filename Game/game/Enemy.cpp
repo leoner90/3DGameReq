@@ -34,6 +34,12 @@ void Enemy::init(int posX, int poxY, int posZ, int enemyType)
 	enemyModel.SetDirectionAndRotationToPoint(0, 0);
 	isDead = false;
 	
+	
+
+	enemyHpbar.SetSize(35, 3);
+	enemyHpbar.SetColor(CColor::Blue());
+	enemyHpbar.SetHealth(100);
+
 }
 
 //*************** UPDATE ***************
@@ -41,7 +47,9 @@ void Enemy::OnUpdate(long t, Player &player, Map& map)
 {
 	localPlayer = &player;
 	localMap = &map;
-
+ 
+	float remainingHpInPercentage = enemyCurrentHp / (enemyMaxHp / 100);
+	enemyHpbar.SetHealth(remainingHpInPercentage);
 	if (localEnemyType == 0)
 	{		  
 		CVector displ = localPlayer->playerModel.GetPositionV() - enemyModel.GetPositionV();
@@ -75,14 +83,17 @@ void Enemy::OnUpdate(long t, Player &player, Map& map)
 		}
 	
 	}
-	
+ 
 	enemyModel.Update(t);
 }
 
 //*************** 2D RENDER ***************
-void Enemy::OnDraw(CGraphics* g)
+void Enemy::OnDraw(CGraphics* g, CVector enemyPos)
 {
+ 
+	enemyHpbar.SetPosition(enemyPos.x, enemyPos.y + 30);
 
+	enemyHpbar.Draw(g);
 }
 
 void Enemy::Attack()
@@ -115,13 +126,10 @@ void Enemy::OnRender3D(CGraphics* g)
 
 void Enemy::EnemyGetDamage(float damage)
 {
+	enemyCurrentHp -= damage;
+	//enemyCurrentHp > 0 ? enemyHpbar.SetHealth(enemyCurrentHp) : enemyHpbar.SetHealth(0);
+
+	if (enemyCurrentHp <= 0) isDead = true;
 }
-
- 
- 
-
- 
- 
-
 
  

@@ -9,7 +9,7 @@ class Player
 {
 public:
 	//Health
-	float maxHp, currentHp, maxEnergy, CurrentEnergy;
+	float playerMaxHp, playerCurrentHp, maxEnergy, CurrentEnergy;
 	CFont font;
 
 

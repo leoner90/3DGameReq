@@ -26,7 +26,7 @@ void Player::init()
 	playerCurrentState = UNOCCUPIED;
 	curentSkillSelected = RECALL;
 	shootingDelay = 1000;
-	maxHp = currentHp = 1000;
+	playerMaxHp = playerCurrentHp = 1000;
 	maxEnergy = CurrentEnergy = 100;
 	playerDamage = 100;
 }
@@ -55,8 +55,9 @@ void Player::OnUpdate( long t, bool Dkey, bool Akey, bool Wkey, bool Skey, Map& 
 			if (pShot->HitTest(&enemy->enemyModel))
 			{
 				pShot->Delete();
-				enemy->enemyModel.SetHealth(0);
-				enemy->isDead = true;
+			 
+				enemy->EnemyGetDamage(playerDamage);
+			 
 			}
 		}
 	}
@@ -145,7 +146,7 @@ void Player::OnKeyDown(SDLKey sym, CVector currentMousePos)
 
 void Player::playerGettingDamage(float damage)
 {
-
+	playerCurrentHp -= damage;
 }
 
 void Player::playerCollision(std::vector<Enemy*> AllEnemies)

@@ -1,4 +1,5 @@
 #include "Game.h"
+#include "headers/Player.h"
 #include "headers/PlayerInterface.h"
  
 
@@ -17,8 +18,11 @@ void PlayerInterface::init(int gameWidth, int gameHeigth)
 	
 }
 
-void PlayerInterface::OnUpdate(int portalHealth)
+void PlayerInterface::OnUpdate(int portalHealth, Player& player)
 {
+	localPlayer = &player;
+	float remainingHpInPercentage = localPlayer->playerCurrentHp / (localPlayer->playerMaxHp / 100);
+	hbar.SetHealth(remainingHpInPercentage);
 	portalHpBar.SetHealth(portalHealth);
 }
 

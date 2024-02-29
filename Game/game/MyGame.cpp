@@ -81,7 +81,7 @@ void CMyGame::OnUpdate()
 	if (IsMenuMode() || IsGameOver()) return;
 	map->OnUpdate(GetTime());
 	player->OnUpdate(GetTime(), IsKeyDown(SDLK_d) , IsKeyDown(SDLK_a) , IsKeyDown(SDLK_w), IsKeyDown(SDLK_s), *map , AllEnemies);
-	playerInterface->OnUpdate(map->portal.GetHealth());
+	playerInterface->OnUpdate(map->portal.GetHealth(), *player);
 
 	int i = 0;
 	for (auto enemy : AllEnemies) {
@@ -102,17 +102,18 @@ void CMyGame::OnUpdate()
 //*************** 2D RENDER ***************
 void CMyGame::OnDraw(CGraphics* g)
 {
-
 	if (IsMenuMode())
 	{
-		
 		MaiMenuDraw(g);
-	
 		return;
 	}
 
 	playerInterface->OnDraw(g);
 	player->OnDraw(g);
+	for (auto enemy : AllEnemies) 
+	{
+		enemy->OnDraw(g, WorldToScreenCoordinate(enemy->enemyModel.GetPositionV()));
+	}
 	//font.DrawNumber(100, 100, camera.rotation.x, CColor::White(), 52);
  
 	
