@@ -3,6 +3,7 @@
 #include "headers/PlayerInterface.h"
 #include "headers/Enemy.h"
 #include "headers/Map.h"
+#include "headers/Shop.h"
 
 //globall for now
 std::vector<Enemy*> AllEnemies; // to make proper enemies init
@@ -18,6 +19,10 @@ void CMyGame::OnInitialize()
 	// Main Objects
 	delete map;
 	map = new Map();
+
+	//shop
+	delete shop;
+	shop = new Shop();
 
 	delete player;
 	player = new Player();
@@ -38,6 +43,9 @@ void CMyGame::OnInitialize()
 	player->init();
 	map->init();
 	
+	//Shop
+	shop->init((float)Width, (float)Height);
+
 	playerInterface->init(Width,Height);
 
 	Light.Enable();
@@ -78,11 +86,17 @@ void CMyGame::OnInitialize()
 //*************** UPDATE ***************
 void CMyGame::OnUpdate() 
 {
-	if (IsMenuMode() || IsGameOver()) return;
+	if (IsMenuMode() || IsGameOver() || currentMenuState == MAIN_MENU || currentMenuState == CHAR_STATS) return;
+
+
 	map->OnUpdate(GetTime());
 	player->OnUpdate(GetTime(), IsKeyDown(SDLK_d) , IsKeyDown(SDLK_a) , IsKeyDown(SDLK_w), IsKeyDown(SDLK_s), *map , AllEnemies);
 	playerInterface->OnUpdate(map->portal.GetHealth(), *player);
+	
+	//Shop
+	shop->OnUpdate(GetTime(), *player);
 
+	//Enemies
 	int i = 0;
 	for (auto enemy : AllEnemies) {
 		
@@ -104,21 +118,22 @@ void CMyGame::OnDraw(CGraphics* g)
 {
 	if (IsMenuMode())
 	{
-		MaiMenuDraw(g);
+		if (currentMenuState == MAIN_MENU) MaiMenuDraw(g);
+		else if (currentMenuState == CHAR_STATS) CharStatsDraw(g);
+		else if (currentMenuState == SHOP) shop->openShop(g);
 		return;
 	}
 
 	playerInterface->OnDraw(g);
 	player->OnDraw(g);
+
+	//Shop
+	shop->OnDraw(g);
+
 	for (auto enemy : AllEnemies) 
 	{
 		enemy->OnDraw(g, WorldToScreenCoordinate(enemy->enemyModel.GetPositionV()));
 	}
-	//font.DrawNumber(100, 100, camera.rotation.x, CColor::White(), 52);
- 
-	
-
-
 }
 
 //*************** 3D RENDER ***************
@@ -133,6 +148,9 @@ void CMyGame::OnRender3D(CGraphics* g)
 		enemy->OnRender3D(g);
 	}
 
+	//Shop
+	shop->OnRender3D(g);
+
 	//ShowBoundingBoxes();
 	//ShowCoordinateSystem();
 }
@@ -140,10 +158,6 @@ void CMyGame::OnRender3D(CGraphics* g)
 //*************** CAMERA ***************
 void CMyGame::CameraControl(CGraphics* g)
 {
-
-	 
- 
-
 	// ------ Global Transformation Functions -----
 	glScalef(world.scale, world.scale, world.scale);  // scale the game world
 	glTranslatef(world.position.x, world.position.y, world.position.z);  // translate game world
@@ -177,13 +191,20 @@ void CMyGame::CameraControl(CGraphics* g)
 
 
 
-
+//INIT SPRITES
 void CMyGame::InitSpritesAndModels()
 {
 	// start screen
 	startScreen.LoadImage("startScreen.jpg");
 	startScreen.SetSize((float)Width, (float)Height);
 	startScreen.SetPosition((float)Width / 2, (float)Height / 2);
+
+	
+
+	// char screen
+	CharStatsMenu.LoadImage("charStats.jpg");
+	CharStatsMenu.SetSize((float)Width, (float)Height);
+	CharStatsMenu.SetPosition((float)Width / 2, (float)Height / 2);
 
 	mainMenushowControlers.LoadImage("mainMenushowControlers.jpg");
 	mainMenushowControlers.SetSize((float)Width, (float)Height);
@@ -218,25 +239,6 @@ void CMyGame::EnableFog()
 }
 
 
-//*************** KEYBOARD EVENTS ***************
-
-
-
-void CMyGame::OnKeyDown(SDLKey sym, SDLMod mod, Uint16 unicode)
-{
-	//Player KeyBoard Controller
-	player->OnKeyDown(sym , currentMousePos);
-
-	//Start
-	MainMenyController(sym);
-
-
-}
-
-void CMyGame::OnLButtonDown(Uint16 x, Uint16 y)
-{
-	player->OnLButtonDown(ScreenToFloorCoordinate(x, y), currentMousePos, GetTime());
-}
 
 
 
@@ -264,20 +266,112 @@ void CMyGame::MaiMenuDraw(CGraphics* g)
 	}
 }
 
+void CMyGame::CharStatsDraw(CGraphics* g)
+{
+	CharStatsMenu.Draw(g);
+	//damage
+	font.DrawText((float)Width / 2, (float)Height - 200, "DAMAGE", CColor::White(), 18);
+	font.DrawNumber((float)Width / 2 + 100, (float)Height - 200, player->playerDamage, CColor::White(), 18);
+
+	//hp
+	font.DrawText((float)Width / 2, (float)Height -250 , "HEALTH", CColor::White(), 18);
+	font.DrawNumber((float)Width / 2 + 100, (float)Height - 250, player->playerCurrentHp , CColor::White(), 18);
+	font.DrawText((float)Width / 2 + 120, (float)Height - 250, " / ", CColor::White(), 18);
+	font.DrawNumber((float)Width /2 + 140, (float)Height - 250, player->playerMaxHp, CColor::White(), 18);
+
+	//armor
+	font.DrawText((float)Width / 2, (float)Height - 300, "ARMOR", CColor::White(), 18);
+	font.DrawNumber((float)Width / 2 + 100, (float)Height - 300, player->playerCurrentArmor, CColor::White(), 18);
+	font.DrawText((float)Width / 2 + 120, (float)Height - 300, " / ", CColor::White(), 18);
+	font.DrawNumber((float)Width / 2 + 140, (float)Height - 300, player->playerMaxArmor, CColor::White(), 18);
+
+	//ENERGY
+	font.DrawText((float)Width / 2, (float)Height - 350, "ENERGY", CColor::White(), 18);
+	font.DrawNumber((float)Width / 2 + 100, (float)Height - 350, player->CurrentEnergy, CColor::White(), 18);
+	font.DrawText((float)Width / 2 + 120, (float)Height - 350, " / ", CColor::White(), 18);
+	font.DrawNumber((float)Width / 2 + 140, (float)Height - 350, player->maxEnergy, CColor::White(), 18);
+	
+	//resources
+	font.DrawText((float)Width / 2, (float)Height - 400, "ARMOR PARTS:", CColor::White(), 18);
+	font.DrawNumber((float)Width / 2 + 100, (float)Height - 400, player->armorComponents, CColor::White(), 18);
+
+	font.DrawText((float)Width / 2, (float)Height - 450, "WEAPON  PARTS:", CColor::White(), 18);
+	font.DrawNumber((float)Width / 2 + 100, (float)Height - 450, player->weaponComponents, CColor::White(), 18);
+
+	font.DrawText((float)Width / 2, (float)Height - 500, "SKILLS:", CColor::White(), 18);
+ 
+}
+
+
+//*************** KEYBOARD EVENTS ***************
+
+
+
+void CMyGame::OnKeyDown(SDLKey sym, SDLMod mod, Uint16 unicode)
+{
+	//Player KeyBoard Controller
+	if (!IsMenuMode()) player->OnKeyDown(sym, currentMousePos);
+
+	//Start
+	MainMenyController(sym);
+
+
+}
+
+void CMyGame::OnLButtonDown(Uint16 x, Uint16 y)
+{
+	if (IsMenuMode())  shop->OnLButtonDown(x, y);
+	if (!IsMenuMode()) player->OnLButtonDown(ScreenToFloorCoordinate(x, y), currentMousePos, GetTime());
+
+	 if (IsMenuMode() && !shop->isPlayerShoping && gameStarted &&   currentMenuState == SHOP)
+	{
+		ResumeGame();
+		SetGameMode(MODE_RUNNING);
+		currentMenuState = IN_GAME;
+		shop->isPlayerShoping = false;
+	}
+}
+
 
 void CMyGame::MainMenyController(SDLKey sym)
 {
+ 
 	// Call / Cancel Menu on ESC btn. pressed
-	if (!IsMenuMode() && sym == SDLK_ESCAPE && gameStarted )
+	if (!IsMenuMode()  && gameStarted )
 	{
-		SetGameMode(MODE_MENU);
-		currentMenuState = MAIN_MENU;
+		if (sym == SDLK_ESCAPE)
+		{
+			PauseGame();
+			SetGameMode(MODE_MENU);
+			currentMenuState = MAIN_MENU;
+		}
+		else if (sym == SDLK_c)
+		{
+			PauseGame();
+			SetGameMode(MODE_MENU);
+			currentMenuState = CHAR_STATS;
+		}
+
+		else if (sym == SDLK_e && shop->shopIsInRange)
+		{
+			PauseGame();
+			SetGameMode(MODE_MENU);
+			currentMenuState = SHOP;
+
+		}
+		
 	}
-	else if (IsMenuMode() && sym == SDLK_ESCAPE && gameStarted && currentMenuState == MAIN_MENU)
+	else if (IsMenuMode() && sym == SDLK_ESCAPE   && gameStarted && (currentMenuState == MAIN_MENU || currentMenuState == CHAR_STATS || currentMenuState == SHOP) )
 	{
+		ResumeGame();
 		SetGameMode(MODE_RUNNING);
 		currentMenuState = IN_GAME;
+		shop->isPlayerShoping = false;
 	}
+
+
+
+
 
 	////******* IF NOT IN MENU MODE -> RETURN
 	if (!IsMenuMode()) return;
@@ -348,12 +442,12 @@ void CMyGame::OnMouseMove(Uint16 x, Uint16 y, Sint16 relx, Sint16 rely, bool bLe
 
 void CMyGame::OnWheelUp(Uint16 x, Uint16 y)
 {
-	player->playerOnWheelUp();
+	if(!IsMenuMode()) player->playerOnWheelUp();
 }
 
 void CMyGame::OnWheelDown(Uint16 x, Uint16 y)
 {
-	player->playerOnWheelDown();
+	if (!IsMenuMode()) player->playerOnWheelDown();
 }
 
 void CMyGame::OnMButtonDown(Uint16 x, Uint16 y)

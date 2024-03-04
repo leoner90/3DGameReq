@@ -3,6 +3,9 @@
 
 void Map::init()
 {
+
+
+
 	// floor texture
 	floor.LoadTexture("Map/floor2.bmp");
 	floor.SetTiling(true);
@@ -82,6 +85,7 @@ void Map::LoadData()
 void Map::OnUpdate(int t)
 {
 	modelList.Update(t);
+ 
 }
 
 void Map::OnDraw(CGraphics* g)
@@ -95,4 +99,5 @@ void Map::OnRender3D(CGraphics* g)
 	if(portal.GetHealth() > 0) portal.Draw(g);
 	floor.Draw(g);
 	modelList.Draw(g);
+ 
 }

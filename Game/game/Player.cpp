@@ -8,40 +8,62 @@
 void Player::init()
 {
 	font.LoadDefault();
-	//Player 3D
+
+	
+
+	//model
 	playerModel.LoadModel("Player/player.md3");
 	playerModel.SetScale(15.5f);
 	playerModel.SetPosition(800, 0, 300);
-	playerModel.AddAnimation("run", 1, 22);
-	playerModel.AddAnimation("idle", 23, 86);
 
-	//delete Shots
-	playerShots.delete_all();
+ 
+	//animation
+	playerModel.AddAnimation("run", 1, 75);
+	playerModel.AddAnimation("idle", 80, 160);
 
-	//bullet
+
+	//moving 
+	footsteps.Play("playerFootsteps.wav");
+	footsteps.SetVolume(3);
+ 
+
+	//Shooting
 	bullet.LoadModel("grass/grass.obj");
 	bullet.SetScale(0.2f);
-
-	mouseControl = false;
+	shootingDelay = 1000;
+	playerDamage = 100;
+	playerShots.delete_all();
+ 
 	playerCurrentState = UNOCCUPIED;
 	curentSkillSelected = RECALL;
-	shootingDelay = 1000;
+
+	//stats
 	playerMaxHp = playerCurrentHp = 1000;
 	maxEnergy = CurrentEnergy = 100;
-	playerDamage = 100;
+	playerCurrentArmor = playerMaxArmor = 100;
+
+	//resources
+	armorComponents = weaponComponents = 0;
+
+	isPlayerDead = false;
 }
 
 //*************** UPDATE ***************
 void Player::OnUpdate( long t, bool Dkey, bool Akey, bool Wkey, bool Skey, Map& map , std::vector<Enemy*> AllEnemies)
 {
-	
+
+	//Energy Recovery
+	if(CurrentEnergy < maxEnergy) CurrentEnergy += 0.25;
+	if (playerCurrentArmor < playerMaxArmor) playerCurrentArmor += 0.1;
+
 	localMap = &map;
 	//Attack Delay 
 	if (attackDelay - t <= 0) playerCurrentState = UNOCCUPIED;
 
 	//playerShots.delete_if(deleted);
-	PlayerControl(Dkey, Akey, Wkey, Skey);
+	
 	playerCollision(AllEnemies);
+	PlayerControl(Dkey, Akey, Wkey, Skey);
 
 	for (CModel* pShot : playerShots)
 	{   
@@ -67,6 +89,7 @@ void Player::OnUpdate( long t, bool Dkey, bool Akey, bool Wkey, bool Skey, Map& 
 	playerShots.delete_if(true);
 
 	playerShots.Update(t);
+	lastFramePos = playerModel.GetPositionV();
 	playerModel.Update(t);
 
 }
@@ -89,33 +112,51 @@ void Player::OnRender3D(CGraphics* g, CCamera& world)
 //*************** PLAYER CONTROLER ***************
 void Player::PlayerControl(bool Dkey, bool Akey, bool Wkey , bool Skey)
 {
+	 
 	//moving back/forward
+ 
 	if (Wkey)
 	{
-		//footsteps.Play("playerFootsteps.wav");
-		playerModel.PlayAnimation("run", 30, true);
+		playerModel.SetDirection(90);
 		playerModel.SetSpeed(400);
-	}
-	else if (Skey) 
-	{
-		playerModel.SetSpeed(-200);
 		playerModel.PlayAnimation("run", 30, true);
 	}
+	else if (Skey && !Wkey)
+	{
+		playerModel.SetDirection(-90);
+		playerModel.SetSpeed(400);
+		playerModel.PlayAnimation("run", 30, true);
+	}
+
+	else if (Dkey && !Wkey)
+	{
+		playerModel.SetDirection(0);
+		playerModel.SetSpeed(400);
+		playerModel.PlayAnimation("run", 30, true);
+	}
+	else if (Akey )
+	{
+		playerModel.SetDirection(180);
+		playerModel.SetSpeed(400);
+		playerModel.PlayAnimation("run", 30, true);
+	}
+ 
 	else 
 	{
-		footsteps.Stop();
+		footsteps.Pause();
 		playerModel.SetSpeed(0);
 		playerModel.PlayAnimation("idle", 30, true);
-		
+
 	}
 
 	//model rotation
-	if (Dkey) playerModel.Rotate(0, -3, 0);
-	if (Akey) playerModel.Rotate(0, 3, 0);
- 
+	//if (Dkey) playerModel.Rotate(0, -3, 0);
+	//if (Akey) playerModel.Rotate(0, 3, 0);
+
+
 
 	// align direction with rotation
-	playerModel.SetDirectionV(playerModel.GetRotationV());
+	//playerModel.SetDirectionV(playerModel.GetRotationV());
 }
 
 
@@ -132,9 +173,12 @@ void Player::OnKeyDown(SDLKey sym, CVector currentMousePos)
 			playerModel.SetPositionV(localMap->portal.GetPositionV());
 			break;
 		case DASH:
-		
-
-			playerModel.SetPositionV(playerModel.GetPositionV() + CVector(xVel, 0 , zVel));
+			if (CurrentEnergy >= 25)
+			{
+				CurrentEnergy -= 25;
+				playerModel.SetPositionV(playerModel.GetPositionV() + CVector(xVel, 0, zVel));
+			}
+				
 			break;
 		default:
 			break;
@@ -146,7 +190,19 @@ void Player::OnKeyDown(SDLKey sym, CVector currentMousePos)
 
 void Player::playerGettingDamage(float damage)
 {
-	playerCurrentHp -= damage;
+	playerCurrentArmor -= damage;
+	if (playerCurrentArmor < 0)
+	{
+		playerCurrentHp = -playerCurrentArmor;
+		playerCurrentArmor = 0;
+	}
+
+	if (playerCurrentHp <= 0)
+	{
+		playerCurrentHp = 0;
+		isPlayerDead = true;
+	}
+ 
 }
 
 void Player::playerCollision(std::vector<Enemy*> AllEnemies)
@@ -155,15 +211,14 @@ void Player::playerCollision(std::vector<Enemy*> AllEnemies)
 	{
 		if (playerModel.HitTest(wallSeg))
 		{
-			playerModel.SetSpeed(0);
+			playerModel.SetPositionV(lastFramePos);
 		}
 	}
 
 	for (auto enemy : AllEnemies) {
 		if (playerModel.HitTest(&enemy->enemyModel)) 
 		{
-			//playerModel.SetSpeed(0);
-			//playerModel.PlayAnimation("stand", 7, true);
+			playerModel.SetPositionV(lastFramePos);
 		}
 	}
 
@@ -173,12 +228,14 @@ void Player::playerCollision(std::vector<Enemy*> AllEnemies)
 
 void Player::OnLButtonDown(CVector pos, CVector currentMousePos, long t)
 {
-	if (playerCurrentState == UNOCCUPIED)
+	if (playerCurrentState == UNOCCUPIED )
 	{
 		playerCurrentState = INATTACK;
 		attackDelay = t + shootingDelay;
 		playerModel.Stop();
-		//playerModel.SetRotationToPoint(currentMousePos.x, currentMousePos.z);
+		playerModel.SetRotationToPoint(currentMousePos.x, currentMousePos.z);
+ 
+	 
 		// create a new shot as a short line
 		CModel* pShot = bullet.Clone();
 		pShot->SetPositionV(playerModel.GetPositionV() + CVector(0, 100, 0));
@@ -189,7 +246,7 @@ void Player::OnLButtonDown(CVector pos, CVector currentMousePos, long t)
 		pShot->Die(500);
 		playerShots.push_back(pShot);
 		//sound
-		shotSound.Stop();
+	 
 		shotSound.Play("shotSound.wav");
 		shotSound.SetVolume(20);
 	}

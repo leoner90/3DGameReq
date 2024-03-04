@@ -9,19 +9,20 @@ class Player
 {
 public:
 	//Health
-	float playerMaxHp, playerCurrentHp, maxEnergy, CurrentEnergy;
-	CFont font;
+	float playerMaxHp, playerCurrentHp, maxEnergy, CurrentEnergy, playerCurrentArmor,playerMaxArmor;
 
+	//playerShots 
+	CModelList playerShots;
+	CModel bullet;
 
-	//shootin
 	float playerDamage;
 	float shootingDelay;
 	float attackDelay;
+ 
 
-	//local Map
+	//local variables
 	Map* localMap;
-	enum playerStates { UNOCCUPIED, INATTACK};
-	playerStates playerCurrentState;
+
 	
 	//Main Functions
 	void init();
@@ -35,21 +36,34 @@ public:
 	void OnKeyDown(SDLKey sym , CVector currentMousePos);
 	void playerGettingDamage(float damage);
 	void playerCollision(std::vector<Enemy*> AllEnemies);
-	CVector SaveMousePos;
+	
+	//player movement
+	CVector lastFramePos;
 
-	bool mouseControl;
-	//playerShots 
-	CModelList playerShots;
+	
+
 	//3D Models
 	CModelMd3 playerModel;
 
-	CModel bullet;
+	
+	CVector SaveMousePos;
 
 	//Player Current Skill
 	enum PlayerSkills{RECALL,DASH};
 	PlayerSkills curentSkillSelected;
+
 	//Sounds
 	CSoundPlayer footsteps;
 	CSoundPlayer shotSound;
 
+	
+	enum playerStates { UNOCCUPIED, INATTACK };
+	playerStates playerCurrentState;
+
+	CFont font;
+
+	//resouces
+	int  armorComponents, weaponComponents;
+
+	bool isPlayerDead;
 };

@@ -15,4 +15,6 @@ public:
 	CModel wallSegment;
 	CModel tree;
 	CModelList modelList, mapCollision;
+
+	
 };

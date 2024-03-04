@@ -6,17 +6,19 @@ class Map;
 class Player;
 class PlayerInterface;
 class Enemy;
+class Shop;
 
 class CMyGame : public CGame
 {
 private:
-	CSprite startScreen, mainMenushowControlers;
+	CSprite startScreen, mainMenushowControlers, CharStatsMenu;
 	CFont font;
-
+ 
 	// Main Objects
 	Map* map;
 	Player* player;
 	PlayerInterface* playerInterface;
+	Shop* shop;
 	//Enemy* enemy;
 
 	// Game Funtions
@@ -42,13 +44,16 @@ private:
 	//Game Modes
 	enum GameModes{MAIN_MENU, CHAR_STATS, SHOP, IN_GAME, CUTSCENE, SHOW_CONTROLLERS};
 	enum mainMenuOptions{NEW_GAME, CONTROLS, EXIT};
+
+	GameModes currentMenuState;
 	bool gameStarted;
 	int mainMenuOptionSelection;
-	void MaiMenuDraw(CGraphics* g);
-	int currentMenuState;
 
 	//fog
 	void EnableFog();
+
+	void MaiMenuDraw(CGraphics* g);
+	void CharStatsDraw(CGraphics* g);
 	//sound
 	CSoundPlayer mainBgMusic;
 
