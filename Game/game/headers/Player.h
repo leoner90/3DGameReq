@@ -40,7 +40,6 @@ public:
 	//player movement
 	CVector lastFramePos;
 
-	
 
 	//3D Models
 	CModelMd3 playerModel;
@@ -65,5 +64,10 @@ public:
 	//resouces
 	int  armorComponents, weaponComponents;
 
+	//death handler
 	bool isPlayerDead;
+	bool playerPreDeahAnimation;
+	Uint32 playerdeathAnimationTimer;
+
+ 
 };

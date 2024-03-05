@@ -11,7 +11,7 @@ void Shop::init(float w, float h)
 	//shop
 	testRobot.LoadModel("Player/testRobot.md3");
 	testRobot.SetScale(45.5f);
-	testRobot.SetPosition(2000, 0, 400);
+	testRobot.SetPosition(1500, 0, 400);
 	testRobot.AddAnimation("idle", 1, 110);
 	testRobot.PlayAnimation("idle", 30, true);
 

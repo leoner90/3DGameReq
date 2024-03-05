@@ -6,7 +6,7 @@ class Map;
 class Enemy
 {
 public:
-	void init(int posX, int poxY, int posZ, int enemyType);
+	void init(int posX, int poxY, int posZ, int enemyType, Map& map);
 	void OnUpdate(long t, Player& player, Map& map);
 	void OnDraw(CGraphics* g, CVector enemyPos);
 	void Attack();
@@ -26,11 +26,22 @@ public:
 
 	int localEnemyType;
 	float enemyMaxHp, enemyCurrentHp;
-	float enemyDamage;
-	bool isDead;
-	float attackDelay;
-	bool hit;
 
+	//attack
+	float enemyDamage;
+	float attackDelay;
+
+	//death handler
+	bool isDead;
+	bool preDeahAnimation;
+	Uint32 deathAnimationTimer;
 	CHealthBar enemyHpbar;
+
+	CVector randomPortalPartPos;
+
+	bool OnSpawnHold;
+
+	//temp To Delete
+	CModel  spawnPoint, spawnPoint2;
 
 };

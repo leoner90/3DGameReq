@@ -96,6 +96,7 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="headers\UIDialogBox.h" />
     <ClInclude Include="headers\Enemy.h" />
     <ClInclude Include="headers\MyGame.h" />
     <ClInclude Include="headers\Player.h" />
@@ -106,6 +107,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Enemy.cpp" />
+    <ClCompile Include="UIDialogBox.cpp" />
     <ClCompile Include="Map.cpp" />
     <ClCompile Include="PlayerInterface.cpp" />
     <ClCompile Include="Shop.cpp" />

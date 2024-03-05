@@ -25,7 +25,7 @@ void Player::init()
 	//Shooting
 	bullet.LoadModel("grass/grass.obj");
 	bullet.SetScale(0.2f);
-	shootingDelay = 1000;
+	shootingDelay = 500;
 	playerDamage = 100;
 	playerShots.delete_all();
  
@@ -40,14 +40,37 @@ void Player::init()
 	//resources
 	armorComponents = weaponComponents = 0;
 
-	isPlayerDead = false;
+	isPlayerDead = playerPreDeahAnimation =  false;
+	playerdeathAnimationTimer = 0;
 }
 
 //*************** UPDATE ***************
 void Player::OnUpdate( long t, bool Dkey, bool Akey, bool Wkey, bool Skey, Map& map , std::vector<Enemy*> AllEnemies)
 {
 
+	//if dead -> return (do nothing)
+	if (isPlayerDead) return;
+
+	//if pre-dead -> play animation of death , set dead status true by the end
+	float remainingHpInPercentage = playerCurrentHp / (playerMaxHp / 100);
+	playerModel.SetHealth(remainingHpInPercentage);
+
+	if (playerPreDeahAnimation)
+	{
+		if (playerdeathAnimationTimer == 0)
+		{
+			playerModel.PlayAnimation("attack", 12, true);
+			playerdeathAnimationTimer = 1000 + t;
+		}
+		else if (playerdeathAnimationTimer < t) isPlayerDead = true;
+
+		else return;
+
+	}
+
+
 	//Energy Recovery
+	 
 	if(CurrentEnergy < maxEnergy) CurrentEnergy += 0.25;
 	if (playerCurrentArmor < playerMaxArmor) playerCurrentArmor += 0.1;
 
@@ -65,6 +88,7 @@ void Player::OnUpdate( long t, bool Dkey, bool Akey, bool Wkey, bool Skey, Map& 
 		for (auto enemy : AllEnemies) {
 			if (pShot->HitTest(&enemy->enemyModel))
 			{
+				if (enemy->preDeahAnimation) continue;
 				pShot->Delete();
 			 
 				enemy->EnemyGetDamage(playerDamage);
@@ -72,8 +96,6 @@ void Player::OnUpdate( long t, bool Dkey, bool Akey, bool Wkey, bool Skey, Map& 
 			}
 		}
 	}
-
-	
 
 	playerShots.delete_if(true);
 
@@ -190,7 +212,7 @@ void Player::playerGettingDamage(float damage)
 	if (playerCurrentHp <= 0)
 	{
 		playerCurrentHp = 0;
-		isPlayerDead = true;
+		playerPreDeahAnimation = true;
 	}
  
 }
@@ -206,6 +228,7 @@ void Player::playerCollision(std::vector<Enemy*> AllEnemies)
 	}
 
 	for (auto enemy : AllEnemies) {
+		if (enemy->deathAnimationTimer) continue;
 		if (playerModel.HitTest(&enemy->enemyModel)) 
 		{
 			playerModel.SetPositionV(lastFramePos);
