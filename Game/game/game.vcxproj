@@ -96,6 +96,7 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="headers\Enemy.h" />
     <ClInclude Include="headers\MyGame.h" />
     <ClInclude Include="headers\Player.h" />
     <ClInclude Include="headers\PlayerInterface.h" />
@@ -104,7 +105,7 @@
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="headers\Enemy.cpp" />
+    <ClCompile Include="Enemy.cpp" />
     <ClCompile Include="Map.cpp" />
     <ClCompile Include="PlayerInterface.cpp" />
     <ClCompile Include="Shop.cpp" />
