@@ -15,14 +15,21 @@ public:
 	//void EnemyControl();
  
 	CModelMd2 enemyModel;
+
+	//local
 	Player* localPlayer;
 	Map* localMap;
+	Uint32 localTime;
+
+
 	float enemySpeed;
 
 	int localEnemyType;
 	float enemyMaxHp, enemyCurrentHp;
 	float enemyDamage;
 	bool isDead;
+	float attackDelay;
+	bool hit;
 
 	CHealthBar enemyHpbar;
 

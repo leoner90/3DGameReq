@@ -13,12 +13,12 @@ void Enemy::init(int posX, int poxY, int posZ, int enemyType)
 	{
 		enemyMaxHp = enemyCurrentHp = 200;
 		enemyModel.LoadModel("Cobra/enemyOne.md2");
-		enemyDamage = 100;
+		enemyDamage = 20;
 		enemySpeed = 100 + rand() % 300;
 	}
 	else if (localEnemyType == 1)
 	{
-		enemyDamage = 200;
+		enemyDamage = 20;
 		enemyMaxHp = enemyCurrentHp = 400;
 		enemyModel.LoadModel("Ogro/ogro.md2");
 		enemySpeed = 100 + rand() % 200;
@@ -52,14 +52,14 @@ void Enemy::OnUpdate(long t, Player &player, Map& map)
 	if (isDead) return;
 	localPlayer = &player;
 	localMap = &map;
- 
+	localTime = t;
 	float remainingHpInPercentage = enemyCurrentHp / (enemyMaxHp / 100);
 	enemyHpbar.SetHealth(remainingHpInPercentage);
 	if (localEnemyType == 0)
 	{		  
 		CVector displ = localPlayer->playerModel.GetPositionV() - enemyModel.GetPositionV();
 		float distance = hypot(displ.GetX(), displ.GetZ());
-		if (distance > 500)
+		if (distance > 60)
 		{
 			enemyModel.SetDirectionAndRotationToPoint(localPlayer->playerModel.GetPositionV().GetX(), localPlayer->playerModel.GetPositionV().GetZ());
 			enemyModel.SetSpeed(enemySpeed);
@@ -70,7 +70,6 @@ void Enemy::OnUpdate(long t, Player &player, Map& map)
 			enemyModel.SetSpeed(0);
 			enemyModel.PlayAnimation("attack", 12, true);
 			Attack();
-			
 		}
 	}
 
@@ -78,7 +77,7 @@ void Enemy::OnUpdate(long t, Player &player, Map& map)
 	{
 		CVector displ = localMap->portal.GetPositionV() - enemyModel.GetPositionV();
 		float distance = hypot(displ.GetX(), displ.GetZ());
-		if (distance > 50)
+		if (distance > 60)
 		{
 			enemyModel.SetSpeed(enemySpeed);
 			enemyModel.SetDirectionAndRotationToPoint(localMap->portal.GetPositionV().GetX(), localMap->portal.GetPositionV().GetZ());
@@ -112,21 +111,22 @@ void Enemy::OnDraw(CGraphics* g, CVector enemyPos)
 void Enemy::Attack()
 {
 
-
-	if (localEnemyType == 0)
+	if (localEnemyType == 0 && attackDelay < localTime)
 	{
 		// Attack player  
 		if (enemyModel.HitTest(&localPlayer->playerModel))
 		{
 			localPlayer->playerGettingDamage(enemyDamage);
+			attackDelay = 2000 + localTime;
 		}
 	}
-	else if (localEnemyType == 1)
+	else if (localEnemyType == 1 && attackDelay < localTime)
 	{
 		// Attack Portal 
 		if (enemyModel.HitTest(&localMap->portal))
 		{
 			localMap->portal.SetHealth(localMap->portal.GetHealth() - 5);
+			attackDelay = 2000 + localTime;
 		}
 	}
 }

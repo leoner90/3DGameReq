@@ -9,23 +9,18 @@ void Player::init()
 {
 	font.LoadDefault();
 
-	
-
 	//model
 	playerModel.LoadModel("Player/player.md3");
 	playerModel.SetScale(15.5f);
 	playerModel.SetPosition(800, 0, 300);
 
- 
 	//animation
 	playerModel.AddAnimation("run", 1, 75);
 	playerModel.AddAnimation("idle", 80, 160);
 
-
 	//moving 
 	footsteps.Play("playerFootsteps.wav");
 	footsteps.SetVolume(3);
- 
 
 	//Shooting
 	bullet.LoadModel("grass/grass.obj");
@@ -66,13 +61,7 @@ void Player::OnUpdate( long t, bool Dkey, bool Akey, bool Wkey, bool Skey, Map& 
 	PlayerControl(Dkey, Akey, Wkey, Skey);
 
 	for (CModel* pShot : playerShots)
-	{   
-		if (pShot->HitTest(&map.portal) && map.portal.GetHealth() > 0)
-		{
-			pShot->Delete();
-			map.portal.SetHealth(map.portal.GetHealth() - 10);
-		}
-
+	{ 
 		for (auto enemy : AllEnemies) {
 			if (pShot->HitTest(&enemy->enemyModel))
 			{
@@ -191,9 +180,10 @@ void Player::OnKeyDown(SDLKey sym, CVector currentMousePos)
 void Player::playerGettingDamage(float damage)
 {
 	playerCurrentArmor -= damage;
+
 	if (playerCurrentArmor < 0)
 	{
-		playerCurrentHp = -playerCurrentArmor;
+		playerCurrentHp -= damage;
 		playerCurrentArmor = 0;
 	}
 
