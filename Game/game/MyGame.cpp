@@ -433,7 +433,6 @@ void CMyGame::OnMouseMove(Uint16 x, Uint16 y, Sint16 relx, Sint16 rely, bool bLe
 		float addX = cameraControlMouseInitPose.GetX() - x;
 		float addY = cameraControlMouseInitPose.GetY() - y;
 
-		//if(camera.rotation.x - addY > -40 && camera.rotation.x + addY < 30)
 		camera.rotation.x += addY / 10;
 		camera.rotation.y -= addX / 10;
 	}
