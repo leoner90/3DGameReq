@@ -1,22 +1,39 @@
 #pragma once
-
-class String;
+#include <iostream>
+ 
 class UIDialogBox
 {
 public:
+	//Set current Speacker
+	enum currentSpeaker {  BLINKY, MYNE};
+	int speaker;
+	bool isBoxShowen;
+	bool autoHideTimer;
+
 	void init(float w, float h);
 	void OnUpdate(long t);
 	void OnDraw(CGraphics* g);
-	void showBox();
+	void showBox(int speakerId, int textId, int priority);
 	void hideBox();
+	float dialogBoxHideSpeed, dialogBoxShowSpeed;
+	CSprite dialogBoxBg;
+
 private:
 	float localW, localH;
-	char* text, name;
-	CSprite speakerImg;
-	CSprite dialogBoxBg;
-	bool isBoxShowen;
+
+	int dialogNumber;
+	std::string text[5], name[2];
+	
 	CFont font;
-	float autoHideTimer;
+	//all Speakers logo
+	CSprite speakerImg, MyneImg;
+	
+
+	float localTime;
+	bool textShow;
+	
+	int currentPriority;
+	bool onTop;
 };
 
  

@@ -16,47 +16,111 @@ void UIDialogBox::init(float w, float h)
 	speakerImg.SetSize(150, 120);
 	speakerImg.SetPosition( 125, 80);
 
+
+	MyneImg.LoadImage("MyraLogo.png");
+	MyneImg.SetSize(150, 120);
+	MyneImg.SetPosition(125, 80);
+
  
-	isBoxShowen = true;
+	isBoxShowen = false;
+
+	name[MYNE] = "Myne";
+	name[BLINKY] = "Blinky";
+	text[0] = "PRESS E FOR SHOPING";
+
+	autoHideTimer = 0;
 }
 
 void UIDialogBox::OnUpdate(long t)
 {
-
-	if (isBoxShowen)
+	localTime = t;
+ 
+	//hide
+	if (autoHideTimer && isBoxShowen)
 	{
-		float pos = dialogBoxBg.GetY() - 10;
-		dialogBoxBg.SetPosition(dialogBoxBg.GetX(), pos);
-		if (pos < -dialogBoxBg.GetHeight() / 2) isBoxShowen = false;
-	}
+		dialogBoxHideSpeed += 8;
+		dialogBoxBg.SetPosition(dialogBoxBg.GetX(), dialogBoxBg.GetY() - dialogBoxHideSpeed);
+		speakerImg.SetPosition(speakerImg.GetX(), speakerImg.GetY() - dialogBoxHideSpeed);
+
+		if (dialogBoxHideSpeed >= dialogBoxBg.GetHeight() / 4)
+		{
+			dialogBoxHideSpeed = 0;
+			autoHideTimer = false;
+			isBoxShowen = false;
+			textShow = false;
+			speakerImg.SetPosition(125, 0);
+			dialogBoxBg.SetPosition(localW / 2, 0);
+		}
+		
+	} 
+
+	//show 
+	if (!autoHideTimer && isBoxShowen && dialogBoxShowSpeed <= 20)
+	{
+		dialogBoxShowSpeed += 5;
+		dialogBoxBg.SetPosition(dialogBoxBg.GetX(), dialogBoxBg.GetY() + dialogBoxShowSpeed);
+		speakerImg.SetPosition(speakerImg.GetX(), speakerImg.GetY() + dialogBoxShowSpeed);
+	} 
+ 
+	 
+
+	//dialogBoxBg.Update(t);
+	//speakerImg.Update(t);
 
 }
 
 void UIDialogBox::OnDraw(CGraphics* g)
 {
-	if (isBoxShowen)
+	if (isBoxShowen )
 	{
 		dialogBoxBg.Draw(g);
-		speakerImg.Draw(g);
+		switch (speaker)
+		{
+			case 0: 
+				speakerImg.Draw(g);
+				break;
+			case 1: 
+				MyneImg.Draw(g);
+				break;
 
-		font.DrawText(localW * 0.2, 120, "Blinky", CColor::Yellow(), 28);
-		font.DrawText(localW * 0.2, 100, "Ship is critycly damaged, the portal can help as survive, " , CColor::White(), 22);
-		font.DrawText(localW * 0.2, 80, "I'm starting to activate the portal ", CColor::White(), 22);
-		font.DrawText(localW * 0.2, 60, "unfortunatly the energy blast will attract all the creatures near by", CColor::White(), 22);
-	 
+		}
+		
 
 	}
-	
+
+	if (textShow && dialogBoxShowSpeed >= 20)
+	{
+		font.DrawText(localW * 0.2, 110, name[speaker], CColor::Yellow(), 28);
+		font.DrawText(localW * 0.2, 80, text[dialogNumber], CColor::White(), 22);
+	}
+ 	
 }
 
-void UIDialogBox::showBox()
+void UIDialogBox::showBox(int speakerId, int textId, int priority)
 {
+	if (currentPriority > priority) return;
+	//set back to origin pos
+	speakerImg.SetPosition(125, 0);
+	dialogBoxBg.SetPosition(localW / 2, 0);
 	isBoxShowen = true;
+	autoHideTimer = false;
+	
+	speaker = speakerId;
+	dialogNumber = textId;
+	//dialogBoxHideSpeed = 0;
+	currentPriority = priority;
+	dialogBoxShowSpeed = 0;
+	textShow = true;
 }
 
 void UIDialogBox::hideBox()
 {
-	isBoxShowen = false;
+	//isBoxShowen = false;
+	//dialogBoxHideSpeed = 0;
+	textShow = false;
+	autoHideTimer = true;
+	currentPriority = -1;
+
 }
 
 

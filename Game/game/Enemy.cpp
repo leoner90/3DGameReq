@@ -71,7 +71,7 @@ void Enemy::init(int posX, int poxY, int posZ, int enemyType, Map& map)
 }
 
 //*************** UPDATE ***************
-void Enemy::OnUpdate(long t, Player &player, Map& map)
+void Enemy::OnUpdate(long t, Player &player, Map& map, std::vector<Enemy*>& AllEnemies, int thisEnemyIndex)
 {
 	//if dead -> return (do nothing)
 	if (isDead) return;
@@ -92,6 +92,16 @@ void Enemy::OnUpdate(long t, Player &player, Map& map)
 	localMap = &map;
 	localTime = t;
 
+	int i = 0;
+	for (auto enemy : AllEnemies)
+	{
+		if (i == thisEnemyIndex) continue;
+		if (enemyModel.HitTest(&enemy->enemyModel) )
+		{
+			//enemyModel.SetPosition(enemyModel.GetPositionV().GetX() + 2, enemyModel.GetPositionV().GetY(), enemyModel.GetPositionV().GetZ() );
+		}
+		i++;
+	}
 
 	if (localEnemyType == 0 && !OnSpawnHold)
 	{	

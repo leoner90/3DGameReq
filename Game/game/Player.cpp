@@ -12,7 +12,7 @@ void Player::init()
 	//model
 	playerModel.LoadModel("Player/player.md3");
 	playerModel.SetScale(15.5f);
-	playerModel.SetPosition(800, 0, 300);
+	playerModel.SetPosition(-800, 0, -300);
 
 	//animation
 	playerModel.AddAnimation("run", 1, 75);
@@ -108,8 +108,7 @@ void Player::OnUpdate( long t, bool Dkey, bool Akey, bool Wkey, bool Skey, Map& 
 //*************** 2D RENDER ***************
 void Player::OnDraw(CGraphics* g)
 {
-	font.DrawText(100, 100, "Current Skill is:", CColor::White(), 22);
-	font.DrawText(300, 100, curentSkillSelected == 0 ? "Recall" : "DASH_FORWARD", CColor::White(), 22);
+ 
 	
 }
 
@@ -238,6 +237,11 @@ void Player::playerCollision(std::vector<Enemy*> AllEnemies)
 	
 }
 
+ 
+void Player::OnMouseMove(CVector currentMousePos)
+{
+	playerModel.SetRotationToPoint(currentMousePos.x, currentMousePos.z);
+}
 
 void Player::OnLButtonDown(CVector pos, CVector currentMousePos, long t)
 {

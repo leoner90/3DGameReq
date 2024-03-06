@@ -49,7 +49,7 @@ public:
 
 	//Player Current Skill
 	enum PlayerSkills{RECALL,DASH};
-	PlayerSkills curentSkillSelected;
+	int curentSkillSelected;
 
 	//Sounds
 	CSoundPlayer footsteps;
@@ -69,5 +69,6 @@ public:
 	bool playerPreDeahAnimation;
 	Uint32 playerdeathAnimationTimer;
 
+	void OnMouseMove(CVector currentMousePos);
  
 };

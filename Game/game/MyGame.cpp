@@ -138,33 +138,42 @@ void CMyGame::OnUpdate()
 
 
 
-	if (IsMenuMode() || IsGameOver() || currentMenuState == MAIN_MENU || currentMenuState == CHAR_STATS ) return;
-
-	enemySpawn();
-	map->OnUpdate(GetTime());
-	player->OnUpdate(GetTime(), IsKeyDown(SDLK_d) , IsKeyDown(SDLK_a) , IsKeyDown(SDLK_w), IsKeyDown(SDLK_s), *map , AllEnemies);
-	playerInterface->OnUpdate(map->portal.GetHealth(), *player);
-	
-	//Shop
-	shop->OnUpdate(GetTime(), *player);
-
-	//dialog box
-	dialogBox->OnUpdate(GetTime());
-
-	//Enemies delete
-	int i = 0;
-	for (auto enemy : AllEnemies) {
-		
-		enemy->OnUpdate(GetTime(), *player , *map);
-
-		//* if regular enemie dead -> delete;
-		if (enemy->isDead) {
-			AllEnemies.erase(AllEnemies.begin() + i);
-			delete enemy;
-		}
-		
-		i++;
+	if (IsMenuMode() || IsGameOver())
+	{
+		return;
 	}
+		
+	else 
+	{
+		enemySpawn();
+		map->OnUpdate(GetTime());
+		player->OnUpdate(GetTime(), IsKeyDown(SDLK_d), IsKeyDown(SDLK_a), IsKeyDown(SDLK_w), IsKeyDown(SDLK_s), *map, AllEnemies);
+		playerInterface->OnUpdate(GetTime(), map->portal.GetHealth(), *player, *dialogBox);
+
+		//Shop
+		shop->OnUpdate(GetTime(), *player, *dialogBox);
+
+		//dialog box
+		dialogBox->OnUpdate(GetTime());
+
+		//Enemies delete
+		int i = 0;
+		for (auto enemy : AllEnemies) {
+
+			enemy->OnUpdate(GetTime(), *player, *map, AllEnemies, i);
+
+			//* if regular enemie dead -> delete;
+			if (enemy->isDead) {
+				AllEnemies.erase(AllEnemies.begin() + i);
+				delete enemy;
+			}
+
+			i++;
+		}
+	}
+
+
+
 }
 
 //*************** 2D RENDER ***************
@@ -184,17 +193,21 @@ void CMyGame::OnDraw(CGraphics* g)
 	map->OnDraw(g);
 	//Shop
 	shop->OnDraw(g);
-	dialogBox->OnDraw(g);
+	
 
 	for (auto enemy : AllEnemies) 
 	{
 		enemy->OnDraw(g, WorldToScreenCoordinate(enemy->enemyModel.GetPositionV()));
 	}
+
+	dialogBox->OnDraw(g);
 }
 
 //*************** 3D RENDER ***************
 void CMyGame::OnRender3D(CGraphics* g)
 { 
+	if (IsMenuMode() || IsGameOver())
+		return;
 	CameraControl(g);
 	map->OnRender3D(g);
 	player->OnRender3D(g, world);
@@ -483,7 +496,7 @@ void CMyGame::OnMouseMove(Uint16 x, Uint16 y, Sint16 relx, Sint16 rely, bool bLe
 {
 	currentMousePos = ScreenToFloorCoordinate(x, y);
 
-
+	player->OnMouseMove(currentMousePos);
 	if (cameraMovement)
 	{
 		float addX = cameraControlMouseInitPose.GetX() - x;

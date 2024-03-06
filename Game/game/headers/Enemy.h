@@ -7,7 +7,7 @@ class Enemy
 {
 public:
 	void init(int posX, int poxY, int posZ, int enemyType, Map& map);
-	void OnUpdate(long t, Player& player, Map& map);
+	void OnUpdate(long t, Player& player, Map& map, std::vector<Enemy*>& AllEnemies, int thisEnemyIndex);
 	void OnDraw(CGraphics* g, CVector enemyPos);
 	void Attack();
 	void OnRender3D(CGraphics* g);

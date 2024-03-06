@@ -101,15 +101,15 @@ void Map::OnUpdate(int t)
 {
 	modelList.Update(t);
 
-	currentportalChargingTime += t;
+	currentportalChargingTime = t;
  
 }
 
 void Map::OnDraw(CGraphics* g)
 {
 
-	font.DrawText(200, 200, "PortalChargeTime", CColor::White(), 18);
-	font.DrawNumber(300,300, currentportalChargingTime, CColor::White(), 18);
+	//font.DrawText(200, 200, "PortalChargeTime", CColor::White(), 18);
+	//font.DrawNumber(300,300, currentportalChargingTime, CColor::White(), 18);
 
 }
 
