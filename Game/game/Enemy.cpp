@@ -98,7 +98,8 @@ void Enemy::OnUpdate(long t, Player &player, Map& map, std::vector<Enemy*>& AllE
 		if (i == thisEnemyIndex) continue;
 		if (enemyModel.HitTest(&enemy->enemyModel) )
 		{
-			//enemyModel.SetPosition(enemyModel.GetPositionV().GetX() + 2, enemyModel.GetPositionV().GetY(), enemyModel.GetPositionV().GetZ() );
+			//
+			//enemyModel.SetPosition(enemyModel.GetPositionV().GetX() + 2, enemyModel.GetPositionV().GetY(), enemyModel.GetPositionV().GetZ()+ 2 );
 		}
 		i++;
 	}

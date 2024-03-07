@@ -30,7 +30,7 @@ void Player::init()
 	playerShots.delete_all();
  
 	playerCurrentState = UNOCCUPIED;
-	curentSkillSelected = RECALL;
+	curentSkillSelected = 0;
 
 	//stats
 	playerMaxHp = playerCurrentHp = 1000;
@@ -125,37 +125,48 @@ void Player::PlayerControl(bool Dkey, bool Akey, bool Wkey , bool Skey)
 	 
 	//moving back/forward
  
+	cout << playerModel.GetDirection() << endl;
 	if (Wkey)
 	{
-		playerModel.SetDirection(90);
-		playerModel.SetSpeed(400);
-		playerModel.PlayAnimation("run", 30, true);
+
+
+		if (Dkey)
+		{
+			//playerModel.SetDirection(0);
+			playerModel.SetDirection(1, 1);
+			playerModel.SetSpeed(400);
+			playerModel.PlayAnimation("run", 30, true);
+		}
+		else
+		{
+			//playerModel.SetDirection(90);
+			playerModel.SetDirection(0, -1);
+			playerModel.SetSpeed(400);
+			playerModel.PlayAnimation("run", 30, true);
+		}
 	}
-	else if (Skey && !Wkey)
+	if (Skey )
 	{
-		playerModel.SetDirection(-90);
+		//playerModel.SetDirection(-90);
+		playerModel.SetDirection(0, 1);
 		playerModel.SetSpeed(400);
 		playerModel.PlayAnimation("run", 30, true);
 	}
 
-	else if (Dkey && !Wkey)
+
+	 if (Akey )
 	{
-		playerModel.SetDirection(0);
-		playerModel.SetSpeed(400);
-		playerModel.PlayAnimation("run", 30, true);
-	}
-	else if (Akey )
-	{
-		playerModel.SetDirection(180);
+		//playerModel.SetDirection(180);
+		playerModel.SetDirection(-1,0);
 		playerModel.SetSpeed(400);
 		playerModel.PlayAnimation("run", 30, true);
 	}
  
 	else 
 	{
-		footsteps.Pause();
-		playerModel.SetSpeed(0);
-		playerModel.PlayAnimation("idle", 30, true);
+		//footsteps.Pause();
+		//playerModel.SetSpeed(0);
+		//playerModel.PlayAnimation("idle", 30, true);
 
 	}
 

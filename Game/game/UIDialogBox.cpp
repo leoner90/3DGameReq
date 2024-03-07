@@ -27,8 +27,10 @@ void UIDialogBox::init(float w, float h)
 	name[MYNE] = "Myne";
 	name[BLINKY] = "Blinky";
 	text[0] = "PRESS E FOR SHOPING";
+	text[1] = "BE AWARE Enemies Are Coming!!!!!!!!!!!!!!!!";
 
 	autoHideTimer = 0;
+	hideInSec = 0;
 }
 
 void UIDialogBox::OnUpdate(long t)
@@ -36,7 +38,7 @@ void UIDialogBox::OnUpdate(long t)
 	localTime = t;
  
 	//hide
-	if (autoHideTimer && isBoxShowen)
+	if ((autoHideTimer && isBoxShowen) || (hideInSec < localTime && hideInSec != 0 ))
 	{
 		dialogBoxHideSpeed += 8;
 		dialogBoxBg.SetPosition(dialogBoxBg.GetX(), dialogBoxBg.GetY() - dialogBoxHideSpeed);
@@ -50,8 +52,9 @@ void UIDialogBox::OnUpdate(long t)
 			textShow = false;
 			speakerImg.SetPosition(125, 0);
 			dialogBoxBg.SetPosition(localW / 2, 0);
+			hideInSec = 0;
+			currentPriority = -1;
 		}
-		
 	} 
 
 	//show 
@@ -96,8 +99,9 @@ void UIDialogBox::OnDraw(CGraphics* g)
  	
 }
 
-void UIDialogBox::showBox(int speakerId, int textId, int priority)
+void UIDialogBox::showBox(int speakerId, int textId, int priority, float autohideBoxin)
 {
+	if (autohideBoxin != -1) hideInSec = localTime + autohideBoxin;
 	if (currentPriority > priority) return;
 	//set back to origin pos
 	speakerImg.SetPosition(125, 0);

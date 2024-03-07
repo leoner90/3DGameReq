@@ -13,11 +13,11 @@ public:
 	void init(float w, float h);
 	void OnUpdate(long t);
 	void OnDraw(CGraphics* g);
-	void showBox(int speakerId, int textId, int priority);
+	void showBox(int speakerId, int textId, int priority, float autohideBoxin = -1 );
 	void hideBox();
 	float dialogBoxHideSpeed, dialogBoxShowSpeed;
 	CSprite dialogBoxBg;
-
+	int currentPriority;
 private:
 	float localW, localH;
 
@@ -32,8 +32,9 @@ private:
 	float localTime;
 	bool textShow;
 	
-	int currentPriority;
+	float hideInSec;
 	bool onTop;
+	 
 };
 
  

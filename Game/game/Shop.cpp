@@ -53,7 +53,7 @@ void Shop::OnUpdate(long t, Player& player, UIDialogBox& dialogBox)
 	else
 	{
 		 shopIsInRange = false;
-		 if (dialogBox.isBoxShowen) dialogBox.hideBox();
+		 if (dialogBox.isBoxShowen && dialogBox.currentPriority == 0) dialogBox.hideBox();
 	}
 }
 

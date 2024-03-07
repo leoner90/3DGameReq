@@ -5,6 +5,7 @@
 #include "headers/Map.h"
 #include "headers/Shop.h"
 #include "headers/UIDialogBox.h"
+ 
 
 //globall for now
 std::vector<Enemy*> AllEnemies; // to make proper enemies init
@@ -22,7 +23,7 @@ void CMyGame::OnInitialize()
 	// Main Objects
 	delete map;
 	map = new Map();
-
+	
 	//shop
 	delete shop;
 	shop = new Shop();
@@ -74,6 +75,7 @@ void CMyGame::OnInitialize()
 	EnableFog();
 
 	totalEnemiesOnHold = 0;
+	totalEnemiesToSpawn = 5;
 
 }
 
@@ -104,15 +106,28 @@ void CMyGame::enemySpawn()
 	}
 
 
-	if (totalEnemiesOnHold == 10 + rand() % 5)
+	//start a wave
+	int howManyEnemiesWasOnhold = 0;
+	if (totalEnemiesOnHold == totalEnemiesToSpawn + rand() % 5)
 	{
+		
 		for (auto enemy : AllEnemies)
 		{
+			if (enemy->OnSpawnHold) howManyEnemiesWasOnhold++;
 			enemy->OnSpawnHold = false;
 			totalEnemiesOnHold = 0;
+			totalEnemiesToSpawn += 3;
+		}
+
+		dialogBox->showBox(0, 1, 1, 3000); // speaker id , text id , priority
+
+		if (howManyEnemiesWasOnhold == totalEnemiesToSpawn)
+		{
+			
 		}
 	}
- 
+	
+
 
 }
 
@@ -137,8 +152,9 @@ void CMyGame::OnUpdate()
 	//------
 
 
+	
 
-	if (IsMenuMode() || IsGameOver())
+	if (IsMenuMode() || IsGameOver() || IsPaused() || currentMenuState == MAIN_MENU)
 	{
 		return;
 	}
@@ -417,7 +433,7 @@ void CMyGame::MainMenyController(SDLKey sym)
 		}
 		else if (sym == SDLK_c)
 		{
-			PauseGame();
+			//PauseGame();
 			SetGameMode(MODE_MENU);
 			currentMenuState = CHAR_STATS;
 		}
@@ -433,8 +449,12 @@ void CMyGame::MainMenyController(SDLKey sym)
 	}
 	else if (IsMenuMode() && sym == SDLK_ESCAPE  && gameStarted && (currentMenuState == MAIN_MENU || currentMenuState == CHAR_STATS || currentMenuState == SHOP) )
 	{
+
 		ResumeGame();
 		SetGameMode(MODE_RUNNING);
+		for (auto enemy : AllEnemies) {
+			enemy->enemyModel.ResetTime();
+		}
 		currentMenuState = IN_GAME;
 		shop->isPlayerShoping = false;
 	}

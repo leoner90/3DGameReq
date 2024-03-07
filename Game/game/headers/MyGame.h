@@ -75,4 +75,6 @@ private:
 
 	// the skydome is a CModel too
 	CModel skydome;
+
+	int totalEnemiesToSpawn;
 };

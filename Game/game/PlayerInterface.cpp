@@ -60,9 +60,6 @@ void PlayerInterface::init(int gameWidth, int gameHeigth)
 	portalIcon.SetSize(25, 25);
 
 
-
-
-
 	skillBarY = 100;
 	//skillBar
 	skillBar.LoadImage("skillBar.png");
@@ -78,11 +75,6 @@ void PlayerInterface::init(int gameWidth, int gameHeigth)
 	callbackSkillIcon.SetPosition(localW - 105,  skillBarY - 5);
 
  
-
-
-
- 
-	
 }
 
 void PlayerInterface::OnUpdate(Uint32 t, int portalHealth, Player& player, UIDialogBox& dialogBox)
