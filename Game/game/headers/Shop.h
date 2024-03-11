@@ -1,6 +1,7 @@
 #pragma once
 
 class Player;
+class UIDialogBox;
 
 class Shop
 {
@@ -9,7 +10,7 @@ public:
 	//~Shop();
 
 	void init(float w, float h);
-	void OnUpdate(long t, Player& player);
+	void OnUpdate(long t, Player& player, UIDialogBox& dialogBox);
 	void OnDraw(CGraphics* g);
 	void OnRender3D(CGraphics* g);
 	void openShop(CGraphics* g);
@@ -23,6 +24,8 @@ private:
 	CSprite shopImg, upgradeWeaponBtn, upgradeArmorBtn, exitShopBtn;
 
 	float Width, Height;
+
+
 
 };
 

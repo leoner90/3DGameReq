@@ -11,10 +11,14 @@ public:
 
 	void LoadData();
 	CFloor floor;
-	CModel portal;
+	CModel portal, portalPartOne, portalPartTwo, portalPartThree, portalPartFour;
 	CModel wallSegment;
 	CModel tree;
 	CModelList modelList, mapCollision;
+	CFont font;
+
+	Uint32 TotaltimeForPortalToCharg;
+	Uint32 currentportalChargingTime;
 
 	
 };

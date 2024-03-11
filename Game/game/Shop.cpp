@@ -1,6 +1,7 @@
 #include "Game.h"
 #include "headers/Shop.h"
 #include "headers/Player.h"
+#include "headers/UIDialogBox.h"
 
 void Shop::init(float w, float h)
 {
@@ -11,7 +12,7 @@ void Shop::init(float w, float h)
 	//shop
 	testRobot.LoadModel("Player/testRobot.md3");
 	testRobot.SetScale(45.5f);
-	testRobot.SetPosition(2000, 0, 400);
+	testRobot.SetPosition(1500, 0, 400);
 	testRobot.AddAnimation("idle", 1, 110);
 	testRobot.PlayAnimation("idle", 30, true);
 
@@ -34,27 +35,31 @@ void Shop::init(float w, float h)
 	exitShopBtn.SetPosition((float)w / 2 + (w / 100 * 42), (float)h - (h / 100 * 24));
 
 }
-
-void Shop::OnUpdate(long t, Player& player)
+ 
+void Shop::OnUpdate(long t, Player& player, UIDialogBox& dialogBox)
 {
 	localPlayer = &player;
 	testRobot.Update(t);
+
+	CVector displ = localPlayer->playerModel.GetPositionV() - testRobot.GetPositionV();
+	float distance = hypot(displ.GetX(), displ.GetZ());
+
+	if (distance < 300)
+	{
+		shopIsInRange = true;
+		
+		if(!dialogBox.isBoxShowen) dialogBox.showBox(0 ,0, 0);
+	}
+	else
+	{
+		 shopIsInRange = false;
+		 if (dialogBox.isBoxShowen && dialogBox.currentPriority == 0) dialogBox.hideBox();
+	}
 }
 
 void Shop::OnDraw(CGraphics* g)
 {
-	CVector displ = localPlayer->playerModel.GetPositionV() - testRobot.GetPositionV();
-	float distance = hypot(displ.GetX(), displ.GetZ());
 
-	if (distance < 1000)
-	{
-		shopIsInRange = true;
-		font.DrawTextW(200, 200, "PRESS E FOR SHOPING", CColor::White(), 30);
-	}
-	else 
-	{
-		shopIsInRange = false;
-	}
 }
 
 void Shop::OnRender3D(CGraphics* g)

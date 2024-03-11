@@ -7,11 +7,12 @@ class Player;
 class PlayerInterface;
 class Enemy;
 class Shop;
+class UIDialogBox;
 
 class CMyGame : public CGame
 {
 private:
-	CSprite startScreen, mainMenushowControlers, CharStatsMenu;
+	CSprite startScreen, mainMenushowControlers, CharStatsMenu, deathScreen;
 	CFont font;
  
 	// Main Objects
@@ -19,6 +20,12 @@ private:
 	Player* player;
 	PlayerInterface* playerInterface;
 	Shop* shop;
+	Uint32 deathScreenTimer;
+	float  enemyOneSpawnDelay, enemyTwoSpawnDelay;
+	Uint32 totalEnemiesOnHold;
+	UIDialogBox* dialogBox;
+
+
 	//Enemy* enemy;
 
 	// Game Funtions
@@ -28,7 +35,7 @@ private:
 	virtual void OnRender3D(CGraphics* g);
 	void CameraControl(CGraphics* g);
 	void MainMenyController(SDLKey sym);
-
+	void enemySpawn();
 	//INIT SPRITES AND MODELS
 	void InitSpritesAndModels();
 
@@ -42,7 +49,7 @@ private:
 	void  OnLButtonDown(Uint16 x, Uint16 y);
 
 	//Game Modes
-	enum GameModes{MAIN_MENU, CHAR_STATS, SHOP, IN_GAME, CUTSCENE, SHOW_CONTROLLERS};
+	enum GameModes{MAIN_MENU, CHAR_STATS, SHOP, IN_GAME, CUTSCENE, SHOW_CONTROLLERS, DEATHSCREEN};
 	enum mainMenuOptions{NEW_GAME, CONTROLS, EXIT};
 
 	GameModes currentMenuState;
@@ -68,4 +75,6 @@ private:
 
 	// the skydome is a CModel too
 	CModel skydome;
+
+	int totalEnemiesToSpawn;
 };

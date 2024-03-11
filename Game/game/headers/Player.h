@@ -40,7 +40,6 @@ public:
 	//player movement
 	CVector lastFramePos;
 
-	
 
 	//3D Models
 	CModelMd3 playerModel;
@@ -50,7 +49,7 @@ public:
 
 	//Player Current Skill
 	enum PlayerSkills{RECALL,DASH};
-	PlayerSkills curentSkillSelected;
+	int curentSkillSelected;
 
 	//Sounds
 	CSoundPlayer footsteps;
@@ -65,5 +64,11 @@ public:
 	//resouces
 	int  armorComponents, weaponComponents;
 
+	//death handler
 	bool isPlayerDead;
+	bool playerPreDeahAnimation;
+	Uint32 playerdeathAnimationTimer;
+
+	void OnMouseMove(CVector currentMousePos);
+ 
 };

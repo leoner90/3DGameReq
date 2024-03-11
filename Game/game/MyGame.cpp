@@ -4,6 +4,8 @@
 #include "headers/Enemy.h"
 #include "headers/Map.h"
 #include "headers/Shop.h"
+#include "headers/UIDialogBox.h"
+ 
 
 //globall for now
 std::vector<Enemy*> AllEnemies; // to make proper enemies init
@@ -15,11 +17,13 @@ void CMyGame::OnInitialize()
 	currentMenuState = MAIN_MENU;
 	mainMenuOptionSelection = NEW_GAME;
 	gameStarted = false;
+	deathScreenTimer = 0;
+	enemyOneSpawnDelay = enemyTwoSpawnDelay = 0;
 
 	// Main Objects
 	delete map;
 	map = new Map();
-
+	
 	//shop
 	delete shop;
 	shop = new Shop();
@@ -29,6 +33,9 @@ void CMyGame::OnInitialize()
 
 	delete playerInterface;
 	playerInterface = new PlayerInterface();
+
+	delete dialogBox;
+	dialogBox = new UIDialogBox();
  
 
 	//music
@@ -51,65 +58,137 @@ void CMyGame::OnInitialize()
 	Light.Enable();
 	font.LoadDefault();
 
-	//ENEMIES CREATION
+	dialogBox->init((float)Width, (float)Height);
 	
+	//clear all enemies
 	for (auto enemy : AllEnemies) {
 		delete enemy;
 	}
-
 	AllEnemies.clear();
 
-	for (int i = 0; i < 67; i++) 
-	{
-		AllEnemies.push_back(new Enemy());
-	}
 
-	int i = 400;
- 
-	int z = 300;
-	bool enemyType = 0;
-	for (auto enemy : AllEnemies) {
-	 
-		enemy->init(i,100, z, enemyType);
-		i +=   rand() % 350;
-		z +=   rand() % 350;
-		enemyType = !enemyType;
-	}
+
 
 	//make sure that sld handels all the input not a window
 	//SDL_WM_GrabInput(SDL_GRAB_ON);
 
 	EnableFog();
 
+	totalEnemiesOnHold = 0;
+	totalEnemiesToSpawn = 5;
+
 }
+
+void CMyGame::enemySpawn()
+{
+	enum allEnemies{EN2, OGRO};
+
+	float randomSpawnPoint = rand() % 100 + 50;
+
+	//Enemy ONe
+	if (enemyOneSpawnDelay < GetTime())
+	{
+		//use Clone instead
+		AllEnemies.push_back(new Enemy());
+		AllEnemies.back()->init(3800 + randomSpawnPoint, 100, 400 + randomSpawnPoint, OGRO, *map);
+		enemyOneSpawnDelay = GetTime() + 3000 + rand() % 3000;
+		totalEnemiesOnHold++;
+	}
+
+
+	//EnemyTwo
+	if (enemyTwoSpawnDelay < GetTime())
+	{
+		AllEnemies.push_back(new Enemy());
+		AllEnemies.back()->init(2500 + randomSpawnPoint, 100, 700 + randomSpawnPoint, EN2, *map);
+		enemyTwoSpawnDelay = GetTime() + 2000 + rand() % 2000;
+		totalEnemiesOnHold++;
+	}
+
+
+	//start a wave
+	int howManyEnemiesWasOnhold = 0;
+	if (totalEnemiesOnHold == totalEnemiesToSpawn + rand() % 5)
+	{
+		
+		for (auto enemy : AllEnemies)
+		{
+			if (enemy->OnSpawnHold) howManyEnemiesWasOnhold++;
+			enemy->OnSpawnHold = false;
+			totalEnemiesOnHold = 0;
+			totalEnemiesToSpawn += 3;
+		}
+
+		dialogBox->showBox(0, 1, 1, 3000); // speaker id , text id , priority
+
+		if (howManyEnemiesWasOnhold == totalEnemiesToSpawn)
+		{
+			
+		}
+	}
+	
+
+
+}
+
+
 
 //*************** UPDATE ***************
 void CMyGame::OnUpdate() 
 {
-	if (IsMenuMode() || IsGameOver() || currentMenuState == MAIN_MENU || currentMenuState == CHAR_STATS) return;
-
-
-	map->OnUpdate(GetTime());
-	player->OnUpdate(GetTime(), IsKeyDown(SDLK_d) , IsKeyDown(SDLK_a) , IsKeyDown(SDLK_w), IsKeyDown(SDLK_s), *map , AllEnemies);
-	playerInterface->OnUpdate(map->portal.GetHealth(), *player);
-	
-	//Shop
-	shop->OnUpdate(GetTime(), *player);
-
-	//Enemies
-	int i = 0;
-	for (auto enemy : AllEnemies) {
-		
-		enemy->OnUpdate(GetTime(), *player , *map);
-
-		//* if regular enemie dead -> delete;
-		if (enemy->isDead) {
-			AllEnemies.erase(AllEnemies.begin() + i);
-			delete enemy;
-		}
-		
-		i++;
+	//Death Handler Move To function
+	if ((player->isPlayerDead) && gameStarted)
+	{
+		currentMenuState = DEATHSCREEN;
+		gameStarted = false;
+		SetGameMode(MODE_MENU);
+		deathScreenTimer = GetTime() + 3000;
+	} 
+	else if(player->isPlayerDead && deathScreenTimer <= GetTime())
+	{
+		currentMenuState = MAIN_MENU;
 	}
+
+	//------
+
+
+	
+
+	if (IsMenuMode() || IsGameOver() || IsPaused() || currentMenuState == MAIN_MENU)
+	{
+		return;
+	}
+		
+	else 
+	{
+		enemySpawn();
+		map->OnUpdate(GetTime());
+		player->OnUpdate(GetTime(), IsKeyDown(SDLK_d), IsKeyDown(SDLK_a), IsKeyDown(SDLK_w), IsKeyDown(SDLK_s), *map, AllEnemies);
+		playerInterface->OnUpdate(GetTime(), map->portal.GetHealth(), *player, *dialogBox);
+
+		//Shop
+		shop->OnUpdate(GetTime(), *player, *dialogBox);
+
+		//dialog box
+		dialogBox->OnUpdate(GetTime());
+
+		//Enemies delete
+		int i = 0;
+		for (auto enemy : AllEnemies) {
+
+			enemy->OnUpdate(GetTime(), *player, *map, AllEnemies, i);
+
+			//* if regular enemie dead -> delete;
+			if (enemy->isDead) {
+				AllEnemies.erase(AllEnemies.begin() + i);
+				delete enemy;
+			}
+
+			i++;
+		}
+	}
+
+
 
 }
 
@@ -121,24 +200,30 @@ void CMyGame::OnDraw(CGraphics* g)
 		if (currentMenuState == MAIN_MENU) MaiMenuDraw(g);
 		else if (currentMenuState == CHAR_STATS) CharStatsDraw(g);
 		else if (currentMenuState == SHOP) shop->openShop(g);
+		else if (currentMenuState == DEATHSCREEN) 	deathScreen.Draw(g);
 		return;
 	}
 
 	playerInterface->OnDraw(g);
 	player->OnDraw(g);
-
+	map->OnDraw(g);
 	//Shop
 	shop->OnDraw(g);
+	
 
 	for (auto enemy : AllEnemies) 
 	{
 		enemy->OnDraw(g, WorldToScreenCoordinate(enemy->enemyModel.GetPositionV()));
 	}
+
+	dialogBox->OnDraw(g);
 }
 
 //*************** 3D RENDER ***************
 void CMyGame::OnRender3D(CGraphics* g)
 { 
+	if (IsMenuMode() || IsGameOver())
+		return;
 	CameraControl(g);
 	map->OnRender3D(g);
 	player->OnRender3D(g, world);
@@ -194,26 +279,30 @@ void CMyGame::CameraControl(CGraphics* g)
 //INIT SPRITES
 void CMyGame::InitSpritesAndModels()
 {
-	// start screen
+	// Main Menu screen
 	startScreen.LoadImage("startScreen.jpg");
 	startScreen.SetSize((float)Width, (float)Height);
 	startScreen.SetPosition((float)Width / 2, (float)Height / 2);
 
-	
+	//Main Menu Controllers
+	mainMenushowControlers.LoadImage("mainMenushowControlers.jpg");
+	mainMenushowControlers.SetSize((float)Width, (float)Height);
+	mainMenushowControlers.SetPosition((float)Width / 2, (float)Height / 2);
 
 	// char screen
 	CharStatsMenu.LoadImage("charStats.jpg");
 	CharStatsMenu.SetSize((float)Width, (float)Height);
 	CharStatsMenu.SetPosition((float)Width / 2, (float)Height / 2);
 
-	mainMenushowControlers.LoadImage("mainMenushowControlers.jpg");
-	mainMenushowControlers.SetSize((float)Width, (float)Height);
-	mainMenushowControlers.SetPosition((float)Width / 2, (float)Height / 2);
-
 	// Load skydome geometry and texture
 	skydome.LoadModel("Skydome/Skydome.obj", "Skydome/Skydome.bmp");
 	skydome.SetScale(200);  // scale to desired size
 	skydome.SetY(-300.0f); // move down to avoid seeing the base
+
+	//deathScreen
+	deathScreen.LoadImage("deathScreen.jpg");
+	deathScreen.SetSize((float)Width, (float)Height);
+	deathScreen.SetPosition((float)Width / 2, (float)Height / 2);
 }
 
 
@@ -239,9 +328,7 @@ void CMyGame::EnableFog()
 }
 
 
-
-
-
+//*************** Main Menu Handler
 void CMyGame::MaiMenuDraw(CGraphics* g)
 {
 	if (currentMenuState == SHOW_CONTROLLERS) 
@@ -253,7 +340,6 @@ void CMyGame::MaiMenuDraw(CGraphics* g)
 		font.DrawText((float)Width / 2 - 220.f, (float)Height / 2 + 100, "Q - USE SKILL", CColor::White(), 32);
 		font.DrawText((float)Width / 2 - 220.f, (float)Height / 2 + 50, "MOUSE WHEEL - CHANGE SKILL", CColor::White(), 32);
 		font.DrawText((float)Width / 2 - 220.f, (float)Height / 2 , "E - INTERACT", CColor::White(), 32);
-
 		font.DrawText((float)Width / 2 - 70.f, 100, "BACK", CColor::White(), 42);
 	}
 	else 
@@ -264,6 +350,7 @@ void CMyGame::MaiMenuDraw(CGraphics* g)
 		font.DrawText((float)Width / 2 - 80.f, (float)Height / 2 - 80  , "CONTROLS", mainMenuOptionSelection == CONTROLS ? CColor::White() : CColor::LightGray(), 42);
 		font.DrawText((float)Width / 2 - 40.f, (float)Height / 2 - 160, "EXIT", mainMenuOptionSelection == EXIT ? CColor::White() : CColor::LightGray(), 42);
 	}
+	 
 }
 
 void CMyGame::CharStatsDraw(CGraphics* g)
@@ -299,7 +386,6 @@ void CMyGame::CharStatsDraw(CGraphics* g)
 	font.DrawNumber((float)Width / 2 + 100, (float)Height - 450, player->weaponComponents, CColor::White(), 18);
 
 	font.DrawText((float)Width / 2, (float)Height - 500, "SKILLS:", CColor::White(), 18);
- 
 }
 
 
@@ -347,7 +433,7 @@ void CMyGame::MainMenyController(SDLKey sym)
 		}
 		else if (sym == SDLK_c)
 		{
-			PauseGame();
+			//PauseGame();
 			SetGameMode(MODE_MENU);
 			currentMenuState = CHAR_STATS;
 		}
@@ -361,15 +447,17 @@ void CMyGame::MainMenyController(SDLKey sym)
 		}
 		
 	}
-	else if (IsMenuMode() && sym == SDLK_ESCAPE   && gameStarted && (currentMenuState == MAIN_MENU || currentMenuState == CHAR_STATS || currentMenuState == SHOP) )
+	else if (IsMenuMode() && sym == SDLK_ESCAPE  && gameStarted && (currentMenuState == MAIN_MENU || currentMenuState == CHAR_STATS || currentMenuState == SHOP) )
 	{
+
 		ResumeGame();
 		SetGameMode(MODE_RUNNING);
+		for (auto enemy : AllEnemies) {
+			enemy->enemyModel.ResetTime();
+		}
 		currentMenuState = IN_GAME;
 		shop->isPlayerShoping = false;
 	}
-
-
 
 
 
@@ -423,11 +511,12 @@ void CMyGame::MainMenyController(SDLKey sym)
 }
 
 
+
 void CMyGame::OnMouseMove(Uint16 x, Uint16 y, Sint16 relx, Sint16 rely, bool bLeft, bool bRight, bool bMiddle)
 {
 	currentMousePos = ScreenToFloorCoordinate(x, y);
 
-
+	player->OnMouseMove(currentMousePos);
 	if (cameraMovement)
 	{
 		float addX = cameraControlMouseInitPose.GetX() - x;

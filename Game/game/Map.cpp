@@ -3,21 +3,36 @@
 
 void Map::init()
 {
-
-
+	font.LoadDefault();
 
 	// floor texture
 	floor.LoadTexture("Map/floor2.bmp");
 	floor.SetTiling(true);
 
-	// set size of the game world
-	//floor.SetSize(9000, 9000);
-
+	//PORTAL
 	portal.LoadModel("portal/portal.obj");
-	//portal.SetSize(1200, 1200, 1200);
 	portal.SetScale(12.f);
 	portal.SetPosition(400, 0, 300);
 	portal.SetHealth(100);
+
+	portalPartOne.LoadModel("portal/portalPart.obj");
+	portalPartOne.SetScale(8.f);
+	portalPartOne.SetPosition(600, 0, 300);
+
+	portalPartTwo.LoadModel("portal/portalPart.obj");
+	portalPartTwo.SetScale(8.f);
+	portalPartTwo.SetPosition(200, 0, 300);
+	
+	portalPartThree.LoadModel("portal/portalPart.obj");
+	portalPartThree.SetScale(8.f);
+	portalPartThree.SetPosition(400, 0, 500);
+
+	portalPartFour.LoadModel("portal/portalPart.obj");
+	portalPartFour.SetScale(8.f);
+	portalPartFour.SetPosition(400, 0, 100);
+
+	TotaltimeForPortalToCharg = 60000 * 1;
+	currentportalChargingTime = 0;
 
 
 	// wall model
@@ -85,18 +100,29 @@ void Map::LoadData()
 void Map::OnUpdate(int t)
 {
 	modelList.Update(t);
+
+	currentportalChargingTime = t;
  
 }
 
 void Map::OnDraw(CGraphics* g)
 {
 
+	//font.DrawText(200, 200, "PortalChargeTime", CColor::White(), 18);
+	//font.DrawNumber(300,300, currentportalChargingTime, CColor::White(), 18);
+
 }
 
 
 void Map::OnRender3D(CGraphics* g)
 {
-	if(portal.GetHealth() > 0) portal.Draw(g);
+	portal.Draw(g);
+
+	portalPartOne.Draw(g);
+	portalPartTwo.Draw(g);
+	portalPartThree.Draw(g);
+	portalPartFour.Draw(g);
+
 	floor.Draw(g);
 	modelList.Draw(g);
  
