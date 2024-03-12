@@ -5,7 +5,7 @@ class UIDialogBox
 {
 public:
 	//Set current Speacker
-	enum currentSpeaker {  BLINKY, MYNE};
+	enum currentSpeaker {  MYNE, BLINKY};
 	int speaker;
 	bool isBoxShowen;
 	bool autoHideTimer;
@@ -22,7 +22,7 @@ private:
 	float localW, localH;
 
 	int dialogNumber;
-	std::string text[5], name[2];
+	std::string text[15], name[2];
 	
 	CFont font;
 	//all Speakers logo

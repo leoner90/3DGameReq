@@ -10,7 +10,8 @@ void Shop::init(float w, float h)
 	font.LoadDefault();
 	shopIsInRange = false;
 	//shop
-	testRobot.LoadModel("Player/testRobot.md3");
+	testRobot.LoadModel("shop/testRobot.md3");
+	testRobot.LoadTexture("shop/shopTextures.jpg");
 	testRobot.SetScale(45.5f);
 	testRobot.SetPosition(1500, 0, 400);
 	testRobot.AddAnimation("idle", 1, 110);
@@ -48,7 +49,7 @@ void Shop::OnUpdate(long t, Player& player, UIDialogBox& dialogBox)
 	{
 		shopIsInRange = true;
 		
-		if(!dialogBox.isBoxShowen) dialogBox.showBox(0 ,0, 0);
+		if(!dialogBox.isBoxShowen) dialogBox.showBox(1 ,10, 0);
 	}
 	else
 	{

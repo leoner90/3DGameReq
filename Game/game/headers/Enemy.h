@@ -40,8 +40,6 @@ public:
 	CVector randomPortalPartPos;
 
 	bool OnSpawnHold;
-
-	//temp To Delete
-	CModel  spawnPoint, spawnPoint2;
+ 
 
 };

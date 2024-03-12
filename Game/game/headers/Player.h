@@ -26,7 +26,7 @@ public:
 	
 	//Main Functions
 	void init();
-	void OnUpdate( long t, bool Dkey, bool Akey, bool Wkey, bool Skey, Map& map, std::vector<Enemy*> AllEnemies);
+	void OnUpdate( long t, bool Dkey, bool Akey, bool Wkey, bool Skey, Map& map, std::vector<Enemy*> AllEnemies, CVector mousePos);
 	void OnDraw(CGraphics* g);
 	void PlayerControl(bool Dkey, bool Akey, bool Wkey, bool Skey);
 	void OnRender3D(CGraphics* g, CCamera& world);
@@ -69,6 +69,10 @@ public:
 	bool playerPreDeahAnimation;
 	Uint32 playerdeathAnimationTimer;
 
+	float prevFrameTime , deltatime;
 	void OnMouseMove(CVector currentMousePos);
  
+	CVector localMouse;
+
+
 };

@@ -8,22 +8,30 @@ class PlayerInterface;
 class Enemy;
 class Shop;
 class UIDialogBox;
+class Cutscene;
+class LoadingScreen;
 
 class CMyGame : public CGame
 {
+public:
+	CMyGame();
 private:
 	CSprite startScreen, mainMenushowControlers, CharStatsMenu, deathScreen;
 	CFont font;
- 
+	
 	// Main Objects
 	Map* map;
 	Player* player;
 	PlayerInterface* playerInterface;
 	Shop* shop;
+	Cutscene* cutscene;
+	UIDialogBox* dialogBox;
+	LoadingScreen* loadingScreen;
+
 	Uint32 deathScreenTimer;
 	float  enemyOneSpawnDelay, enemyTwoSpawnDelay;
 	Uint32 totalEnemiesOnHold;
-	UIDialogBox* dialogBox;
+	int totalEnemiesToSpawn;
 
 
 	//Enemy* enemy;
@@ -33,8 +41,9 @@ private:
 	virtual void OnUpdate();
 	virtual void OnDraw(CGraphics* g);
 	virtual void OnRender3D(CGraphics* g);
+	virtual void OnStartLevel(int level);
 	void CameraControl(CGraphics* g);
-	void MainMenyController(SDLKey sym);
+	void MainMenuController(SDLKey sym);
 	void enemySpawn();
 	//INIT SPRITES AND MODELS
 	void InitSpritesAndModels();
@@ -49,7 +58,7 @@ private:
 	void  OnLButtonDown(Uint16 x, Uint16 y);
 
 	//Game Modes
-	enum GameModes{MAIN_MENU, CHAR_STATS, SHOP, IN_GAME, CUTSCENE, SHOW_CONTROLLERS, DEATHSCREEN};
+	enum GameModes{MAIN_MENU, CHAR_STATS, SHOP, IN_GAME, CUTSCENE, SHOW_CONTROLLERS, DEATHSCREEN, LOADING_SCREEN};
 	enum mainMenuOptions{NEW_GAME, CONTROLS, EXIT};
 
 	GameModes currentMenuState;
@@ -59,8 +68,10 @@ private:
 	//fog
 	void EnableFog();
 
+	//pause menus
 	void MaiMenuDraw(CGraphics* g);
 	void CharStatsDraw(CGraphics* g);
+
 	//sound
 	CSoundPlayer mainBgMusic;
 
@@ -70,11 +81,10 @@ private:
 	bool cameraMovement;
 
 	CVector currentMousePos;
-
 	CVector cameraControlMouseInitPose;
-
-	// the skydome is a CModel too
+	CSprite mousePointer;
 	CModel skydome;
 
-	int totalEnemiesToSpawn;
+	float YcameraInitState;
+	
 };

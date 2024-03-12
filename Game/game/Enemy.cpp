@@ -12,6 +12,7 @@ void Enemy::init(int posX, int poxY, int posZ, int enemyType, Map& map)
 	if (localEnemyType == 0) 
 	{
 		enemyMaxHp = enemyCurrentHp = 200;
+
 		enemyModel.LoadModel("Cobra/enemyOne.md2");
 		enemyDamage = 20;
 		enemySpeed = 100 + rand() % 300;
@@ -47,8 +48,6 @@ void Enemy::init(int posX, int poxY, int posZ, int enemyType, Map& map)
 	enemyModel.SetDirectionAndRotationToPoint(0, 0);
 	isDead = preDeahAnimation = false;
 	
-	
-
 	enemyHpbar.SetSize(35, 3);
 	enemyHpbar.SetColor(CColor::Blue());
 	enemyHpbar.SetHealth(100);
@@ -57,17 +56,6 @@ void Enemy::init(int posX, int poxY, int posZ, int enemyType, Map& map)
 
 	//wait at spawn point
 	OnSpawnHold = true;
-
-
-	//TO delete
-	spawnPoint.LoadModel("portal/portalPart.obj");
-	spawnPoint.SetScale(8.f);
-	spawnPoint.SetPosition(2500, 0, 700);
-
-	spawnPoint2.LoadModel("portal/portalPart.obj");
-	spawnPoint2.SetScale(8.f);
-	spawnPoint2.SetPosition(3800, 0, 400);
-
 }
 
 //*************** UPDATE ***************
@@ -161,8 +149,6 @@ void Enemy::OnDraw(CGraphics* g, CVector enemyPos)
 	
 	if(distance < 1200 && !preDeahAnimation) enemyHpbar.Draw(g);
 
-	//todelete
-
 }
 
 void Enemy::Attack()
@@ -180,7 +166,6 @@ void Enemy::Attack()
 	else if (localEnemyType == 1 && attackDelay < localTime)
 	{
 		// Attack Portal 
-
 		if (
 				enemyModel.HitTest(&localMap->portalPartOne) || 
 				enemyModel.HitTest(&localMap->portalPartTwo) ||
@@ -199,8 +184,7 @@ void Enemy::OnRender3D(CGraphics* g)
 {
 	if (isDead) return;
 	enemyModel.Draw(g);
-	spawnPoint.Draw(g);
-	spawnPoint2.Draw(g);
+ 
 }
 
 void Enemy::EnemyGetDamage(float damage)

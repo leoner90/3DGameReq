@@ -13,8 +13,8 @@ public:
 	CFloor floor;
 	CModel portal, portalPartOne, portalPartTwo, portalPartThree, portalPartFour;
 	CModel wallSegment;
-	CModel tree;
-	CModelList modelList, mapCollision;
+	CModel tree,collidingTree, rock,grass, flowers, mushroom;
+	CModelList modelList, mapCollision, collidingObjects;
 	CFont font;
 
 	Uint32 TotaltimeForPortalToCharg;

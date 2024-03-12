@@ -26,8 +26,22 @@ void UIDialogBox::init(float w, float h)
 
 	name[MYNE] = "Myne";
 	name[BLINKY] = "Blinky";
-	text[0] = "PRESS E FOR SHOPING";
-	text[1] = "BE AWARE Enemies Are Coming!!!!!!!!!!!!!!!!";
+
+	text[0] = "Looks Like this planet has a lot of resources , we have to check this out";
+	text[1] = "I detect many organic life forms on the surface, but their intelligence leaves much to be desired.";
+	text[2] = "We have to be careful down there";
+	text[3] = "expl";
+	text[4] = "What Was that?????";
+	text[5] = "Sensor detects a malfunction in engine section";
+	text[6] = "Malfunction?? That sounds more like a big explodition";
+	text[7] = "Ship Control is down , we are falling";
+	text[8] = "It was a pleasure to work with you. gg";
+	text[9] = "BE AWARE Enemies Are Coming!!!!!!!!!!!!!!!!";
+	text[10] = "PRESS E FOR SHOPING";
+	text[11] = "PRESS E FOR SHOPING";
+	text[12] = "PRESS E FOR SHOPING";
+	text[13] = "BE AWARE Enemies Are Coming!!!!!!!!!!!!!!!!";
+	text[14] = "PRESS E FOR SHOPING";
 
 	autoHideTimer = 0;
 	hideInSec = 0;
@@ -80,10 +94,10 @@ void UIDialogBox::OnDraw(CGraphics* g)
 		switch (speaker)
 		{
 			case 0: 
-				speakerImg.Draw(g);
+				MyneImg.Draw(g);
 				break;
 			case 1: 
-				MyneImg.Draw(g);
+				speakerImg.Draw(g);
 				break;
 
 		}
