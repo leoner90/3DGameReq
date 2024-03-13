@@ -5,11 +5,11 @@
 class LoadingScreen
 {
 public:
-	LoadingScreen();
+	LoadingScreen(float w, float h);
 	std::string text[15];
 
-	void init(float w, float h);
-	void Update(float t);
+	void init();
+	void Update(Uint32 t);
 	void OnDraw(CGraphics* g);
 
 	CSprite loadingBg;

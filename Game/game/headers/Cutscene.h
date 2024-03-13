@@ -5,7 +5,7 @@ class UIDialogBox;
 class Cutscene
 {
 public:
-	Cutscene();
+	Cutscene(float w, float h);
  
 	enum Cutsenes {START,END};
 	CModel shipModel;

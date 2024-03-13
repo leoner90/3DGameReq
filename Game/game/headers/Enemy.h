@@ -2,23 +2,26 @@
 
 class Player;
 class Map;
+class Portal;
 
 class Enemy
 {
 public:
-	void init(int posX, int poxY, int posZ, int enemyType, Map& map);
-	void OnUpdate(long t, Player& player, Map& map, std::vector<Enemy*>& AllEnemies, int thisEnemyIndex);
+	~Enemy();
+	void init(int posX, int poxY, int posZ, int enemyType, Map& map, Portal& portal);
+	void OnUpdate(Uint32 t, Player& player, Map& map, std::vector<Enemy*>& AllEnemies, int thisEnemyIndex);
 	void OnDraw(CGraphics* g, CVector enemyPos);
 	void Attack();
 	void OnRender3D(CGraphics* g);
 	void EnemyGetDamage(float damage);
 	//void EnemyControl();
  
-	CModelMd2 enemyModel;
+	CModelMd2* enemyModel;
 
 	//local
 	Player* localPlayer;
 	Map* localMap;
+	Portal* localPortal;
 	Uint32 localTime;
 
 

@@ -98,6 +98,7 @@
   <ItemGroup>
     <ClInclude Include="headers\Cutscene.h" />
     <ClInclude Include="headers\loadingScreen.h" />
+    <ClInclude Include="headers\Portal.h" />
     <ClInclude Include="headers\UIDialogBox.h" />
     <ClInclude Include="headers\Enemy.h" />
     <ClInclude Include="headers\MyGame.h" />
@@ -110,6 +111,7 @@
   <ItemGroup>
     <ClCompile Include="Enemy.cpp" />
     <ClCompile Include="Cutscene.cpp" />
+    <ClCompile Include="Portal.cpp" />
     <ClCompile Include="loadingScreen.cpp" />
     <ClCompile Include="UIDialogBox.cpp" />
     <ClCompile Include="Map.cpp" />

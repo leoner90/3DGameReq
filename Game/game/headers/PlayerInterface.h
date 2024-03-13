@@ -6,19 +6,21 @@ class UIDialogBox;
 class PlayerInterface
 {
 public:
+	PlayerInterface(int gameWidth, int gameHeigth);
+
 	//Main Functions
 	void init(int gameWidth, int gameHeigth);
-	void OnUpdate(Uint32 t, int portalHealth, Player& player, UIDialogBox& dialogBox);
+	void OnUpdate(Uint32 t, Player& player, UIDialogBox& dialogBox);
 	void OnDraw(CGraphics* g);
 	CFont font;
 	
-	CHealthBar hbar, portalHpBar, energyBar, armorBar;
+	CHealthBar hbar, energyBar, armorBar;
 
 	CSprite healtIcon, armorIcon, energyIcon, skillBar, sprintSkillLogo, callbackSkillIcon;
 private:
 	Player* localPlayer;
 	float localH, localW;
-	CSprite weaponComponent, armorComponent, portalIcon;
+	CSprite weaponComponent, armorComponent;
 
 	float skillBarY;
 };

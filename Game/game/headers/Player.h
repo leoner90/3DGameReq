@@ -4,10 +4,14 @@
 class CCamera;
 class Map;
 class Enemy;
+class Portal;
+
 
 class Player 
 {
 public:
+	Player();
+
 	//Health
 	float playerMaxHp, playerCurrentHp, maxEnergy, CurrentEnergy, playerCurrentArmor,playerMaxArmor;
 
@@ -22,11 +26,11 @@ public:
 
 	//local variables
 	Map* localMap;
-
+	Portal* localPortal;
 	
 	//Main Functions
 	void init();
-	void OnUpdate( long t, bool Dkey, bool Akey, bool Wkey, bool Skey, Map& map, std::vector<Enemy*> AllEnemies, CVector mousePos);
+	void OnUpdate(Uint32 t, bool Dkey, bool Akey, bool Wkey, bool Skey, Map& map, std::vector<Enemy*> AllEnemies, CVector mousePos, Portal& portal);
 	void OnDraw(CGraphics* g);
 	void PlayerControl(bool Dkey, bool Akey, bool Wkey, bool Skey);
 	void OnRender3D(CGraphics* g, CCamera& world);
@@ -73,6 +77,8 @@ public:
 	void OnMouseMove(CVector currentMousePos);
  
 	CVector localMouse;
+
+	bool isPlayerMoving;
 
 
 };

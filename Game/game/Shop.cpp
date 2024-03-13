@@ -3,12 +3,12 @@
 #include "headers/Player.h"
 #include "headers/UIDialogBox.h"
 
-void Shop::init(float w, float h)
+Shop::Shop(float w, float h)
 {
 	Width = w;
 	Height = h;
 	font.LoadDefault();
-	shopIsInRange = false;
+
 	//shop
 	testRobot.LoadModel("shop/testRobot.md3");
 	testRobot.LoadTexture("shop/shopTextures.jpg");
@@ -32,12 +32,17 @@ void Shop::init(float w, float h)
 	upgradeArmorBtn.SetPosition((float)w / 2 + (w / 100 * 20), (float)h - (h / 100 * 60));
 
 	exitShopBtn.LoadImage("shopCancelBtn.png");
-	exitShopBtn.SetSize(50,50);
+	exitShopBtn.SetSize(50, 50);
 	exitShopBtn.SetPosition((float)w / 2 + (w / 100 * 42), (float)h - (h / 100 * 24));
+}
+
+void Shop::init(float w, float h)
+{
+	shopIsInRange = false;
 
 }
  
-void Shop::OnUpdate(long t, Player& player, UIDialogBox& dialogBox)
+void Shop::OnUpdate(Uint32 t, Player& player, UIDialogBox& dialogBox)
 {
 	localPlayer = &player;
 	testRobot.Update(t);
@@ -48,7 +53,6 @@ void Shop::OnUpdate(long t, Player& player, UIDialogBox& dialogBox)
 	if (distance < 300)
 	{
 		shopIsInRange = true;
-		
 		if(!dialogBox.isBoxShowen) dialogBox.showBox(1 ,10, 0);
 	}
 	else

@@ -10,6 +10,7 @@ class Shop;
 class UIDialogBox;
 class Cutscene;
 class LoadingScreen;
+class Portal;
 
 class CMyGame : public CGame
 {
@@ -27,14 +28,17 @@ private:
 	Cutscene* cutscene;
 	UIDialogBox* dialogBox;
 	LoadingScreen* loadingScreen;
+	Portal* portal;
+	std::vector<Enemy*> AllEnemies;
 
+	//death screen
 	Uint32 deathScreenTimer;
-	float  enemyOneSpawnDelay, enemyTwoSpawnDelay;
+
+	//enemies spawn properties
 	Uint32 totalEnemiesOnHold;
+	float  enemyOneSpawnDelay, enemyTwoSpawnDelay;
 	int totalEnemiesToSpawn;
 
-
-	//Enemy* enemy;
 
 	// Game Funtions
 	virtual void OnInitialize();
@@ -87,4 +91,5 @@ private:
 
 	float YcameraInitState;
 	
+
 };

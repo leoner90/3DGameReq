@@ -1,6 +1,10 @@
 #include "Game.h"
 #include "headers/UIDialogBox.h"
-#include "string"
+ 
+
+
+//UIDialogBox::UIDialogBox() {  }
+
 void UIDialogBox::init(float w, float h)
 {
 	localW = w;

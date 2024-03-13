@@ -1,11 +1,12 @@
 #pragma once
-#include <iostream>
- 
+
 class UIDialogBox
 {
 public:
+	//UIDialogBox();
+
 	//Set current Speacker
-	enum currentSpeaker {  MYNE, BLINKY};
+	enum currentSpeaker {MYNE, BLINKY};
 	int speaker;
 	bool isBoxShowen;
 	bool autoHideTimer;

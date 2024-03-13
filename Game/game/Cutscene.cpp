@@ -2,33 +2,34 @@
 #include "headers/Cutscene.h"
 #include "headers/UIDialogBox.h"
 
-Cutscene::Cutscene()
-{
-}
-
-void Cutscene::init(float w, float h)
+Cutscene::Cutscene(float w, float h)
 {
 	shipModel.LoadModel("test/test.obj");
 	shipModel.SetScale(1150.f);
-	shipModel.SetAlpha(1);
-	shipModel.AddAnimation("gg", 0, 255);
-	shipModel.PlayAnimation("gg", 11, true);
-	shipModel.SetPosition(1400, 3500, 1400);
-	shipModel.SetSpeed(-75);
-	dialogSwitcherTimer = 0;
-	dialogNumber = 0;
 
-
+	//Cutscene Edges
 	screenEdges.LoadImage("screenEdges.png");
 	screenEdges.SetSize(w, h);
 	screenEdges.SetPosition(w / 2, h / 2);
 
-
+	//transition
 	darkTransition.LoadImage("darkTransition.png");
 	darkTransition.SetSize(w, h);
 	darkTransition.SetPosition(w / 2, h / 2);
+}
+
+void Cutscene::init(float w, float h)
+{
+	//ship position Resets
+	shipModel.SetPosition(1400, 3500, 1400);
+	shipModel.SetSpeed(-75);
+
+	//resets
+	dialogSwitcherTimer = 0;
+	dialogNumber = 0;
 	blackScreenTimer = 0;
 	shiprotationalAngelY = 0;
+	//isCutscenePlaying =
 }
 
 void Cutscene::Update(Uint32 t, UIDialogBox& dialogBox)

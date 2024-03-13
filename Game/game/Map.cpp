@@ -1,37 +1,9 @@
 #include "Game.h"
 #include "headers/Map.h"
 
-void Map::init()
+Map::Map()
 {
 	font.LoadDefault();
-
-
-
-	//PORTAL
-	portal.LoadModel("portal/portal.obj");
-	portal.SetScale(12.f);
-	portal.SetPosition(400, 0, 300);
-	portal.SetHealth(100);
-
-	portalPartOne.LoadModel("portal/portalPart.obj");
-	portalPartOne.SetScale(8.f);
-	portalPartOne.SetPosition(600, 0, 300);
-
-	portalPartTwo.LoadModel("portal/portalPart.obj");
-	portalPartTwo.SetScale(8.f);
-	portalPartTwo.SetPosition(200, 0, 300);
-	
-	portalPartThree.LoadModel("portal/portalPart.obj");
-	portalPartThree.SetScale(8.f);
-	portalPartThree.SetPosition(400, 0, 500);
-
-	portalPartFour.LoadModel("portal/portalPart.obj");
-	portalPartFour.SetScale(8.f);
-	portalPartFour.SetPosition(400, 0, 100);
-
-	TotaltimeForPortalToCharg = 60000 * 1; // 1 min
-	currentportalChargingTime = 0;
-
 
 	// wall model
 	wallSegment.LoadModel("wall/wall.obj");
@@ -42,7 +14,7 @@ void Map::init()
 	tree.LoadModel("tree/tree1.obj");
 	//random scale in load function
 	tree.SetToFloor(0);
-	
+
 	collidingTree.LoadModel("tree/tree1.obj");
 	//random scale in load function
 	collidingTree.SetToFloor(0);
@@ -62,7 +34,6 @@ void Map::init()
 	grass.SetY(50);
 	grass.SetScale(1.0f);
 
-
 	// flowers model
 	flowers.LoadModel("flowers/flowers2.obj");
 	flowers.SetY(0);
@@ -72,7 +43,10 @@ void Map::init()
 	mushroom.LoadModel("mushroom/MushroomShiitake.obj");
 	mushroom.SetScale(10.0f);
 	mushroom.SetToFloor(0);
+}
 
+void Map::init()
+{
 	LoadData();
 }
 
@@ -166,36 +140,18 @@ void Map::LoadData()
 	myfile.close();
 }
 
-void Map::OnUpdate(int t)
+void Map::OnUpdate(Uint32 t)
 {
 	modelList.Update(t);
-
-
-
-	currentportalChargingTime = t;
- 
 }
 
-void Map::OnDraw(CGraphics* g)
-{
-
-	//font.DrawText(200, 200, "PortalChargeTime", CColor::White(), 18);
-	//font.DrawNumber(300,300, currentportalChargingTime, CColor::White(), 18);
-
-}
+void Map::OnDraw(CGraphics* g) {}
 
 
 void Map::OnRender3D(CGraphics* g)
 {
-	portal.Draw(g);
 	//mapCollision.Draw(g);
 	collidingObjects.Draw(g);
-	portalPartOne.Draw(g);
-	portalPartTwo.Draw(g);
-	portalPartThree.Draw(g);
-	portalPartFour.Draw(g);
-
 	floor.Draw(g);
 	modelList.Draw(g);
- 
 }

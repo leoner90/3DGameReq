@@ -7,9 +7,8 @@
 #include "headers/UIDialogBox.h"
 #include "headers/Cutscene.h"
 #include "headers/loadingScreen.h"
+#include "headers/Portal.h"
 
-//globall for now
-std::vector<Enemy*> AllEnemies; // to make proper enemies init
 
 CMyGame::CMyGame()
 {
@@ -20,86 +19,62 @@ CMyGame::CMyGame()
 void CMyGame::OnInitialize()
 {
 	HideMouse();
-	mousePointer.LoadImage("mousePointer.png");
-	mousePointer.SetSize(20,20);
-	 
 	cameraMovement = false;
 	currentMenuState = MAIN_MENU;
 	mainMenuOptionSelection = NEW_GAME;
-	gameStarted = false;
-	deathScreenTimer = 0;
-	enemyOneSpawnDelay = enemyTwoSpawnDelay = 90000; // init SPAWN DELAY 1.5min
 
-	// Main Objects
-	delete map;
+	//Main Objects
 	map = new Map();
-	
-	//shop
-	delete shop;
-	shop = new Shop();
-
-	delete cutscene;
-	cutscene = new Cutscene();
-
-
-	delete player;
+	portal = new Portal((float)Width, (float)Height);
+	shop = new Shop((float)Width, (float)Height);
+	cutscene = new Cutscene((float)Width, (float)Height);
 	player = new Player();
-
-	delete playerInterface;
-	playerInterface = new PlayerInterface();
-
-	delete dialogBox;
+	playerInterface = new PlayerInterface((float)Width, (float)Height);
 	dialogBox = new UIDialogBox();
- 
-
-	delete loadingScreen;
-	loadingScreen = new LoadingScreen();
-
-	//cutscene
-	cutscene->init((float)Width, (float)Height);
+	loadingScreen = new LoadingScreen((float)Width, (float)Height);
 
 	//loading screen 
-	loadingScreen->init((float)Width, (float)Height);
+	loadingScreen->init();
 
 	//music
-	mainBgMusic.Stop();
 	mainBgMusic.Play("mainBg.wav");
 	mainBgMusic.SetVolume(35);
 
 	//StartScreen Models
 	InitSpritesAndModels();
-
-	//Main inits
-	player->init();
-	map->init();
-	
-	//Shop
-	shop->init((float)Width, (float)Height);
-
-	playerInterface->init(Width,Height);
-
 	Light.Enable();
 	font.LoadDefault();
-
-	dialogBox->init((float)Width, (float)Height);
-	
-	//clear all enemies
-	for (auto enemy : AllEnemies) {
-		delete enemy;
-	}
-	AllEnemies.clear();
-
-
-	//make sure that sld handels all the input not a window
-	//SDL_WM_GrabInput(SDL_GRAB_ON);
-
 	EnableFog();
-
-	totalEnemiesOnHold = 0;
-	totalEnemiesToSpawn = 5;
+	//make sure that sld handels all the input not a window //SDL_WM_GrabInput(SDL_GRAB_ON);
 }
+
+//ON NEW GAME START
 void CMyGame::OnStartLevel(int level)
 {
+	cutscene->init((float)Width, (float)Height); 	//cutscene
+	map->init();
+	player->init();//Main inits
+	shop->init((float)Width, (float)Height); //Shop init
+	playerInterface->init(Width, Height); //player Interface init
+	dialogBox->init((float)Width, (float)Height); // dialog Box init
+	portal->init();
+
+	//****ENEMIES
+	for (auto enemy : AllEnemies) 
+	{
+		delete enemy;
+	}
+
+	AllEnemies.clear();
+	totalEnemiesOnHold = 0;
+	totalEnemiesToSpawn = 5;
+	enemyOneSpawnDelay = enemyTwoSpawnDelay = 0; // init SPAWN DELAY 1.5min
+	//****
+
+
+	//resets
+	gameStarted = false;
+	deathScreenTimer = 0;
 
 }
 
@@ -109,47 +84,50 @@ void CMyGame::OnStartLevel(int level)
 //*************** UPDATE ***************
 void CMyGame::OnUpdate() 
 {
+	Uint32 t = (float)GetTime();
+	//CUTSCENE
 	if (!cutscene->isCutscenePlaying && currentMenuState == CUTSCENE)
 	{
 		currentMenuState = IN_GAME;
 		camera.rotation.y = YcameraInitState;
 	}
+
+	if (currentMenuState == CUTSCENE && gameStarted)
+	{
+		map->OnUpdate(t);
+		dialogBox->OnUpdate(t);
+		cutscene->Update(t, *dialogBox);
+		return;
+	}
+
 	//Death Handler Move To function
 	if ((player->isPlayerDead) && gameStarted)
 	{
 		currentMenuState = DEATHSCREEN;
 		gameStarted = false;
 		SetGameMode(MODE_MENU);
-		deathScreenTimer = GetTime() + 3000;
+		deathScreenTimer = t + 3000;
 	} 
-	else if(player->isPlayerDead && deathScreenTimer <= GetTime())
+	else if(player->isPlayerDead && deathScreenTimer <= t)
 	{
 		currentMenuState = MAIN_MENU;
 	}
 
-	//------
-
-	if (currentMenuState == CUTSCENE && gameStarted)
-	{
-
-		map->OnUpdate(GetTime());
-		dialogBox->OnUpdate(GetTime());
-		cutscene->Update(GetTime(), *dialogBox);
-		return;
-	}
-	
-	loadingScreen->Update(GetTime());
+	loadingScreen->Update(t);
 	//RETURN IF MENU MODE
 	if (IsMenuMode() || IsGameOver() || IsPaused() || currentMenuState == MAIN_MENU) return;
-		 
+	
+
+	//Enemy spawn
 	enemySpawn();
 
 	//Objects updates
-	map->OnUpdate(GetTime());
-	player->OnUpdate(GetTime(), IsKeyDown(SDLK_d), IsKeyDown(SDLK_a), IsKeyDown(SDLK_w), IsKeyDown(SDLK_s), *map, AllEnemies, currentMousePos);
-	playerInterface->OnUpdate(GetTime(), map->portal.GetHealth(), *player, *dialogBox);
-	shop->OnUpdate(GetTime(), *player, *dialogBox);
-	dialogBox->OnUpdate(GetTime());
+	map->OnUpdate(t);
+	player->OnUpdate(t, IsKeyDown(SDLK_d), IsKeyDown(SDLK_a), IsKeyDown(SDLK_w), IsKeyDown(SDLK_s), *map, AllEnemies, currentMousePos, *portal);
+	playerInterface->OnUpdate(t, *player, *dialogBox);
+	shop->OnUpdate(t, *player, *dialogBox);
+	dialogBox->OnUpdate(t);
+	portal->OnUpdate(t);
  
 
 	//Enemies delete
@@ -172,7 +150,7 @@ void CMyGame::OnUpdate()
 //*************** 2D RENDER ***************
 void CMyGame::OnDraw(CGraphics* g)
 {
-	if (IsMenuMode())
+	if (IsMenuMode() || IsPaused())
 	{
 		if (currentMenuState == MAIN_MENU) MaiMenuDraw(g);
 		else if (currentMenuState == CHAR_STATS) CharStatsDraw(g);
@@ -197,11 +175,12 @@ void CMyGame::OnDraw(CGraphics* g)
 	playerInterface->OnDraw(g);
 	player->OnDraw(g);
 	shop->OnDraw(g);
+	portal->OnDraw(g);
 	
 
 	for (auto enemy : AllEnemies) 
 	{
-		enemy->OnDraw(g, WorldToScreenCoordinate(enemy->enemyModel.GetPositionV()));
+		enemy->OnDraw(g, WorldToScreenCoordinate(enemy->enemyModel->GetPositionV()));
 	}
 
 	dialogBox->OnDraw(g);
@@ -210,7 +189,7 @@ void CMyGame::OnDraw(CGraphics* g)
 //*************** 3D RENDER ***************
 void CMyGame::OnRender3D(CGraphics* g)
 { 
-	if (IsMenuMode() || IsGameOver()) return;
+	if (IsMenuMode() || IsGameOver() || IsPaused()) return;
 
 	if (currentMenuState == CUTSCENE && gameStarted)
 	{
@@ -224,7 +203,7 @@ void CMyGame::OnRender3D(CGraphics* g)
 	CameraControl(g);
 	map->OnRender3D(g);
 	player->OnRender3D(g, world);
- 
+	portal->OnRender3D(g);
 
 	for (auto enemy : AllEnemies) {
 		enemy->OnRender3D(g);
@@ -250,8 +229,6 @@ void CMyGame::CameraControl(CGraphics* g)
 	
 	glRotatef(camera.rotation.y , 0, 1, 0);	// rotate game world around x-axis
 
-
-
 	// -----  Player camera control ----------
 
 	// rotate game world with player and face forward
@@ -263,8 +240,6 @@ void CMyGame::CameraControl(CGraphics* g)
 	else
 		glTranslatef(0, -player->playerModel.GetY() - camera.position.y, 0);
 
-	
-
 	// draw the skydome before game world is translated
    // it makes the skydome stationary
 	skydome.Draw(g);
@@ -275,9 +250,6 @@ void CMyGame::CameraControl(CGraphics* g)
 	else
 		glTranslatef(-player->playerModel.GetX(), 0, -player->playerModel.GetZ());
 	
-
-	
-
 	UpdateView();
 	Light.Apply();
 
@@ -316,6 +288,10 @@ void CMyGame::InitSpritesAndModels()
 	deathScreen.LoadImage("deathScreen.jpg");
 	deathScreen.SetSize((float)Width, (float)Height);
 	deathScreen.SetPosition((float)Width / 2, (float)Height / 2);
+
+	//mouse Pointer 
+	mousePointer.LoadImage("mousePointer.png");
+	mousePointer.SetSize(20, 20);
 }
 
 
@@ -413,7 +389,7 @@ void CMyGame::enemySpawn()
 	{
 		//use Clone instead
 		AllEnemies.push_back(new Enemy());
-		AllEnemies.back()->init(3800 + randomSpawnPoint, 100, 400 + randomSpawnPoint, OGRO, *map);
+		AllEnemies.back()->init(3800 + randomSpawnPoint, 100, 400 + randomSpawnPoint, OGRO, *map, *portal);
 		enemyOneSpawnDelay = GetTime() + 3000 + rand() % 3000;
 		totalEnemiesOnHold++;
 	}
@@ -423,7 +399,7 @@ void CMyGame::enemySpawn()
 	if (enemyTwoSpawnDelay < GetTime())
 	{
 		AllEnemies.push_back(new Enemy());
-		AllEnemies.back()->init(2500 + randomSpawnPoint, 100, 700 + randomSpawnPoint, EN2, *map);
+		AllEnemies.back()->init(2500 + randomSpawnPoint, 100, 700 + randomSpawnPoint, EN2, *map, *portal);
 		enemyTwoSpawnDelay = GetTime() + 2000 + rand() % 2000;
 		totalEnemiesOnHold++;
 	}
@@ -468,20 +444,18 @@ void CMyGame::OnKeyDown(SDLKey sym, SDLMod mod, Uint16 unicode)
 
 void CMyGame::OnLButtonDown(Uint16 x, Uint16 y)
 {
-	if (IsMenuMode())  shop->OnLButtonDown(x, y);
-	if (!IsMenuMode()) player->OnLButtonDown(ScreenToFloorCoordinate(x, y), currentMousePos, GetTime());
+	
+	//player Left Btn
+	if (!IsMenuMode() && !IsPaused() && !cutscene->isCutscenePlaying) 
+		player->OnLButtonDown(ScreenToFloorCoordinate(x, y), currentMousePos, GetTime());
 
-	 if (IsMenuMode() && !shop->isPlayerShoping && gameStarted &&   currentMenuState == SHOP)
+	//If shopping (but armor/damage)
+	if (IsPaused() && currentMenuState == SHOP)  shop->OnLButtonDown(x, y);
+
+	//SHOP X BTN EXIT
+	if (IsPaused() && !shop->isPlayerShoping && gameStarted &&  currentMenuState == SHOP)
 	{
-		 //Bug fixing
-		for (auto enemy : AllEnemies) {
-			enemy->enemyModel.ResetTime();
-		}
-
-		playerInterface->energyBar.ResetTime();
-		playerInterface->armorBar.ResetTime();
-
-
+		//	enemy->enemyModel.ResetTime();
 		ResumeGame();
 		SetGameMode(MODE_RUNNING);
 		currentMenuState = IN_GAME;
@@ -493,67 +467,46 @@ void CMyGame::OnLButtonDown(Uint16 x, Uint16 y)
 
 void CMyGame::MainMenuController(SDLKey sym)
 {
- 
 	// Call / Cancel Menu on ESC btn. pressed
-	if (!IsMenuMode()  && gameStarted && currentMenuState == IN_GAME)
+	if (!IsPaused() && gameStarted && currentMenuState == IN_GAME)
 	{
 		if (sym == SDLK_ESCAPE)
 		{
-			PauseGame();
-			SetGameMode(MODE_MENU);
+			SetGameMode(MODE_PAUSED);
 			currentMenuState = MAIN_MENU;
 		}
 		else if (sym == SDLK_c)
 		{
-			//PauseGame();
-			SetGameMode(MODE_MENU);
+			SetGameMode(MODE_PAUSED);
 			currentMenuState = CHAR_STATS;
 		}
 
 		else if (sym == SDLK_e && shop->shopIsInRange)
 		{
-			PauseGame();
-			SetGameMode(MODE_MENU);
+			SetGameMode(MODE_PAUSED);
 			currentMenuState = SHOP;
 			ShowMouse();
-
 		}
-		
 	}
 	else if (sym == SDLK_ESCAPE && gameStarted && currentMenuState == CUTSCENE)
 	{
-		cutscene->dialogNumber = 10;
+		cutscene->dialogNumber = 10; //skip dialog
 	}
-	else if (IsMenuMode() && sym == SDLK_ESCAPE  && gameStarted && (currentMenuState == MAIN_MENU || currentMenuState == CHAR_STATS || currentMenuState == SHOP) )
+	else if ((IsMenuMode() || IsPaused()) && sym == SDLK_ESCAPE  && gameStarted && (currentMenuState == MAIN_MENU || currentMenuState == CHAR_STATS || currentMenuState == SHOP) )
 	{
-
-		for (auto enemy : AllEnemies) {
-			enemy->enemyModel.ResetTime();
-		}
-		playerInterface->energyBar.ResetTime();
+		//	enemy->enemyModel.ResetTime();
 		HideMouse();
-		ResumeGame();
 		SetGameMode(MODE_RUNNING);
-
-		
 		currentMenuState = IN_GAME;
 		shop->isPlayerShoping = false;
 	}
 
 
 
-	////******* IF NOT IN MENU MODE -> RETURN
-	if (!IsMenuMode()) return;
-
-	//******* IF SHOW_CONTROLLERS
-	if (currentMenuState == SHOW_CONTROLLERS )
+	//LOADING COMPLETED
+	if ((IsMenuMode() || IsPaused()) && sym == 13 && currentMenuState == LOADING_SCREEN && loadingScreen->loadingCompleted)
 	{
-		if (sym == 13 || sym == SDLK_ESCAPE) currentMenuState = MAIN_MENU;
-	}
-
-	if (IsMenuMode() && sym == 13 && currentMenuState == LOADING_SCREEN && loadingScreen->loadingCompleted)
-	{
-		//OnInitialize();
+		OnStartLevel(1);
 		StartGame();
 		gameStarted = true;
 		cutscene->isCutscenePlaying = true;
@@ -561,9 +514,13 @@ void CMyGame::MainMenuController(SDLKey sym)
 	}
 
 
-	if (sym == 13 && mainMenuOptionSelection == LOADING_SCREEN)
+	////******* IF NOT IN MENU MODE -> RETURN~~~~~~~~~~~~~~~~~~~~~~
+	if ((!IsMenuMode() && !gameStarted) || (gameStarted && !IsPaused())) return;
+
+	//******* IF SHOW_CONTROLLERS
+	if (currentMenuState == SHOW_CONTROLLERS )
 	{
-		OnInitialize();
+		if (sym == 13 || sym == SDLK_ESCAPE) currentMenuState = MAIN_MENU;
 	}
 
 	
@@ -574,8 +531,8 @@ void CMyGame::MainMenuController(SDLKey sym)
 		//Start
 		if (sym == 13 && mainMenuOptionSelection == NEW_GAME)
 		{
-			mainBgMusic.Play("mainBg.wav");
-			mainBgMusic.SetVolume(20);
+			SetGameMode(MODE_MENU); // to update loading sprite
+			loadingScreen->init();
 			currentMenuState = LOADING_SCREEN;
 			loadingScreen->loadingStarted = true;
 			
@@ -627,12 +584,12 @@ void CMyGame::OnMouseMove(Uint16 x, Uint16 y, Sint16 relx, Sint16 rely, bool bLe
 
 void CMyGame::OnWheelUp(Uint16 x, Uint16 y)
 {
-	if(!IsMenuMode()) player->playerOnWheelUp();
+	if(!IsMenuMode() && !IsPaused()) player->playerOnWheelUp();
 }
 
 void CMyGame::OnWheelDown(Uint16 x, Uint16 y)
 {
-	if (!IsMenuMode()) player->playerOnWheelDown();
+	if (!IsMenuMode() && !IsPaused()) player->playerOnWheelDown();
 }
 
 void CMyGame::OnMButtonDown(Uint16 x, Uint16 y)

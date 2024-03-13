@@ -2,18 +2,20 @@
 #include "headers/Player.h"
 #include "headers/map.h"
 #include "headers/Enemy.h"
+#include "headers/Portal.h"
 
 //*************** INIT ***************
 
-void Player::init()
+Player::Player()
 {
+	isPlayerDead = playerPreDeahAnimation = false;
 	font.LoadDefault();
 
 	//model
 	playerModel.LoadModel("Player/myra.md3");
 	playerModel.LoadTexture("Player/myraTextures.png");
-	playerModel.SetScale(20.5f);
-	playerModel.SetPosition(-800, 0, -300);
+	playerModel.SetScale(25.5f);
+
 
 	//animation
 	playerModel.AddAnimation("runF", 255, 276);
@@ -25,18 +27,26 @@ void Player::init()
 	playerModel.AddAnimation("death", 425, 556);
 	playerModel.AddAnimation("dash", 560, 576);
 
-	//moving 
-	footsteps.Play("playerFootsteps.wav");
-	footsteps.SetVolume(3);
-
 	//Shooting
 	bullet.LoadModel("grass/bulletOB.obj");
 	bullet.SetScale(25.f);
- 
+
 	shootingDelay = 500;
 	playerDamage = 100;
+
+	//sounds
+	footsteps.Play("playerFootsteps.wav", -1);
+	footsteps.SetVolume(3);
+	footsteps.Pause();
+
+}
+
+void Player::init()
+{
+	//reset
+	playerModel.SetPosition(-800, 0, -300);
+	isPlayerMoving = false;
 	playerShots.delete_all();
- 
 	playerCurrentState = UNOCCUPIED;
 	curentSkillSelected = 0;
 
@@ -53,19 +63,16 @@ void Player::init()
 }
 
 //*************** UPDATE ***************
-void Player::OnUpdate( long t, bool Dkey, bool Akey, bool Wkey, bool Skey, Map& map , std::vector<Enemy*> AllEnemies, CVector mousePos)
+void Player::OnUpdate(Uint32 t, bool Dkey, bool Akey, bool Wkey, bool Skey, Map& map, std::vector<Enemy*> AllEnemies, CVector mousePos, Portal& portal)
 {
-
 	localMouse = mousePos; 
+	localPortal = &portal;
+	localMap = &map;
 
 	//getDeltaTime
 	deltatime = (t - prevFrameTime) / 1000  ; //in sec
- 
 	prevFrameTime = t;
  
-	
-
-
 	//if dead -> return (do nothing)
 	if (isPlayerDead) return;
 
@@ -79,26 +86,28 @@ void Player::OnUpdate( long t, bool Dkey, bool Akey, bool Wkey, bool Skey, Map& 
 		{
 			playerModel.PlayAnimation("death", 43, true);
 			playerdeathAnimationTimer = 3000 + t;
-			
 		}
 		else if (playerdeathAnimationTimer < t) isPlayerDead = true;
 		playerModel.Update(t);
 		return;
-
 	}
 
+	if (playerModel.GetSpeed() > 0 && !isPlayerMoving)
+	{
+		//moving 
+		isPlayerMoving = true;
+		footsteps.Resume();
+	}
 
 	//Energy Recovery
-	 
 	float energyRegenPerSec = 50;
 	float armorRegenPerSec = 10;
 	if (CurrentEnergy < maxEnergy) CurrentEnergy += deltatime * energyRegenPerSec;
 	if (playerCurrentArmor < playerMaxArmor) playerCurrentArmor += deltatime * armorRegenPerSec;
 
-	localMap = &map;
+	
 	//Attack Delay 
 	if (attackDelay - t <= 0) playerCurrentState = UNOCCUPIED;
-
 	//playerShots.delete_if(deleted);
 	
 	playerCollision(AllEnemies);
@@ -106,32 +115,25 @@ void Player::OnUpdate( long t, bool Dkey, bool Akey, bool Wkey, bool Skey, Map& 
 
 	for (CModel* pShot : playerShots)
 	{ 
-		for (auto enemy : AllEnemies) {
-			if (pShot->HitTest(&enemy->enemyModel))
+		for (auto enemy : AllEnemies) 
+		{
+			if (pShot->HitTest(enemy->enemyModel))
 			{
 				if (enemy->preDeahAnimation) continue;
 				pShot->Delete();
-			 
 				enemy->EnemyGetDamage(playerDamage);
-			 
 			}
 		}
 	}
 
 	playerShots.delete_if(true);
-
 	playerShots.Update(t);
 	lastFramePos = playerModel.GetPositionV();
 	playerModel.Update(t);
-
 }
 
 //*************** 2D RENDER ***************
-void Player::OnDraw(CGraphics* g)
-{
- 
-	
-}
+void Player::OnDraw(CGraphics* g){}
 
 //*************** 3D RENDER ***************
 void Player::OnRender3D(CGraphics* g, CCamera& world)
@@ -216,7 +218,9 @@ void Player::PlayerControl(bool Dkey, bool Akey, bool Wkey , bool Skey )
 	else 
 	{
 		footsteps.Pause();
+	
 		playerModel.SetSpeed(0);
+		isPlayerMoving = false;
 		//playerModel.GetMaxFrames()
 		//if( playerModel.GetFrame())
 		playerModel.PlayAnimation("idle", 20, true);
@@ -230,66 +234,58 @@ void Player::PlayerControl(bool Dkey, bool Akey, bool Wkey , bool Skey )
 	if ((playerModel.GetZ() > localMouse.GetZ() || playerModel.GetX() > localMouse.GetX()) && Wkey )
 	{
 		playerModel.SetSpeed(450);
-		playerModel.PlayAnimation("runF", 20, true);
+		playerModel.PlayAnimation("runF", 22, true);
 	}
 	
 	else if ((playerModel.GetZ() < localMouse.GetZ() || playerModel.GetX() < localMouse.GetX()) && Wkey)
 	{
-		playerModel.SetSpeed(300);
-		playerModel.PlayAnimation("runB", 15, true);
+		playerModel.SetSpeed(400);
+		playerModel.PlayAnimation("runB", 22, true);
 	}
 	
  
 	if (playerModel.GetZ() > localMouse.GetZ() && Skey)
 	{
-		playerModel.SetSpeed(300);
-		playerModel.PlayAnimation("runB", 15, true);
+		playerModel.SetSpeed(400);
+		playerModel.PlayAnimation("runB", 22, true);
 	}
 		
 	else if (playerModel.GetZ() < localMouse.GetZ() && Skey)
 	{
 		playerModel.SetSpeed(450);
-		playerModel.PlayAnimation("runF", 20, true);
+		playerModel.PlayAnimation("runF", 22, true);
 	}
 		
 
-	int dotproduct = playerModel.GetXVelocity() * localMouse.GetX() + playerModel.GetZVelocity() * localMouse.GetZ();
-	int crossProduct = playerModel.GetXVelocity() * localMouse.GetZ() + playerModel.GetZVelocity() * localMouse.GetX();
-	cout << dotproduct << endl;
+	//int dotproduct = playerModel.GetXVelocity() * localMouse.GetX() + playerModel.GetZVelocity() * localMouse.GetZ();
+	//int crossProduct = playerModel.GetXVelocity() * localMouse.GetZ() + playerModel.GetZVelocity() * localMouse.GetX();
+ 
 
 	if (playerModel.GetX() > localMouse.GetX() && Dkey)
 	{
 		playerModel.SetSpeed(400);
-		playerModel.PlayAnimation("runR", 11, true);
+		playerModel.PlayAnimation("runR", 22, true);
 	}
 
 	else if (playerModel.GetX() < localMouse.GetX() && Dkey)
 	{
 		playerModel.SetSpeed(400);
-		playerModel.PlayAnimation("runL", 11, true);
+		playerModel.PlayAnimation("runL", 22, true);
 	}
 
 
 	if (playerModel.GetX() > localMouse.GetX() && Akey)
 	{
 		playerModel.SetSpeed(400);
-		playerModel.PlayAnimation("runL", 11, true);
+		playerModel.PlayAnimation("runL", 22, true);
 	
 	}
 
 	else if (playerModel.GetX() < localMouse.GetX() && Akey)
 	{
 		playerModel.SetSpeed(400);
-		playerModel.PlayAnimation("runR", 11, true);
+		playerModel.PlayAnimation("runR", 22, true);
 	}
-
-
-
-
-
- 
-
-
 
 }
 
@@ -304,7 +300,7 @@ void Player::OnKeyDown(SDLKey sym, CVector currentMousePos)
 		switch (curentSkillSelected)
 		{
 		case RECALL:
-			playerModel.SetPositionV(localMap->portal.GetPositionV());
+			playerModel.SetPositionV(localPortal->portal.GetPositionV());
 			break;
 		case DASH:
 			if (CurrentEnergy >= 25)
@@ -364,7 +360,7 @@ void Player::playerCollision(std::vector<Enemy*> AllEnemies)
 
 	for (auto enemy : AllEnemies) {
 		if (enemy->deathAnimationTimer) continue;
-		if (playerModel.HitTest(&enemy->enemyModel)) 
+		if (playerModel.HitTest(enemy->enemyModel)) 
 		{
 			playerModel.SetPositionV(lastFramePos);
 		}
