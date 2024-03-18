@@ -6,7 +6,7 @@ class UIDialogBox;
 class PlayerInterface
 {
 public:
-	PlayerInterface(int gameWidth, int gameHeigth);
+	PlayerInterface(float gameWidth, float gameHeigth);
 
 	//Main Functions
 	void init(int gameWidth, int gameHeigth);

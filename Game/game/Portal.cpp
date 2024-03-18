@@ -1,15 +1,16 @@
 #include "Game.h"
 #include "headers/Portal.h"
+#include "headers/UIDialogBox.h"
 
-Portal::Portal(int gameWidth, int gameHeigth)
+Portal::Portal(float gameWidth, float gameHeigth)
 {
 	localH = gameHeigth;
 	localW = gameWidth;
 
 	//PORTAL
 	portal.LoadModel("portal/portal.obj");
-	portal.SetScale(12.f);
-	portal.SetPosition(400, 0, 300);
+	portal.SetScale(230.f);
+	portal.SetPosition(400, 80, 300);
 	portal.SetHealth(0);
 
 	portalPartOne.LoadModel("portal/portalPartTestobj.obj");
@@ -33,44 +34,100 @@ Portal::Portal(int gameWidth, int gameHeigth)
 	portalHpBar.SetPosition(115, gameHeigth - 105);
 	portalHpBar.SetColors(CColor::DarkBlue(), CColor::Black(), CColor::Black());
 
+	//portal
+	resetHpBar.SetSize(140, 5);
+	resetHpBar.SetPosition(115, gameHeigth - 113);
+	resetHpBar.SetColors(CColor::DarkRed(), CColor::Black(), CColor::Black());
+
+
 	portalIcon.LoadImage("portalIcon.png");
 	portalIcon.SetSize(20, 20);
 	portalIcon.SetPosition(25, gameHeigth - 105);
+
+	isPortalCharged = false;
 }
 
 void Portal::init()
 {
-	TotaltimeForPortalToCharg = 60000 * 1;
-	currentportalChargingTime = 0;
+	TotaltimeForPortalToCharg = 60000 * 2; // min
+	portalChargePerSec = 1000; //
 
 	rechargeTime = 30000; //30 sec recharge if got too many damage
 	portalRechargeTimer = 0;
 	
-	portalUnderAttack = false;
+	
 	portalHpBar.SetHealth(0); //UI
- 
+	resetHpBar.SetHealth(0);
+	prevFrameTime = 0;
+	deltatime = 0;
+	currentportalChargingTime = 0;
+	isPortalCharged = false;
+
+	portalEnergyField = portalMaxEnergyField = 500;
+	portalUnderAttack = false;
+	portalResetTimer = 0;
+	isPortalReseting = false;
+	damageDelay = 0;
+	font.LoadDefault();
 }
 
-void Portal::OnUpdate(Uint32 t)
+void Portal::OnUpdate(Uint32 t, UIDialogBox& dialogBox)
 {
+	localTime = t;
+	localDialogBox = &dialogBox;
+
+	//getDeltaTime
+	if(prevFrameTime != 0)  deltatime = (t - prevFrameTime) / 1000; //in sec
+	prevFrameTime = t;
+
+	//if not reseting and last attack was 3 sec ago
+	if (damageDelay < localTime && !isPortalReseting)
+	{
+		portalUnderAttack = false;
+		
+	}
+
+	if (portalResetTimer <= localTime && portalResetTimer !=0)
+	{
+		isPortalReseting = false;
+		localDialogBox->showBox(1, 21, 21, 1, 2000);
+		portalResetTimer = 0;
+	}
+
+	float energyFieldResetPerSec = 20;
+	if (portalEnergyField < portalMaxEnergyField) portalEnergyField += deltatime * energyFieldResetPerSec;
+
 	CColor currentPortalColor = CColor::Blue();
 	if (portalUnderAttack) currentPortalColor = CColor::DarkRed();
 	portalHpBar.SetColor(currentPortalColor);
 
-	if (!portalUnderAttack) currentportalChargingTime = t;
+	//prevFrameTime != 0???
+	if (!portalUnderAttack) currentportalChargingTime += (float)deltatime * portalChargePerSec;
+	float portalChargeInPercent = currentportalChargingTime / TotaltimeForPortalToCharg * 100.f;
 
-	float portalChargeInPercent = currentportalChargingTime / 60000.f * 100.f;
+	//float to integer - so not really accurate
+	portalHpBar.SetHealth((int)portalChargeInPercent);
 
+	resetHpBar.SetHealth(100 - (portalEnergyField / portalMaxEnergyField * 100));
 
-	cout << portalChargeInPercent << endl;
-	if ((int)portalChargeInPercent > portalHpBar.GetHealth())
-		portalHpBar.SetHealth((int)portalChargeInPercent);
+	portalHpBar.Update(t);
+	resetHpBar.Update(t);
+	if ((int)portalChargeInPercent >= 100) isPortalCharged = true;
+
 }
 
 void Portal::OnDraw(CGraphics* g)
 {
 	portalHpBar.Draw(g);
+	resetHpBar.Draw(g);
 	portalIcon.Draw(g);
+	if (isPortalReseting)
+	{
+	
+		//font.DrawText(190 , localH - 113, "OVERLOADED: ", CColor::DarkRed(), 17);
+		font.DrawNumber(190, localH - 113, portalResetTimer - localTime, CColor::Red(), 18);
+	}
+	
 }
 
 void Portal::OnRender3D(CGraphics* g)
@@ -80,4 +137,24 @@ void Portal::OnRender3D(CGraphics* g)
 	portalPartTwo.Draw(g);
 	portalPartThree.Draw(g);
 	portalPartFour.Draw(g);
+}
+
+void Portal::portalGettingDamaged(float damageAmount)
+{
+	if (isPortalReseting) return;
+	portalUnderAttack = true;
+	portalEnergyField -= damageAmount;
+	damageDelay = 3000 + localTime;
+	if (underAttackMsgDelay <= localTime)
+	{
+		underAttackMsgDelay = 10000 + localTime;
+		localDialogBox->showBox(1, 10, 10, 1, 3000);
+	}
+
+	if (portalEnergyField <= 0)
+	{
+		isPortalReseting = true;
+		localDialogBox->showBox(1, 11, 11, 1, 2000);
+		portalResetTimer = 30000 + localTime; //30 sec rest time
+	}
 }

@@ -1,5 +1,6 @@
 #include "Game.h"
 #include "headers/Map.h"
+#include "headers/Player.h"
 
 Map::Map()
 {
@@ -43,6 +44,27 @@ Map::Map()
 	mushroom.LoadModel("mushroom/MushroomShiitake.obj");
 	mushroom.SetScale(10.0f);
 	mushroom.SetToFloor(0);
+
+	//ship
+	shipModel.LoadModel("test/test.obj");
+	shipModel.SetScale(1150.f);
+	shipModel.SetPosition(5100, -5, 4550);
+	shipModel.SetSpeed(0);
+	shipModel.Rotate(25, 25, 25);
+
+	
+
+	// coin model
+	rainDrop.LoadModel("rainDrop/rainDrop.obj");
+	rainDrop.SetY(50);
+	rainDrop.SetScale(0.15f);
+
+	for (int i = 0; i < 500; i++)
+	{
+		CModel* pShot = rainDrop.Clone();
+		pShot->SetPositionV(CVector(rand() % 3000, 2000, rand() % 3000));
+		rain.push_back(pShot);
+	}
 }
 
 void Map::init()
@@ -59,7 +81,7 @@ void Map::LoadData()
 	//floor.SetPosition(floor.GetWidth() / 2, floor.GetDepth() / 2);
 
 	fstream myfile;
-	myfile.open("level3.txt", ios_base::in);
+	myfile.open("level.txt", ios_base::in);
 	int type, x, y, z, rot;
 	bool neof; // not end of file
 	do
@@ -140,12 +162,17 @@ void Map::LoadData()
 	myfile.close();
 }
 
-void Map::OnUpdate(Uint32 t)
+void Map::OnUpdate(Uint32 t, Player& player)
 {
+	localTime = t;
+	localPlayer = &player;
+	weather();
 	modelList.Update(t);
+
+
 }
 
-void Map::OnDraw(CGraphics* g) {}
+void Map::OnDraw(CGraphics* g) {   }
 
 
 void Map::OnRender3D(CGraphics* g)
@@ -154,4 +181,28 @@ void Map::OnRender3D(CGraphics* g)
 	collidingObjects.Draw(g);
 	floor.Draw(g);
 	modelList.Draw(g);
+	shipModel.Draw(g);
+	rain.Draw(g);
+}
+
+void Map::weather()
+{
+	for (auto drop : rain)
+	{
+		float y = drop->GetPositionV().GetY();
+		float x = localPlayer->playerModel.GetX() + (rand() % 1500) - (rand() % 1500);
+		float z = localPlayer->playerModel.GetZ() + (rand() % 1000) - (rand() % 1000);
+
+		if (y < 50)
+		{
+			CVector pos = (CVector(x, 2000, z));
+			drop->SetPositionV(pos);
+		}
+		else
+		{
+			y -= rand() % 150 + 25; //speed
+			drop->SetPosition(drop->GetX(), y, drop->GetZ());
+		}
+	}
+	rain.Update(localTime);
 }

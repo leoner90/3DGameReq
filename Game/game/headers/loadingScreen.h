@@ -1,6 +1,6 @@
 #pragma once
  
-
+class TextConverter;
 
 class LoadingScreen
 {
@@ -21,6 +21,7 @@ public:
 	int randomTextSelectionNum;
 
 	float loadingTimer;
+	TextConverter* textConverter;
 private:
 
 };

@@ -5,7 +5,8 @@ class CCamera;
 class Map;
 class Enemy;
 class Portal;
-
+class UIDialogBox;
+class Shop;
 
 class Player 
 {
@@ -30,8 +31,8 @@ public:
 	
 	//Main Functions
 	void init();
-	void OnUpdate(Uint32 t, bool Dkey, bool Akey, bool Wkey, bool Skey, Map& map, std::vector<Enemy*> AllEnemies, CVector mousePos, Portal& portal);
-	void OnDraw(CGraphics* g);
+	void OnUpdate(Uint32 t, bool Dkey, bool Akey, bool Wkey, bool Skey, Map& map, std::vector<Enemy*> AllEnemies, CVector& mousePos, Portal& portal);
+	void OnDraw(CGraphics* g, UIDialogBox& dialogBox, Shop& shop);
 	void PlayerControl(bool Dkey, bool Akey, bool Wkey, bool Skey);
 	void OnRender3D(CGraphics* g, CCamera& world);
 	void OnLButtonDown(CVector pos, CVector currentMousePos, long t);
@@ -48,8 +49,7 @@ public:
 	//3D Models
 	CModelMd3 playerModel;
 
-	
-	CVector SaveMousePos;
+ 
 
 	//Player Current Skill
 	enum PlayerSkills{RECALL,DASH};
@@ -58,9 +58,9 @@ public:
 	//Sounds
 	CSoundPlayer footsteps;
 	CSoundPlayer shotSound;
-
+	bool isPlayerMoving;
 	
-	enum playerStates { UNOCCUPIED, INATTACK };
+	enum playerStates { UNOCCUPIED, INATTACK, INDASH };
 	playerStates playerCurrentState;
 
 	CFont font;
@@ -76,9 +76,10 @@ public:
 	float prevFrameTime , deltatime;
 	void OnMouseMove(CVector currentMousePos);
  
-	CVector localMouse;
+	CVector* localMouse;
 
-	bool isPlayerMoving;
+	bool onStartGameEvent, firstBlinkyMeet;
+
 
 
 };

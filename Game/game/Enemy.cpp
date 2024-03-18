@@ -9,31 +9,32 @@
 
 Enemy::~Enemy()
 {
-	//delete localPortal;
+ 
 	delete enemyModel;
 }
 
 void Enemy::init(int posX, int poxY, int posZ, int enemyType, Map& map, Portal& portal)
 {
 	localPortal = &portal;
-	enemyModel = new CModelMd2();
+	enemyModel = new CModelMd3();
 
 	localEnemyType = enemyType;
 	if (localEnemyType == 0) 
 	{
 		enemyMaxHp = enemyCurrentHp = 200;
 
-		enemyModel->LoadModel("Cobra/enemyOne.md2");
-		enemyDamage = 20;
+		enemyModel->LoadModel("enemies/65.md3");
+		enemyModel->SetScale(15.5f);
+		enemyDamage = 50;
 		enemySpeed = 300 + rand() % 250;
 	}
 	else if (localEnemyType == 1)
 	{
-		enemyDamage = 20;
+		enemyDamage = 50;
 		enemyMaxHp = enemyCurrentHp = 400;
-		enemyModel->LoadModel("Ogro/ogro.md2");
+		enemyModel->LoadModel("enemies/65.md3");
 		enemySpeed = 200 + rand() % 200;
-
+		enemyModel->SetScale(15.5f);
 		//choose Random Portal Part To Attack
 		CVector portalPartsPostions[4]
 		{
@@ -45,14 +46,14 @@ void Enemy::init(int posX, int poxY, int posZ, int enemyType, Map& map, Portal& 
 		randomPortalPartPos = portalPartsPostions[rand() % 4];
 	}
 	
-	enemyModel->AddAnimation("run", 1, 35);
-	enemyModel->AddAnimation("attack", 23, 86);
+	enemyModel->AddAnimation("run", 10, 40);
+	enemyModel->AddAnimation("attack", 0, 10);
 
 	// enemy model
-	enemyModel->SetScale(3.5f);
+
 	//enemyModel.SetToFloor(0);
 	
-	enemyModel->SetScale(3.5f);
+	
 	enemyModel->SetPosition(posX, poxY, posZ);
 	
 	enemyModel->SetDirectionAndRotationToPoint(0, 0);
@@ -66,11 +67,13 @@ void Enemy::init(int posX, int poxY, int posZ, int enemyType, Map& map, Portal& 
 
 	//wait at spawn point
 	OnSpawnHold = true;
+	
 }
 
 //*************** UPDATE ***************
-void Enemy::OnUpdate(Uint32 t, Player &player, Map& map, std::vector<Enemy*>& AllEnemies, int thisEnemyIndex)
+void Enemy::OnUpdate(Uint32 t, Player &player, Map& map, std::vector<Enemy*>& AllEnemies, int thisEnemyIndex, Portal& portal)
 {
+	localPortal = &portal;
 	//if dead -> return (do nothing)
 	if (isDead) return;
 
@@ -110,7 +113,7 @@ void Enemy::OnUpdate(Uint32 t, Player &player, Map& map, std::vector<Enemy*>& Al
 		{
 			enemyModel->SetDirectionAndRotationToPoint(localPlayer->playerModel.GetPositionV().GetX(), localPlayer->playerModel.GetPositionV().GetZ());
 			enemyModel->SetSpeed(enemySpeed);
-			enemyModel->PlayAnimation("run", 12, true);
+			enemyModel->PlayAnimation("run", 22, true);
 		}
 		else 
 		{
@@ -120,16 +123,28 @@ void Enemy::OnUpdate(Uint32 t, Player &player, Map& map, std::vector<Enemy*>& Al
 		}
 	}
 
+	//Enemy 2
 	else if (localEnemyType == 1 && !OnSpawnHold)
 	{
 		CVector displ = CVector{ randomPortalPartPos.GetX() , 0, randomPortalPartPos.GetZ() } - enemyModel->GetPositionV();
 		float distance = hypot(displ.GetX(), displ.GetZ());
 
-		if (distance > 60)
+
+		CVector displPlayer = localPlayer->playerModel.GetPositionV() - enemyModel->GetPositionV();
+		float distanceToPlayer = hypot(displPlayer.GetX(), displPlayer.GetZ());
+
+		if (localPortal->isPortalReseting && distanceToPlayer > 60)
+		{
+			enemyModel->SetDirectionAndRotationToPoint(localPlayer->playerModel.GetPositionV().GetX(), localPlayer->playerModel.GetPositionV().GetZ());
+			enemyModel->SetSpeed(enemySpeed);
+			enemyModel->PlayAnimation("run", 22, true);
+		}
+
+		else if (distance > 60 && !localPortal->isPortalReseting)
 		{
 			enemyModel->SetSpeed(enemySpeed);
 			enemyModel->SetDirectionAndRotationToPoint(randomPortalPartPos.GetX(), randomPortalPartPos.GetZ());
-			enemyModel->PlayAnimation("run", 12, true);
+			enemyModel->PlayAnimation("run", 22, true);
 		}
 		else
 		{
@@ -155,6 +170,7 @@ void Enemy::OnDraw(CGraphics* g, CVector enemyPos)
 	float distance = hypot(displ.GetX(), displ.GetZ());
 	
 	if(distance < 1200 && !preDeahAnimation) enemyHpbar.Draw(g);
+	 
 }
 
 void Enemy::Attack()
@@ -170,17 +186,25 @@ void Enemy::Attack()
 	}
 	else if (localEnemyType == 1 && attackDelay < localTime)
 	{
+		// Attack player 
+		if (localPortal->isPortalReseting && enemyModel->HitTest(&localPlayer->playerModel))
+		{
+			localPlayer->playerGettingDamage(enemyDamage);
+			attackDelay = 2000 + localTime;
+		}
 		// Attack Portal 
-		if (
+		else if	
+				 (
 				enemyModel->HitTest(&localPortal->portalPartOne) ||
 				enemyModel->HitTest(&localPortal->portalPartTwo) ||
 				enemyModel->HitTest(&localPortal->portalPartThree) ||
 				enemyModel->HitTest(&localPortal->portalPartFour)
-			)
-		{
-			localPortal->portal.SetHealth(localPortal->portal.GetHealth() - 5);
-			attackDelay = 2000 + localTime;
-		}
+				)
+			{
+				localPortal->portalGettingDamaged(enemyDamage);
+				attackDelay = 2000 + localTime;
+			}
+			
 	}
 }
 

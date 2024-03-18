@@ -3,6 +3,10 @@
 #include "headers/map.h"
 #include "headers/Enemy.h"
 #include "headers/Portal.h"
+#include "headers/UIDialogBox.h"
+#include "headers/Shop.h"
+#include "headers/Player.h"
+
 
 //*************** INIT ***************
 
@@ -28,9 +32,8 @@ Player::Player()
 	playerModel.AddAnimation("dash", 560, 576);
 
 	//Shooting
-	bullet.LoadModel("grass/bulletOB.obj");
+	bullet.LoadModel("bullet/bullet.obj");
 	bullet.SetScale(25.f);
-
 	shootingDelay = 500;
 	playerDamage = 100;
 
@@ -38,13 +41,12 @@ Player::Player()
 	footsteps.Play("playerFootsteps.wav", -1);
 	footsteps.SetVolume(3);
 	footsteps.Pause();
-
 }
 
 void Player::init()
 {
 	//reset
-	playerModel.SetPosition(-800, 0, -300);
+	playerModel.SetPosition(5461, 0, 4275);
 	isPlayerMoving = false;
 	playerShots.delete_all();
 	playerCurrentState = UNOCCUPIED;
@@ -60,12 +62,13 @@ void Player::init()
 
 	isPlayerDead = playerPreDeahAnimation =  false;
 	playerdeathAnimationTimer = 0;
+	onStartGameEvent = firstBlinkyMeet = false;
 }
 
 //*************** UPDATE ***************
-void Player::OnUpdate(Uint32 t, bool Dkey, bool Akey, bool Wkey, bool Skey, Map& map, std::vector<Enemy*> AllEnemies, CVector mousePos, Portal& portal)
+void Player::OnUpdate(Uint32 t, bool Dkey, bool Akey, bool Wkey, bool Skey, Map& map, std::vector<Enemy*> AllEnemies, CVector& mousePos, Portal& portal)
 {
-	localMouse = mousePos; 
+	localMouse = &mousePos; 
 	localPortal = &portal;
 	localMap = &map;
 
@@ -103,11 +106,13 @@ void Player::OnUpdate(Uint32 t, bool Dkey, bool Akey, bool Wkey, bool Skey, Map&
 	float energyRegenPerSec = 50;
 	float armorRegenPerSec = 10;
 	if (CurrentEnergy < maxEnergy) CurrentEnergy += deltatime * energyRegenPerSec;
+
+	 
 	if (playerCurrentArmor < playerMaxArmor) playerCurrentArmor += deltatime * armorRegenPerSec;
 
 	
 	//Attack Delay 
-	if (attackDelay - t <= 0) playerCurrentState = UNOCCUPIED;
+	if (attackDelay - t <= 0 && playerCurrentState == INATTACK) playerCurrentState = UNOCCUPIED;
 	//playerShots.delete_if(deleted);
 	
 	playerCollision(AllEnemies);
@@ -117,7 +122,7 @@ void Player::OnUpdate(Uint32 t, bool Dkey, bool Akey, bool Wkey, bool Skey, Map&
 	{ 
 		for (auto enemy : AllEnemies) 
 		{
-			if (pShot->HitTest(enemy->enemyModel))
+			if (pShot->HitTest(enemy->enemyModel->GetPositionV(), 150)) //add distance
 			{
 				if (enemy->preDeahAnimation) continue;
 				pShot->Delete();
@@ -133,160 +138,136 @@ void Player::OnUpdate(Uint32 t, bool Dkey, bool Akey, bool Wkey, bool Skey, Map&
 }
 
 //*************** 2D RENDER ***************
-void Player::OnDraw(CGraphics* g){}
+void Player::OnDraw(CGraphics* g, UIDialogBox& dialogBox, Shop& shop)
+{
+	if (!onStartGameEvent) 
+	{
+		onStartGameEvent = true;
+		dialogBox.showBox(0, 15, 17, 1, 4000);
+	}
+
+	if (!firstBlinkyMeet)
+	{
+		CVector displ =  playerModel.GetPositionV() - shop.testRobot.GetPositionV();
+		float distance = hypot(displ.GetX(), displ.GetZ());
+
+		if (distance < 1200)
+		{
+			firstBlinkyMeet = true;
+			dialogBox.showBox(1, 18, 20, 1, 4000);
+		}
+		
+	}
+}
 
 //*************** 3D RENDER ***************
 void Player::OnRender3D(CGraphics* g, CCamera& world)
 {
 	playerShots.Draw(g);
-	playerModel.Draw(g);;	
+	playerModel.Draw(g);
+	
 }
 
 //*************** PLAYER CONTROLER ***************
 void Player::PlayerControl(bool Dkey, bool Akey, bool Wkey , bool Skey )
 {
+	if (playerModel.AnimationFinished() && playerCurrentState == INDASH) playerCurrentState = UNOCCUPIED;
+	if (playerCurrentState == INDASH) return;
 
 	//moving back/forward
- 
 	if (Wkey)
 	{
 		if (Dkey)
 		{
 			playerModel.SetDirection(1, -1);
 			playerModel.SetSpeed(400);
-			//playerModel.PlayAnimation("runR", 20, true);
 		}
 
 		else if (Akey)
 		{
-			//playerModel.SetDirection(180);
 			playerModel.SetDirection(-1, -1);
 			playerModel.SetSpeed(400);
-			//playerModel.PlayAnimation("runL", 20, true);
 		}
 
 		else
 		{
 			playerModel.SetDirection(0, -1);
 			playerModel.SetSpeed(400);
-			//playerModel.PlayAnimation("runF", 20, true);
 		}
 	}
 
 	else if (Skey)
 	{
-		if (Dkey)
-		{
-			playerModel.SetDirection(1, 1);
-			//playerModel.SetSpeed(400);
-			//playerModel.PlayAnimation("runR", 20, true);
-		}
-
-		else if (Akey)
-		{
-			//playerModel.SetDirection(180);
-			playerModel.SetDirection(-1, 1);
-			//playerModel.SetSpeed(400);
-			//playerModel.PlayAnimation("runL", 20, true);
-		}
-
-		else
-		{
-			playerModel.SetDirection(0, 1);
-			//playerModel.SetSpeed(400);
-		//	playerModel.PlayAnimation("runB", 20, true);
-		}
+		if (Dkey) playerModel.SetDirection(1, 1);
+		else if (Akey) playerModel.SetDirection(-1, 1);
+		else playerModel.SetDirection(0, 1);
 	}
 
-	else if (Dkey )
-	{
-		playerModel.SetDirection(1, 0);
-		//playerModel.SetSpeed(400);
-		//playerModel.PlayAnimation("runR", 20, true);
-	}
- 
+	else if (Dkey) playerModel.SetDirection(1, 0);
+	else if (Akey) playerModel.SetDirection(-1,0);
 
-
-	else if (Akey )
-	{
-		//playerModel.SetDirection(180);
-		playerModel.SetDirection(-1,0);
-		//playerModel.SetSpeed(400);
-		//playerModel.PlayAnimation("runL", 20, true);
-	}
- 
 	else 
 	{
 		footsteps.Pause();
-	
 		playerModel.SetSpeed(0);
 		isPlayerMoving = false;
-		//playerModel.GetMaxFrames()
-		//if( playerModel.GetFrame())
 		playerModel.PlayAnimation("idle", 20, true);
-
 	}
 
- 
 
 	float x = playerModel.GetXVelocity();
-	float y = playerModel.GetXVelocity();
-	if ((playerModel.GetZ() > localMouse.GetZ() || playerModel.GetX() > localMouse.GetX()) && Wkey )
-	{
-		playerModel.SetSpeed(450);
-		playerModel.PlayAnimation("runF", 22, true);
-	}
-	
-	else if ((playerModel.GetZ() < localMouse.GetZ() || playerModel.GetX() < localMouse.GetX()) && Wkey)
-	{
-		playerModel.SetSpeed(400);
-		playerModel.PlayAnimation("runB", 22, true);
-	}
-	
- 
-	if (playerModel.GetZ() > localMouse.GetZ() && Skey)
-	{
-		playerModel.SetSpeed(400);
-		playerModel.PlayAnimation("runB", 22, true);
-	}
-		
-	else if (playerModel.GetZ() < localMouse.GetZ() && Skey)
-	{
-		playerModel.SetSpeed(450);
-		playerModel.PlayAnimation("runF", 22, true);
-	}
-		
-
+	float y = playerModel.GetZVelocity();
 	//int dotproduct = playerModel.GetXVelocity() * localMouse.GetX() + playerModel.GetZVelocity() * localMouse.GetZ();
 	//int crossProduct = playerModel.GetXVelocity() * localMouse.GetZ() + playerModel.GetZVelocity() * localMouse.GetX();
- 
 
-	if (playerModel.GetX() > localMouse.GetX() && Dkey)
+	if ((playerModel.GetZ() > localMouse->GetZ() || playerModel.GetX() > localMouse->GetX()) && Wkey )
 	{
-		playerModel.SetSpeed(400);
-		playerModel.PlayAnimation("runR", 22, true);
+		playerModel.SetSpeed(450);
+		playerModel.PlayAnimation("runF", 22, true);
 	}
-
-	else if (playerModel.GetX() < localMouse.GetX() && Dkey)
-	{
-		playerModel.SetSpeed(400);
-		playerModel.PlayAnimation("runL", 22, true);
-	}
-
-
-	if (playerModel.GetX() > localMouse.GetX() && Akey)
-	{
-		playerModel.SetSpeed(400);
-		playerModel.PlayAnimation("runL", 22, true);
 	
+	else if ((playerModel.GetZ() < localMouse->GetZ() || playerModel.GetX() < localMouse->GetX()) && Wkey)
+	{
+		playerModel.SetSpeed(400);
+		playerModel.PlayAnimation("runB", 22, true);
 	}
-
-	else if (playerModel.GetX() < localMouse.GetX() && Akey)
+	
+ 
+	if (playerModel.GetZ() > localMouse->GetZ() && Skey)
+	{
+		playerModel.SetSpeed(400);
+		playerModel.PlayAnimation("runB", 22, true);
+	}
+		
+	else if (playerModel.GetZ() < localMouse->GetZ() && Skey)
+	{
+		playerModel.SetSpeed(450);
+		playerModel.PlayAnimation("runF", 22, true);
+	}
+		
+	if (playerModel.GetX() > localMouse->GetX() && Dkey)
 	{
 		playerModel.SetSpeed(400);
 		playerModel.PlayAnimation("runR", 22, true);
 	}
 
+	else if (playerModel.GetX() < localMouse->GetX() && Dkey)
+	{
+		playerModel.SetSpeed(400);
+		playerModel.PlayAnimation("runL", 22, true);
+	}
+
+	if (playerModel.GetX() > localMouse->GetX() && Akey)
+	{
+		playerModel.SetSpeed(400);
+		playerModel.PlayAnimation("runL", 22, true);
+	}
+
+	else if (playerModel.GetX() < localMouse->GetX() && Akey)
+	{
+		playerModel.SetSpeed(400);
+		playerModel.PlayAnimation("runR", 22, true);
+	}
 }
 
 
@@ -294,9 +275,9 @@ void Player::OnKeyDown(SDLKey sym, CVector currentMousePos)
 {
 	if (sym == SDLK_q)
 	{
-		float xVel = playerModel.GetXVelocity() * 1.2;
-		float zVel = playerModel.GetZVelocity() * 1.2;
-		playerModel.PlayAnimation("dash", 15, true);
+		CVector* mouseDirection = localMouse;
+		CVector* dash = mouseDirection;
+
 		switch (curentSkillSelected)
 		{
 		case RECALL:
@@ -306,16 +287,16 @@ void Player::OnKeyDown(SDLKey sym, CVector currentMousePos)
 			if (CurrentEnergy >= 25)
 			{
 				CurrentEnergy -= 25;
-				playerModel.SetPositionV(playerModel.GetPositionV() + CVector(xVel, 0, zVel));
+				playerModel.SetPositionV(playerModel.GetPositionV() + CVector(dash->GetX(), 0, dash->GetZ()));
+				playerCurrentState = INDASH;
+				playerModel.PlayAnimation("dash", 150, false);
+				playerModel.SetSpeed(0);
 			}
-				
 			break;
 		default:
 			break;
 		}
 	}
-
- 
 }
 
 void Player::playerGettingDamage(float damage)
@@ -346,7 +327,6 @@ void Player::playerCollision(std::vector<Enemy*> AllEnemies)
 		}
 	}
 
-	 
 	for (auto collidingObj : localMap->collidingObjects)
 	{
 		float distance = 100;
@@ -357,7 +337,6 @@ void Player::playerCollision(std::vector<Enemy*> AllEnemies)
 		}
 	}
 	 
-
 	for (auto enemy : AllEnemies) {
 		if (enemy->deathAnimationTimer) continue;
 		if (playerModel.HitTest(enemy->enemyModel)) 
@@ -365,8 +344,6 @@ void Player::playerCollision(std::vector<Enemy*> AllEnemies)
 			playerModel.SetPositionV(lastFramePos);
 		}
 	}
-
-	
 }
 
  
@@ -387,12 +364,12 @@ void Player::OnLButtonDown(CVector pos, CVector currentMousePos, long t)
 	 
 		// create a new shot as a short line
 		CModel* pShot = bullet.Clone();
-		pShot->SetPositionV(playerModel.GetPositionV() + CVector(0, 100, 0));
+		pShot->SetPositionV(playerModel.GetPositionV() + CVector(20, 75, 0));
 		// rotation and direction same as the player
 		pShot->SetDirection(playerModel.GetRotation());
 		pShot->SetRotation(playerModel.GetRotation() - 90);
 		//pShot->SetRotation(playerModel.GetRotation());
-		pShot->SetSpeed(2000);
+		pShot->SetSpeed(3000);
 		pShot->Die(500);
 		playerShots.push_back(pShot);
 		//sound

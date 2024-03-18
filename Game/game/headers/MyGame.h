@@ -11,6 +11,7 @@ class UIDialogBox;
 class Cutscene;
 class LoadingScreen;
 class Portal;
+class Radar;
 
 class CMyGame : public CGame
 {
@@ -29,6 +30,7 @@ private:
 	UIDialogBox* dialogBox;
 	LoadingScreen* loadingScreen;
 	Portal* portal;
+	Radar* radar;
 	std::vector<Enemy*> AllEnemies;
 
 	//death screen

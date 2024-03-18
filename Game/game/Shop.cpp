@@ -53,7 +53,7 @@ void Shop::OnUpdate(Uint32 t, Player& player, UIDialogBox& dialogBox)
 	if (distance < 300)
 	{
 		shopIsInRange = true;
-		if(!dialogBox.isBoxShowen) dialogBox.showBox(1 ,10, 0);
+		if(!dialogBox.isBoxShowen) dialogBox.showBox(1 ,12,12, 0);
 	}
 	else
 	{

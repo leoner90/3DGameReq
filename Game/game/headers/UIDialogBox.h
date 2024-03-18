@@ -1,4 +1,5 @@
 #pragma once
+class TextConverter;
 
 class UIDialogBox
 {
@@ -12,9 +13,9 @@ public:
 	bool autoHideTimer;
 
 	void init(float w, float h);
-	void OnUpdate(long t);
+	void OnUpdate(long t, bool fullWidth);
 	void OnDraw(CGraphics* g);
-	void showBox(int speakerId, int textId, int priority, float autohideBoxin = -1 );
+	void showBox(int speakerId, int textIdStart, int textIdEnd, int priority, float autohideBoxin = -1 );
 	void hideBox();
 	float dialogBoxHideSpeed, dialogBoxShowSpeed;
 	CSprite dialogBoxBg;
@@ -22,19 +23,24 @@ public:
 private:
 	float localW, localH;
 
-	int dialogNumber;
-	std::string text[15], name[2];
+	int dialogNumber, dialogEndNumber;
+	std::string text[27], name[2];
 	
 	CFont font;
 	//all Speakers logo
 	CSprite speakerImg, MyneImg;
 	
+	vector2f initPosDialogBox, initPosSpeakerImages;
 
 	float localTime;
 	bool textShow;
 	
 	float hideInSec;
-	bool onTop;
+
+
+	float localautohideTime;
+	TextConverter* textConverter;
+
 	 
 };
 

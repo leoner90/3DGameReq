@@ -17,10 +17,11 @@ public:
 	void OnKeyDown(SDLKey sym);
 	void OnLButtonDown(float x, float y);
 	bool shopIsInRange, isPlayerShoping;
+	CModelMd3 testRobot;
 private:
 	CFont font;
 	Player* localPlayer;
-	CModelMd3 testRobot;
+	
 	CSprite shopImg, upgradeWeaponBtn, upgradeArmorBtn, exitShopBtn;
 
 	float Width, Height;

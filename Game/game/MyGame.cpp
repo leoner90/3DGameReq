@@ -8,6 +8,7 @@
 #include "headers/Cutscene.h"
 #include "headers/loadingScreen.h"
 #include "headers/Portal.h"
+#include "headers/Radar.h"
 
 
 CMyGame::CMyGame()
@@ -32,7 +33,7 @@ void CMyGame::OnInitialize()
 	playerInterface = new PlayerInterface((float)Width, (float)Height);
 	dialogBox = new UIDialogBox();
 	loadingScreen = new LoadingScreen((float)Width, (float)Height);
-
+	radar = new Radar((float)Width, (float)Height);
 	//loading screen 
 	loadingScreen->init();
 
@@ -58,6 +59,7 @@ void CMyGame::OnStartLevel(int level)
 	playerInterface->init(Width, Height); //player Interface init
 	dialogBox->init((float)Width, (float)Height); // dialog Box init
 	portal->init();
+	radar->init();
 
 	//****ENEMIES
 	for (auto enemy : AllEnemies) 
@@ -68,7 +70,7 @@ void CMyGame::OnStartLevel(int level)
 	AllEnemies.clear();
 	totalEnemiesOnHold = 0;
 	totalEnemiesToSpawn = 5;
-	enemyOneSpawnDelay = enemyTwoSpawnDelay = 0; // init SPAWN DELAY 1.5min
+	enemyOneSpawnDelay = enemyTwoSpawnDelay = 0; // init SPAWN DELAY 1.5min time start runnign when cutscene starts ..
 	//****
 
 
@@ -85,8 +87,24 @@ void CMyGame::OnStartLevel(int level)
 void CMyGame::OnUpdate() 
 {
 	Uint32 t = (float)GetTime();
+	//portal Charged
+	if (portal->isPortalCharged && currentMenuState != CUTSCENE)
+	{
+		cutscene->startCutscene(1);
+		currentMenuState = CUTSCENE;
+	}
+
+	//end Of the game Win
+	if (cutscene->curentCutSceneNum == 1 && !cutscene->isCutscenePlaying)
+	{
+		currentMenuState = MAIN_MENU;
+		SetGameMode(MODE_PAUSED);
+		gameStarted = false;
+	}
+
+
 	//CUTSCENE
-	if (!cutscene->isCutscenePlaying && currentMenuState == CUTSCENE)
+	if (!cutscene->isCutscenePlaying && currentMenuState == CUTSCENE && cutscene->curentCutSceneNum == 0)
 	{
 		currentMenuState = IN_GAME;
 		camera.rotation.y = YcameraInitState;
@@ -94,9 +112,11 @@ void CMyGame::OnUpdate()
 
 	if (currentMenuState == CUTSCENE && gameStarted)
 	{
-		map->OnUpdate(t);
-		dialogBox->OnUpdate(t);
+		map->OnUpdate(t, *player);
+		bool fullWidth = true;
+		dialogBox->OnUpdate(t, fullWidth);
 		cutscene->Update(t, *dialogBox);
+		portal->OnUpdate(t, *dialogBox);
 		return;
 	}
 
@@ -111,9 +131,14 @@ void CMyGame::OnUpdate()
 	else if(player->isPlayerDead && deathScreenTimer <= t)
 	{
 		currentMenuState = MAIN_MENU;
+		SetGameMode(MODE_PAUSED);
 	}
 
-	loadingScreen->Update(t);
+	//LOADING_SCREEN 
+	if(currentMenuState == LOADING_SCREEN) loadingScreen->Update(t);
+
+
+
 	//RETURN IF MENU MODE
 	if (IsMenuMode() || IsGameOver() || IsPaused() || currentMenuState == MAIN_MENU) return;
 	
@@ -122,24 +147,29 @@ void CMyGame::OnUpdate()
 	enemySpawn();
 
 	//Objects updates
-	map->OnUpdate(t);
+	map->OnUpdate(t, *player);
+	portal->OnUpdate(t, *dialogBox);
+	bool fullWidth = false;
+	dialogBox->OnUpdate(t, fullWidth);
 	player->OnUpdate(t, IsKeyDown(SDLK_d), IsKeyDown(SDLK_a), IsKeyDown(SDLK_w), IsKeyDown(SDLK_s), *map, AllEnemies, currentMousePos, *portal);
 	playerInterface->OnUpdate(t, *player, *dialogBox);
 	shop->OnUpdate(t, *player, *dialogBox);
-	dialogBox->OnUpdate(t);
-	portal->OnUpdate(t);
+	radar->OnUpdate(t, AllEnemies, *player);
+	
  
 
 	//Enemies delete
 	int i = 0;
 	for (auto enemy : AllEnemies) {
 
-		enemy->OnUpdate(GetTime(), *player, *map, AllEnemies, i);
+		enemy->OnUpdate(GetTime(), *player, *map, AllEnemies, i, *portal);
 
 		//* if regular enemie dead -> delete;
-		if (enemy->isDead) {
+		if (enemy->isDead) 
+		{
 			AllEnemies.erase(AllEnemies.begin() + i);
-			delete enemy;
+			//delete enemy;
+			//i--;
 		}
 
 		i++;
@@ -157,7 +187,6 @@ void CMyGame::OnDraw(CGraphics* g)
 		else if (currentMenuState == SHOP) shop->openShop(g);
 		else if (currentMenuState == DEATHSCREEN) 	deathScreen.Draw(g);
 		else if (currentMenuState == LOADING_SCREEN) 	loadingScreen->OnDraw(g);
-		
 		return;
 	}
 
@@ -167,23 +196,21 @@ void CMyGame::OnDraw(CGraphics* g)
 		cutscene->Draw2d(g);
 		dialogBox->OnDraw(g);
 		map->OnDraw(g);
-		
 		return;
 	}
 
 	mousePointer.Draw(g);
 	playerInterface->OnDraw(g);
-	player->OnDraw(g);
+	player->OnDraw(g, *dialogBox, *shop);
 	shop->OnDraw(g);
 	portal->OnDraw(g);
 	
-
-	for (auto enemy : AllEnemies) 
-	{
-		enemy->OnDraw(g, WorldToScreenCoordinate(enemy->enemyModel->GetPositionV()));
-	}
+	
+	for (auto enemy : AllEnemies) enemy->OnDraw(g, WorldToScreenCoordinate(enemy->enemyModel->GetPositionV()));
+	
 
 	dialogBox->OnDraw(g);
+	radar->OnDraw(g);
 }
 
 //*************** 3D RENDER ***************
@@ -204,11 +231,7 @@ void CMyGame::OnRender3D(CGraphics* g)
 	map->OnRender3D(g);
 	player->OnRender3D(g, world);
 	portal->OnRender3D(g);
-
-	for (auto enemy : AllEnemies) {
-		enemy->OnRender3D(g);
-	}
-
+	for (auto enemy : AllEnemies) enemy->OnRender3D(g);
 	shop->OnRender3D(g);
 
 	//ShowBoundingBoxes();
@@ -224,8 +247,9 @@ void CMyGame::CameraControl(CGraphics* g)
 
 	glTranslatef(0, 0, camera.position.z);  // translate game world in z-axis direction
 	glRotatef(camera.rotation.x + 50, 1, 0, 0);	// rotate game world around x-axis
-	if (currentMenuState == CUTSCENE && gameStarted) 
+	if (currentMenuState == CUTSCENE && gameStarted )
 		camera.rotation.y -= cutscene->shiprotationalAngelY / 2;
+	//camera.rotation.y -= cutscene->shiprotationalAngelY / 2;
 	
 	glRotatef(camera.rotation.y , 0, 1, 0);	// rotate game world around x-axis
 
@@ -235,8 +259,8 @@ void CMyGame::CameraControl(CGraphics* g)
 	//glRotatef(-player->playerModel.GetRotation() + 90, 0, 1, 0);
 
 	// move camera up from player position. Camera will rise with the player
-	if (currentMenuState == CUTSCENE && gameStarted)
-		glTranslatef(0, -cutscene->shipModel.GetY() - camera.position.y , 220);
+	if (currentMenuState == CUTSCENE && gameStarted )
+		glTranslatef(0, -cutscene->cutcceneCameraPosition.GetY() - camera.position.y , 220);
 	else
 		glTranslatef(0, -player->playerModel.GetY() - camera.position.y, 0);
 
@@ -245,8 +269,8 @@ void CMyGame::CameraControl(CGraphics* g)
 	skydome.Draw(g);
 	
 	// position game world at the player position (excluding skydome)
-	if (currentMenuState == CUTSCENE && gameStarted)
-		glTranslatef(-cutscene->shipModel.GetX(), 700, -cutscene->shipModel.GetZ());
+	if (currentMenuState == CUTSCENE && gameStarted )
+		glTranslatef(-cutscene->cutcceneCameraPosition.GetX(), 700, -cutscene->cutcceneCameraPosition.GetZ());
 	else
 		glTranslatef(-player->playerModel.GetX(), 0, -player->playerModel.GetZ());
 	
@@ -281,8 +305,8 @@ void CMyGame::InitSpritesAndModels()
 
 	// Load skydome geometry and texture
 	skydome.LoadModel("Skydome/Skydome.obj", "Skydome/Skydome.bmp");
-	skydome.SetScale(400);  // scale to desired size
-	skydome.SetY(-300.0f); // move down to avoid seeing the base
+	skydome.SetScale(400);
+	skydome.SetY(-300.0f);
 
 	//deathScreen
 	deathScreen.LoadImage("deathScreen.jpg");
@@ -305,7 +329,6 @@ void CMyGame::EnableFog()
 
 	//fog settings
 	glClearColor(0.5f, 0.5f, 0.5f, 1.0f);          // We'll Clear To The Color Of The Fog ( Modified )
-
 	glFogi(GL_FOG_MODE, fogMode[fogfilter]);        // Fog Mode
 	glFogfv(GL_FOG_COLOR, fogColor);            // Set Fog Color
 	glFogf(GL_FOG_DENSITY, 0.03f);              // How Dense Will The Fog Be
@@ -313,7 +336,6 @@ void CMyGame::EnableFog()
 	glFogf(GL_FOG_START, 0.1f);             // Fog Start Depth
 	glFogf(GL_FOG_END, 5.0f);               // Fog End Depth
 	glEnable(GL_FOG);                   // Enables GL_FOG
-
 }
 
 
@@ -380,7 +402,7 @@ void CMyGame::CharStatsDraw(CGraphics* g)
 
 void CMyGame::enemySpawn()
 {
-	enum allEnemies { EN2, OGRO };
+	enum allEnemiesTypes { EN2, OGRO };
 
 	float randomSpawnPoint = rand() % 100 + 50;
 
@@ -389,8 +411,8 @@ void CMyGame::enemySpawn()
 	{
 		//use Clone instead
 		AllEnemies.push_back(new Enemy());
-		AllEnemies.back()->init(3800 + randomSpawnPoint, 100, 400 + randomSpawnPoint, OGRO, *map, *portal);
-		enemyOneSpawnDelay = GetTime() + 3000 + rand() % 3000;
+		AllEnemies.back()->init(5500 + randomSpawnPoint, 100, 5400 + randomSpawnPoint, OGRO, *map, *portal);
+		enemyOneSpawnDelay = GetTime() + 5000 + rand() % 3000;
 		totalEnemiesOnHold++;
 	}
 
@@ -399,15 +421,15 @@ void CMyGame::enemySpawn()
 	if (enemyTwoSpawnDelay < GetTime())
 	{
 		AllEnemies.push_back(new Enemy());
-		AllEnemies.back()->init(2500 + randomSpawnPoint, 100, 700 + randomSpawnPoint, EN2, *map, *portal);
-		enemyTwoSpawnDelay = GetTime() + 2000 + rand() % 2000;
+		AllEnemies.back()->init(-5500 + randomSpawnPoint, 100, -5400 + randomSpawnPoint, EN2, *map, *portal);
+		enemyTwoSpawnDelay = GetTime() + 5000 + rand() % 2000;
 		totalEnemiesOnHold++;
 	}
 
 
 	//start a wave
 	int howManyEnemiesWasOnhold = 0; // if not enought -> dont show alert
-	if (totalEnemiesOnHold == totalEnemiesToSpawn + rand() % 5)
+	if (totalEnemiesOnHold == totalEnemiesToSpawn + rand() % 2)
 	{
 
 		for (auto enemy : AllEnemies)
@@ -415,10 +437,10 @@ void CMyGame::enemySpawn()
 			if (enemy->OnSpawnHold) howManyEnemiesWasOnhold++;
 			enemy->OnSpawnHold = false;
 			totalEnemiesOnHold = 0;
-			totalEnemiesToSpawn += 3;
+			totalEnemiesToSpawn += 2;
 		}
 
-		dialogBox->showBox(1, 9, 1, 3000); // speaker id , text id , priority
+		dialogBox->showBox(1, 9,9, 1, 3000); // speaker id , text id , priority
 
 		if (howManyEnemiesWasOnhold == totalEnemiesToSpawn)
 		{
@@ -509,13 +531,13 @@ void CMyGame::MainMenuController(SDLKey sym)
 		OnStartLevel(1);
 		StartGame();
 		gameStarted = true;
-		cutscene->isCutscenePlaying = true;
+		cutscene->startCutscene(0);
 		currentMenuState = CUTSCENE;
 	}
 
 
 	////******* IF NOT IN MENU MODE -> RETURN~~~~~~~~~~~~~~~~~~~~~~
-	if ((!IsMenuMode() && !gameStarted) || (gameStarted && !IsPaused())) return;
+	//if ((!IsMenuMode() && !gameStarted) || (gameStarted && !IsPaused())) return;
 
 	//******* IF SHOW_CONTROLLERS
 	if (currentMenuState == SHOW_CONTROLLERS )

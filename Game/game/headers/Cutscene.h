@@ -14,11 +14,17 @@ public:
 	void Draw2d(CGraphics* g);
 	void Draw3d(CGraphics* g);
 	void cutSceneOne();
+	void cutSceneTwo();
 	
 	float dialogSwitcherTimer;
 	int dialogNumber;
 	bool isCutscenePlaying = true;
 	float shiprotationalAngelY;
+	int curentCutSceneNum;
+	void startCutscene(int sceneNum);
+
+	CVector cutcceneCameraPosition;
+
 private:
 	int blackScreenTimer;
 
@@ -29,6 +35,17 @@ private:
 	float localTime;
 
 	UIDialogBox* localDialogBox;
+
+	CSoundPlayer test;
+	bool cutSceneEndDimOn;
+
+	CModelMd3 portal, playerModel;
+
+	float delay;
+	bool cutsceneTwoStarted, CutSceneTwoReachedPortal; // to redo
+	CModel portalPartOne, portalPartTwo, portalPartThree, portalPartFour;
+
+	CModelList particleList;
 };
 
  

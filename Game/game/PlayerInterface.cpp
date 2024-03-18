@@ -4,7 +4,7 @@
 #include "headers/UIDialogBox.h"
 
 
-PlayerInterface::PlayerInterface(int gameWidth, int gameHeigth)
+PlayerInterface::PlayerInterface(float gameWidth, float gameHeigth)
 {
 	localH = gameHeigth;
 	localW = gameWidth;
@@ -12,31 +12,31 @@ PlayerInterface::PlayerInterface(int gameWidth, int gameHeigth)
 
 	// setup healthbar
 	hbar.SetSize(140, 15);
-	hbar.SetPosition(115, gameHeigth - 30);
+	hbar.SetPosition(115, gameHeigth - 30.f);
 	hbar.SetColors(CColor::Red(), CColor::Black(), CColor::Black());
 
 	//Armor Bar
 	armorBar.SetSize(140, 15);
-	armorBar.SetPosition(115, gameHeigth - 55);
+	armorBar.SetPosition(115, gameHeigth - 55.f);
 	armorBar.SetColors(CColor::Gray(), CColor::Black(), CColor::Black());
 
 	//energyBar
 	energyBar.SetSize(140, 15);
-	energyBar.SetPosition(115, gameHeigth - 80); 
+	energyBar.SetPosition(115, gameHeigth - 80.f); 
 	energyBar.SetColors(CColor::Yellow(), CColor::Black(), CColor::Black());
 
 	//icons
 	healtIcon.LoadImage("healthIcon.png");
 	healtIcon.SetSize(20, 20);
-	healtIcon.SetPosition(25, (float)gameHeigth - 30);
+	healtIcon.SetPosition(25, gameHeigth - 30.f);
 
 	armorIcon.LoadImage("armorIcon.png");
 	armorIcon.SetSize(20, 20);
-	armorIcon.SetPosition(25, (float)gameHeigth - 55);
+	armorIcon.SetPosition(25, gameHeigth - 55.f);
 
 	energyIcon.LoadImage("energyIcon.png");
 	energyIcon.SetSize(20, 20);
-	energyIcon.SetPosition(25, (float)gameHeigth - 80);
+	energyIcon.SetPosition(25, gameHeigth - 80.f);
 
 	//Resources Icons
 	armorComponent.LoadImage("armorComponent.png");
@@ -47,7 +47,7 @@ PlayerInterface::PlayerInterface(int gameWidth, int gameHeigth)
 	weaponComponent.SetSize(30, 30);
 	weaponComponent.SetPosition(localW - 75, localH - 30);
 
-	skillBarY = 100;
+	skillBarY = 400;
 	//skillBar
 	skillBar.LoadImage("skillBar.png");
 	skillBar.SetSize(120, 120);
@@ -71,6 +71,8 @@ void PlayerInterface::init(int gameWidth, int gameHeigth)
 
 void PlayerInterface::OnUpdate(Uint32 t, Player& player, UIDialogBox& dialogBox)
 {
+
+	/*
 	if (dialogBox.isBoxShowen)
 	{
 		//skillbar attached to the dialogbox
@@ -85,6 +87,7 @@ void PlayerInterface::OnUpdate(Uint32 t, Player& player, UIDialogBox& dialogBox)
 		sprintSkillLogo.SetPosition(sprintSkillLogo.GetX(), dialogBox.dialogBoxBg.GetY() + 95);
 		callbackSkillIcon.SetPosition(callbackSkillIcon.GetX(), dialogBox.dialogBoxBg.GetY() + 95);
 	}
+	*/
 
 	localPlayer = &player;
 	float remainingHpInPercentage = localPlayer->playerCurrentHp / (localPlayer->playerMaxHp / 100);
