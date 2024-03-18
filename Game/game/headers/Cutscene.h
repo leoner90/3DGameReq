@@ -46,6 +46,8 @@ private:
 	CModel portalPartOne, portalPartTwo, portalPartThree, portalPartFour;
 
 	CModelList particleList;
+
+	CVector initRotation, initPos, initVelocity;
 };
 
  

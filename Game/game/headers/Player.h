@@ -80,6 +80,7 @@ public:
 
 	bool onStartGameEvent, firstBlinkyMeet;
 
-
+	CModelList dashEffect;
+	CModel dashVfx;
 
 };

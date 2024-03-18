@@ -7,14 +7,29 @@
 
 //*************** INIT ***************
 
+//Static
+CModelMd3* Enemy::enemyModelOne = new CModelMd3();
+CModelMd3* Enemy::enemyModelTwo = new CModelMd3();
+
+Enemy::Enemy()
+{
+	enemyModelOne->LoadModel("enemies/65.md3");
+	enemyModelOne->SetScale(15.5f);
+	
+
+	enemyModelTwo->LoadModel("enemies/65.md3");
+	enemyModelTwo->SetScale(15.5f);
+}
+
 Enemy::~Enemy()
 {
- 
 	delete enemyModel;
 }
 
 void Enemy::init(int posX, int poxY, int posZ, int enemyType, Map& map, Portal& portal)
 {
+
+
 	localPortal = &portal;
 	enemyModel = new CModelMd3();
 
@@ -22,19 +37,20 @@ void Enemy::init(int posX, int poxY, int posZ, int enemyType, Map& map, Portal& 
 	if (localEnemyType == 0) 
 	{
 		enemyMaxHp = enemyCurrentHp = 200;
-
-		enemyModel->LoadModel("enemies/65.md3");
-		enemyModel->SetScale(15.5f);
+		enemyModel = enemyModelOne->Clone();
+		
 		enemyDamage = 50;
 		enemySpeed = 300 + rand() % 250;
+
+
 	}
 	else if (localEnemyType == 1)
 	{
 		enemyDamage = 50;
 		enemyMaxHp = enemyCurrentHp = 400;
-		enemyModel->LoadModel("enemies/65.md3");
+		enemyModel = enemyModelTwo->Clone();
 		enemySpeed = 200 + rand() % 200;
-		enemyModel->SetScale(15.5f);
+		
 		//choose Random Portal Part To Attack
 		CVector portalPartsPostions[4]
 		{
@@ -52,6 +68,7 @@ void Enemy::init(int posX, int poxY, int posZ, int enemyType, Map& map, Portal& 
 	// enemy model
 
 	//enemyModel.SetToFloor(0);
+
 	
 	
 	enemyModel->SetPosition(posX, poxY, posZ);
@@ -67,6 +84,8 @@ void Enemy::init(int posX, int poxY, int posZ, int enemyType, Map& map, Portal& 
 
 	//wait at spawn point
 	OnSpawnHold = true;
+
+	enemyModel->SetToFloor(0);
 	
 }
 
@@ -99,7 +118,6 @@ void Enemy::OnUpdate(Uint32 t, Player &player, Map& map, std::vector<Enemy*>& Al
 		if (i == thisEnemyIndex) continue;
 		if (enemyModel->HitTest(enemy->enemyModel) )
 		{
-			//
 			//enemyModel.SetPosition(enemyModel.GetPositionV().GetX() + 2, enemyModel.GetPositionV().GetY(), enemyModel.GetPositionV().GetZ()+ 2 );
 		}
 		i++;

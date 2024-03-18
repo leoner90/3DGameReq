@@ -12,6 +12,8 @@ public:
 	void init(int gameWidth, int gameHeigth);
 	void OnUpdate(Uint32 t, Player& player, UIDialogBox& dialogBox);
 	void OnDraw(CGraphics* g);
+
+
 	CFont font;
 	
 	CHealthBar hbar, energyBar, armorBar;

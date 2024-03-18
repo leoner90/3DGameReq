@@ -7,6 +7,7 @@ class Portal;
 class Enemy
 {
 public:
+	Enemy();
 	~Enemy();
 	void init(int posX, int poxY, int posZ, int enemyType, Map& map, Portal& portal);
 	void OnUpdate(Uint32 t, Player& player, Map& map, std::vector<Enemy*>& AllEnemies, int thisEnemyIndex, Portal& portal);
@@ -44,4 +45,8 @@ public:
 
 	bool OnSpawnHold;
  
+
+
+	static CModelMd3* enemyModelOne;
+	static CModelMd3* enemyModelTwo;
 };

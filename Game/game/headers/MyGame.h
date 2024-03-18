@@ -38,7 +38,7 @@ private:
 
 	//enemies spawn properties
 	Uint32 totalEnemiesOnHold;
-	float  enemyOneSpawnDelay, enemyTwoSpawnDelay;
+	float  enemyOneSpawnDelay, enemyTwoSpawnDelay, InitSpawnDelay;
 	int totalEnemiesToSpawn;
 
 
@@ -93,5 +93,5 @@ private:
 
 	float YcameraInitState;
 	
-
+	float localH, localW;
 };

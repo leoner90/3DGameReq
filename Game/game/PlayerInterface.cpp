@@ -47,19 +47,19 @@ PlayerInterface::PlayerInterface(float gameWidth, float gameHeigth)
 	weaponComponent.SetSize(30, 30);
 	weaponComponent.SetPosition(localW - 75, localH - 30);
 
-	skillBarY = 400;
+	skillBarY = 240;
 	//skillBar
 	skillBar.LoadImage("skillBar.png");
-	skillBar.SetSize(120, 120);
-	skillBar.SetPosition(localW - 100, skillBarY);
+	skillBar.SetSize(80, 80);
+	skillBar.SetPosition(localW - 60, skillBarY);
 
 	sprintSkillLogo.LoadImage("sprintSkillLogo.png");
-	sprintSkillLogo.SetSize(120, 120);
-	sprintSkillLogo.SetPosition(localW - 105, skillBarY - 5);
+	sprintSkillLogo.SetSize(80, 80);
+	sprintSkillLogo.SetPosition(localW - 65, skillBarY - 5);
 
 	callbackSkillIcon.LoadImage("callbackSkillIcon.png");
-	callbackSkillIcon.SetSize(120, 120);
-	callbackSkillIcon.SetPosition(localW - 105, skillBarY - 5);
+	callbackSkillIcon.SetSize(80, 80);
+	callbackSkillIcon.SetPosition(localW - 65, skillBarY - 5);
 }
 
 void PlayerInterface::init(int gameWidth, int gameHeigth)
@@ -71,24 +71,6 @@ void PlayerInterface::init(int gameWidth, int gameHeigth)
 
 void PlayerInterface::OnUpdate(Uint32 t, Player& player, UIDialogBox& dialogBox)
 {
-
-	/*
-	if (dialogBox.isBoxShowen)
-	{
-		//skillbar attached to the dialogbox
-		skillBar.SetPosition(skillBar.GetX(), dialogBox.dialogBoxBg.GetY() + 190);
-		sprintSkillLogo.SetPosition(sprintSkillLogo.GetX(), dialogBox.dialogBoxBg.GetY() + 185);
-		callbackSkillIcon.SetPosition(callbackSkillIcon.GetX(), dialogBox.dialogBoxBg.GetY() + 185);
-	}
-
-	if (dialogBox.dialogBoxBg.GetY() <= 0)
-	{
-		skillBar.SetPosition(skillBar.GetX(), dialogBox.dialogBoxBg.GetY() + 100);
-		sprintSkillLogo.SetPosition(sprintSkillLogo.GetX(), dialogBox.dialogBoxBg.GetY() + 95);
-		callbackSkillIcon.SetPosition(callbackSkillIcon.GetX(), dialogBox.dialogBoxBg.GetY() + 95);
-	}
-	*/
-
 	localPlayer = &player;
 	float remainingHpInPercentage = localPlayer->playerCurrentHp / (localPlayer->playerMaxHp / 100);
 	float remainingEnergyInPercentage = localPlayer->CurrentEnergy / (localPlayer->maxEnergy / 100);
@@ -130,3 +112,5 @@ void PlayerInterface::OnDraw(CGraphics* g)
 	weaponComponent.Draw(g);
 	font.DrawNumber(localW - 50, localH - 40, localPlayer->weaponComponents, CColor::White(), 30);
 }
+
+ 

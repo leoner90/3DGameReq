@@ -4,35 +4,27 @@
  
 
 
-//UIDialogBox::UIDialogBox() {  }
-
-void UIDialogBox::init(float w, float h)
-{
+UIDialogBox::UIDialogBox(float w, float h)
+{ 
 	localW = w;
 	localH = h;
+
 	font.LoadDefault();
-	textConverter = new TextConverter();
-
-	 
- 
-
 	dialogBoxBg.LoadImage("dialogBox3.png");
-	dialogBoxBg.SetSize(w , 180);
-	dialogBoxBg.SetPosition(w / 2  , 110);
-
-	initPosSpeakerImages;
+	dialogBoxBg.SetSize(w, 180);
+ 
 	speakerImg.LoadImage("robotLogo.png");
 	speakerImg.SetSize(120, 100);
-	speakerImg.SetPosition( 210, 100);
-
-
+ 
 	MyneImg.LoadImage("MyraLogo.png");
 	MyneImg.SetSize(120, 100);
-	MyneImg.SetPosition(190, 100);
-
  
-	isBoxShowen = false;
 
+	dialogBoxShowSpeed = 20;
+	speakerImgMarginTop = 80;
+	speakerImgMarginLeft = 240;
+
+	//DIALOGS
 	name[MYNE] = "Myne";
 	name[BLINKY] = "Blinky";
 
@@ -51,29 +43,34 @@ void UIDialogBox::init(float w, float h)
 	text[11] = "PORTAL OVERLOADED - IT TAKES SOME TIME TO START AGAIN ";
 	text[12] = "PRESS E FOR SHOPING";
 	text[13] = "BE AWARE Enemies Are Coming!!!!!!!!!!!!!!!!";
-
-
-
 	text[15] =
 		"What a landing...\n"
 		"It’s a miracle that I survived.\n";
 	text[16] = "Looks like this ship will never fly again.\n";
-	text[17] = 
+	text[17] =
 		"I wonder how Blinky is doing, although he’s a robot\n"
-		 "he’s not immortal, it seems that during landing he was thrown towards that strange portal";
+		"he’s not immortal, it seems that during landing he was thrown towards that strange portal";
 
 	text[18] = "Myne!!! You alive.\n";
 	text[19] = "Wonderful, I started to charge this ancient portal, it's our ticket home\n";
-	text[20] = 
-			"But I'm afraid it's woke up all the monsters around, you have to survive \n"
-			"while the portal is charging";
+	text[20] =
+		"But I'm afraid it's woke up all the monsters around, you have to survive \n"
+		"while the portal is charging";
 
 	text[21] = "Portal is back to life";
 
 	text[22] = "Portal is charged , faster it's time to go";
-		 
 
+}
 
+void UIDialogBox::init()
+{
+	textConverter = new TextConverter();
+	autoHideTimer = false;
+	isBoxShowen = false;
+	textShow = false;
+	dialogBoxHideSpeed = 0;
+	currentPriority = -1;
 	autoHideTimer = 0;
 	hideInSec = 0;
 }
@@ -81,24 +78,24 @@ void UIDialogBox::init(float w, float h)
 void UIDialogBox::OnUpdate(long t, bool fullWidth)
 {
 	localTime = t;
- 
-	/*
+	
 	//full width in cutsenes , 
 	if (fullWidth)
 	{
-		dialogBoxBg.SetSize(localW, dialogBoxBg.GetY());
+		dialogBoxBg.SetSize(localW, dialogBoxBg.GetHeight());
 		dialogBoxBg.SetPosition(localW / 2, dialogBoxBg.GetY());
 	}
 	else 
 	{
-		dialogBoxBg.SetSize(localW - 300, dialogBoxBg.GetY()); // 300 size of RADAR
-		dialogBoxBg.SetPosition(localW / 2 - 150, dialogBoxBg.GetY());
+		dialogBoxBg.SetSize(localW - 180, dialogBoxBg.GetHeight()); // 300 size of RADAR
+		dialogBoxBg.SetPosition(localW / 2 - 90, dialogBoxBg.GetY());
 	}
+ 
 
-	*/
+
 
 	//hide
-	if ((autoHideTimer && isBoxShowen) || (hideInSec < localTime && hideInSec != 0 ))
+	if ((autoHideTimer && isBoxShowen) || (hideInSec < localTime && hideInSec != 0 )) // manual hide called or autohide(hideInSec) timer is off
 	{
 		//if dialog is not one , reset timer and change text id to next one
 		if (dialogNumber < dialogEndNumber)
@@ -124,20 +121,21 @@ void UIDialogBox::OnUpdate(long t, bool fullWidth)
 		}
 	} 
 
-	//show 
-	if (!autoHideTimer && isBoxShowen && dialogBoxShowSpeed <= 20)
+	//show dialogBox 
+	if (!autoHideTimer && isBoxShowen && dialogBoxBg.GetY() < dialogBoxBg.GetHeight() / 2)
 	{
-		dialogBoxShowSpeed += 5;
-		dialogBoxBg.SetPosition(dialogBoxBg.GetX(), dialogBoxBg.GetY() + dialogBoxShowSpeed);
-		speakerImg.SetPosition(speakerImg.GetX(), speakerImg.GetY() + dialogBoxShowSpeed);
-		MyneImg.SetPosition(speakerImg.GetX(), speakerImg.GetY() + dialogBoxShowSpeed);
+		dialogBoxBg.SetY(dialogBoxBg.GetY() + dialogBoxShowSpeed);
+
+		//avatar centration
+		if (speakerImg.GetY() <= speakerImgMarginTop)
+		{
+			speakerImg.SetY(speakerImg.GetY() + dialogBoxShowSpeed);
+			MyneImg.SetY(MyneImg.GetY() + dialogBoxShowSpeed);
+		}
+		
 	} 
  
-	 
-
-	dialogBoxBg.Update(t);
-	speakerImg.Update(t);
-	MyneImg.Update(t);
+ 
 
 }
 
@@ -157,7 +155,7 @@ void UIDialogBox::OnDraw(CGraphics* g)
 		}
 	}
 
-	if (textShow && dialogBoxShowSpeed >= 20)
+	if (textShow && dialogBoxBg.GetY() >= dialogBoxBg.GetHeight() / 2)
 	{
 		font.DrawText(localW * 0.25, 110, name[speaker], CColor::Yellow(), 26);
 		textConverter->splitTextToLines(text[dialogNumber], localW * 0.25, 80, 22);	
@@ -169,40 +167,28 @@ void UIDialogBox::showBox(int speakerId, int textIdStart, int textIdEnd, int pri
 {
 	if (autohideBoxin != -1) hideInSec = localTime + autohideBoxin;
 	if (currentPriority > priority) return;
-	//set back to origin pos
-	//speakerImg.SetPosition(125, 0);
-	//dialogBoxBg.SetPosition(localW / 2  , 0);
 
-
-
-	dialogBoxBg.SetPosition(localW / 2, 0);
-	speakerImg.SetPosition(210, 0);
-	MyneImg.SetPosition(210, 0);
-
-
+	dialogBoxBg.SetPosition(localW / 2, -dialogBoxBg.GetHeight() / 2);
+	speakerImg.SetPosition(speakerImgMarginLeft, -speakerImg.GetHeight() / 2);
+	MyneImg.SetPosition(speakerImgMarginLeft, -MyneImg.GetHeight() / 2);
 
 
 	isBoxShowen = true;
 	autoHideTimer = false;
+	textShow = true;
 	localautohideTime = autohideBoxin;
-	
+
 	speaker = speakerId;
 	dialogNumber = textIdStart;
 	dialogEndNumber = textIdEnd;
-	//dialogBoxHideSpeed = 0;
 	currentPriority = priority;
-	dialogBoxShowSpeed = 0;
-	textShow = true;
 }
 
 void UIDialogBox::hideBox()
 {
-	//isBoxShowen = false;
-	//dialogBoxHideSpeed = 0;
 	textShow = false;
 	autoHideTimer = true;
 	currentPriority = -1;
-
 }
 
 

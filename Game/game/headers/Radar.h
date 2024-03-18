@@ -9,6 +9,7 @@ public:
 	void init();
 	void OnUpdate(Uint32 t, std::vector<Enemy*>& AllEnemies, Player& player);
 	void OnDraw(CGraphics* g);
+	void DrawDot(float posX, float posZ, CColor color, CGraphics* g);
 
 private:
 	CSprite radarBg;

@@ -4,7 +4,7 @@ class TextConverter;
 class UIDialogBox
 {
 public:
-	//UIDialogBox();
+	UIDialogBox(float w, float h);
 
 	//Set current Speacker
 	enum currentSpeaker {MYNE, BLINKY};
@@ -12,12 +12,13 @@ public:
 	bool isBoxShowen;
 	bool autoHideTimer;
 
-	void init(float w, float h);
+	void init();
 	void OnUpdate(long t, bool fullWidth);
 	void OnDraw(CGraphics* g);
 	void showBox(int speakerId, int textIdStart, int textIdEnd, int priority, float autohideBoxin = -1 );
 	void hideBox();
 	float dialogBoxHideSpeed, dialogBoxShowSpeed;
+	float speakerImgMarginTop, speakerImgMarginLeft;
 	CSprite dialogBoxBg;
 	int currentPriority;
 private:

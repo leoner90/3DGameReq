@@ -12,21 +12,37 @@ LoadingScreen::LoadingScreen(float w, float h)
 	font.Load("arial.ttf");
 	text[0] = 
 		"Blinky is a droid with an Ai companion created by Yer.\n"
-		"Blinky comes with vast knowledge and is actually intelligent\n"
+		"Blinky comes with vast knowledge and is actually intelligent \n"
 		"enough to create several ideas with provided information.\n"
-		"In the story, Blinky must stay next to the portal until the player\n" 
-		"finds an alternative power source as Blinky’s power source has been\n" 
-		"damaged.Blinky acts as a shop keeper of kind where if you bring him\n" 
+		"In the story, Blinky must stay next to the portal until the player \n" 
+		"finds an alternative power source as Blinky’s power source has been \n" 
+		"damaged.Blinky acts as a shop keeper of kind where if you bring him \n" 
 		"resources, he will tell you what he needs to rebuild the portal.\n"
-		"You can arm and upgrade him with weapons to have self defence so\n"
+		"You can arm and upgrade him with weapons to have self defence so \n"
 		"that you can leave the portal and explore for more resources.\n"
-		"Eventually, you can have him moving freely after finding a power\n"
-		"source at which point he follows you around or stays guard in any\n" 
+		"Eventually, you can have him moving freely after finding a power \n"
+		"source at which point he follows you around or stays guard in any \n" 
 		"placement you seem fit, bringing new avenues for tactical combat.\n";
 
 
-	text[1] = "Alumni \n are the titles given  \nto the graduates  \nof The Academy.  ";
-	text[2] = "Yor  \nis the husband of Myne. \n Crafted many things Myne  \nuses on her daily adventures";
+	text[1] = 
+		"Alumni are the titles given to the graduates of The Academy.\n"
+		"They are highly trained with skills and knowledge to explore\n"
+		"the unknown universe. Very few become an Alumni and they are \n"
+		"all exceptional people. Alumni are also given highly advanced\n"
+		"protection suits to explore the universe which have several \n"
+		"abilities like flight, “invisibility” cloak, enhanced strength \n"
+		"and mobility, power shield and resistance and adaptability \n"
+		"across all weather. They are powered by all forms of energy, \n"
+		"including kinetic energy produced by movement.\n";
+
+	text[2] = 
+		"Yor is the husband of Myne. A passionate scientific mind,\n"
+		"he is incredibly knowledgeable and creative, something that \n"
+		"Myne loves about him. Not very socially adaptable as Myne, he \n"
+		"prefers the walls of his workshop than the outside. He has \n"
+		"personally crafted many things Myne uses on her daily adventures, \n"
+		"namely Blinky, her companion and Catherine, the blaster. \n";
 
 
 	//loadingIcon.PlayAnimation();
@@ -46,7 +62,7 @@ void LoadingScreen::init()
 {
 	loadingCompleted = false;
 	loadingStarted = false;
-	randomTextSelectionNum = rand() % 2;
+	randomTextSelectionNum = rand() % 3;
 	loadingTimer = 0;
 }
 

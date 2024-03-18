@@ -37,7 +37,7 @@ Portal::Portal(float gameWidth, float gameHeigth)
 	//portal
 	resetHpBar.SetSize(140, 5);
 	resetHpBar.SetPosition(115, gameHeigth - 113);
-	resetHpBar.SetColors(CColor::DarkRed(), CColor::Black(), CColor::Black());
+	resetHpBar.SetColors(CColor::Red(), CColor::Black(), CColor::Black());
 
 
 	portalIcon.LoadImage("portalIcon.png");
@@ -49,7 +49,7 @@ Portal::Portal(float gameWidth, float gameHeigth)
 
 void Portal::init()
 {
-	TotaltimeForPortalToCharg = 60000 * 2; // min
+	TotaltimeForPortalToCharg = 60000 * 3; // min
 	portalChargePerSec = 1000; //
 
 	rechargeTime = 30000; //30 sec recharge if got too many damage
@@ -102,7 +102,7 @@ void Portal::OnUpdate(Uint32 t, UIDialogBox& dialogBox)
 	portalHpBar.SetColor(currentPortalColor);
 
 	//prevFrameTime != 0???
-	if (!portalUnderAttack) currentportalChargingTime += (float)deltatime * portalChargePerSec;
+	if (!portalUnderAttack ) currentportalChargingTime += (float)deltatime * portalChargePerSec;
 	float portalChargeInPercent = currentportalChargingTime / TotaltimeForPortalToCharg * 100.f;
 
 	//float to integer - so not really accurate
@@ -123,9 +123,7 @@ void Portal::OnDraw(CGraphics* g)
 	portalIcon.Draw(g);
 	if (isPortalReseting)
 	{
-	
-		//font.DrawText(190 , localH - 113, "OVERLOADED: ", CColor::DarkRed(), 17);
-		font.DrawNumber(190, localH - 113, portalResetTimer - localTime, CColor::Red(), 18);
+		font.DrawNumber(190, localH - 113, (portalResetTimer - localTime) / 1000, CColor::Red(), 18);
 	}
 	
 }

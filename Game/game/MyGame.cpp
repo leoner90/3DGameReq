@@ -23,17 +23,20 @@ void CMyGame::OnInitialize()
 	cameraMovement = false;
 	currentMenuState = MAIN_MENU;
 	mainMenuOptionSelection = NEW_GAME;
+	SetGameMode(MODE_PAUSED);
 
+	localW = (float)Width;
+	localH = (float)Height;
 	//Main Objects
 	map = new Map();
-	portal = new Portal((float)Width, (float)Height);
-	shop = new Shop((float)Width, (float)Height);
-	cutscene = new Cutscene((float)Width, (float)Height);
+	portal = new Portal(localW, localH);
+	shop = new Shop(localW, localH);
+	cutscene = new Cutscene(localW, localH);
 	player = new Player();
-	playerInterface = new PlayerInterface((float)Width, (float)Height);
-	dialogBox = new UIDialogBox();
-	loadingScreen = new LoadingScreen((float)Width, (float)Height);
-	radar = new Radar((float)Width, (float)Height);
+	playerInterface = new PlayerInterface(localW, localH);
+	dialogBox = new UIDialogBox(localW, localH);
+	loadingScreen = new LoadingScreen(localW, localH);
+	radar = new Radar(localW, localH);
 	//loading screen 
 	loadingScreen->init();
 
@@ -52,12 +55,12 @@ void CMyGame::OnInitialize()
 //ON NEW GAME START
 void CMyGame::OnStartLevel(int level)
 {
-	cutscene->init((float)Width, (float)Height); 	//cutscene
 	map->init();
+	cutscene->init(localW, localH); 	//cutscene
 	player->init();//Main inits
-	shop->init((float)Width, (float)Height); //Shop init
-	playerInterface->init(Width, Height); //player Interface init
-	dialogBox->init((float)Width, (float)Height); // dialog Box init
+	shop->init(localW, localH); //Shop init
+	playerInterface->init(localW, localH); //player Interface init
+	dialogBox->init(); // dialog Box init
 	portal->init();
 	radar->init();
 
@@ -69,13 +72,14 @@ void CMyGame::OnStartLevel(int level)
 
 	AllEnemies.clear();
 	totalEnemiesOnHold = 0;
-	totalEnemiesToSpawn = 5;
-	enemyOneSpawnDelay = enemyTwoSpawnDelay = 0; // init SPAWN DELAY 1.5min time start runnign when cutscene starts ..
+	totalEnemiesToSpawn = 4;
+	InitSpawnDelay = 60000 * 0.5; // spawn start , not the wave
+	enemyOneSpawnDelay = enemyTwoSpawnDelay = 0; // init SPAWN DELAY -> set In Enemy Spawn fun!!!!!!
 	//****
-
 
 	//resets
 	gameStarted = false;
+	SetGameMode(MODE_PAUSED);
 	deathScreenTimer = 0;
 
 }
@@ -116,7 +120,6 @@ void CMyGame::OnUpdate()
 		bool fullWidth = true;
 		dialogBox->OnUpdate(t, fullWidth);
 		cutscene->Update(t, *dialogBox);
-		portal->OnUpdate(t, *dialogBox);
 		return;
 	}
 
@@ -132,6 +135,7 @@ void CMyGame::OnUpdate()
 	{
 		currentMenuState = MAIN_MENU;
 		SetGameMode(MODE_PAUSED);
+		gameStarted = false;
 	}
 
 	//LOADING_SCREEN 
@@ -140,7 +144,7 @@ void CMyGame::OnUpdate()
 
 
 	//RETURN IF MENU MODE
-	if (IsMenuMode() || IsGameOver() || IsPaused() || currentMenuState == MAIN_MENU) return;
+	if ( IsGameOver() || IsPaused() || IsMenuMode() || currentMenuState != IN_GAME) return; // IN GAME , when exit the game mode == exit rising bugs
 	
 
 	//Enemy spawn
@@ -180,17 +184,18 @@ void CMyGame::OnUpdate()
 //*************** 2D RENDER ***************
 void CMyGame::OnDraw(CGraphics* g)
 {
-	if (IsMenuMode() || IsPaused())
+	// MENU MODE
+	if (IsPaused() || IsMenuMode())
 	{
-		if (currentMenuState == MAIN_MENU) MaiMenuDraw(g);
+		if (currentMenuState == MAIN_MENU || currentMenuState == SHOW_CONTROLLERS) MaiMenuDraw(g);
 		else if (currentMenuState == CHAR_STATS) CharStatsDraw(g);
 		else if (currentMenuState == SHOP) shop->openShop(g);
-		else if (currentMenuState == DEATHSCREEN) 	deathScreen.Draw(g);
-		else if (currentMenuState == LOADING_SCREEN) 	loadingScreen->OnDraw(g);
+		else if (currentMenuState == DEATHSCREEN) deathScreen.Draw(g);
+		else if (currentMenuState == LOADING_SCREEN) loadingScreen->OnDraw(g);
 		return;
 	}
 
-
+	// CUTSCENE
 	if (currentMenuState == CUTSCENE && gameStarted)
 	{
 		cutscene->Draw2d(g);
@@ -199,33 +204,36 @@ void CMyGame::OnDraw(CGraphics* g)
 		return;
 	}
 
+	//IN GAME
+	if(currentMenuState != IN_GAME) return; // IN GAME , when exit the game mode == exit rising bugs
+
 	mousePointer.Draw(g);
-	playerInterface->OnDraw(g);
 	player->OnDraw(g, *dialogBox, *shop);
+	playerInterface->OnDraw(g);
 	shop->OnDraw(g);
 	portal->OnDraw(g);
-	
-	
-	for (auto enemy : AllEnemies) enemy->OnDraw(g, WorldToScreenCoordinate(enemy->enemyModel->GetPositionV()));
-	
-
 	dialogBox->OnDraw(g);
 	radar->OnDraw(g);
+	for (auto enemy : AllEnemies) enemy->OnDraw(g, WorldToScreenCoordinate(enemy->enemyModel->GetPositionV()));
 }
 
 //*************** 3D RENDER ***************
 void CMyGame::OnRender3D(CGraphics* g)
 { 
-	if (IsMenuMode() || IsGameOver() || IsPaused()) return;
+	if (IsGameOver() || IsPaused() || IsMenuMode()) return; // IN GAME , when exit the game mode == exit rising bugs
 
+	//CUTSCENE
 	if (currentMenuState == CUTSCENE && gameStarted)
 	{
 		CameraControl(g);
 		map->OnRender3D(g);
 		cutscene->Draw3d(g);
+		portal->OnRender3D(g);
 		return;
 	}
 
+	//IN GAME
+	if(currentMenuState != IN_GAME) return;
 
 	CameraControl(g);
 	map->OnRender3D(g);
@@ -342,15 +350,17 @@ void CMyGame::EnableFog()
 //*************** Main Menu Handler
 void CMyGame::MaiMenuDraw(CGraphics* g)
 {
+
 	if (currentMenuState == SHOW_CONTROLLERS) 
 	{
 		mainMenushowControlers.Draw(g);
-		font.DrawText((float)Width / 2 - 100, (float)camera.rotation.x  / 2 + 280, "CONTROLS", CColor::White(), 52);
-		font.DrawText((float)Width / 2 - 220.f, (float)Height / 2 + 200, "LEFT MOUSE BTN. - SHOOT", CColor::White() , 32);
-		font.DrawText((float)Width / 2 - 220.f, (float)Height / 2 + 150, "W / S / A / D  - MOVE CHARACTER", CColor::White(), 32);
-		font.DrawText((float)Width / 2 - 220.f, (float)Height / 2 + 100, "Q - USE SKILL", CColor::White(), 32);
-		font.DrawText((float)Width / 2 - 220.f, (float)Height / 2 + 50, "MOUSE WHEEL - CHANGE SKILL", CColor::White(), 32);
-		font.DrawText((float)Width / 2 - 220.f, (float)Height / 2 , "E - INTERACT", CColor::White(), 32);
+		font.DrawText((float)Width / 2 - 100,	(float)Height / 2 + 280, "CONTROLS", CColor::White(), 52);
+		font.DrawText((float)Width / 2 - 220.f, (float)Height / 2 + 200, "LEFT MOUSE BTN. - SHOOT", CColor::White() , 22);
+		font.DrawText((float)Width / 2 - 220.f, (float)Height / 2 + 150, "W / S / A / D  - MOVE CHARACTER", CColor::White(), 22);
+		font.DrawText((float)Width / 2 - 220.f, (float)Height / 2 + 100, "Q - USE SKILL", CColor::White(), 22);
+		font.DrawText((float)Width / 2 - 220.f, (float)Height / 2 + 50, "MOUSE WHEEL - CHANGE SKILL", CColor::White(), 22);
+		font.DrawText((float)Width / 2 - 220.f, (float)Height / 2 , "E - INTERACT", CColor::White(), 22);
+		font.DrawText((float)Width / 2 - 220.f, (float)Height / 2 - 50, "C - CHARACTER STATS", CColor::White(), 22);
 		font.DrawText((float)Width / 2 - 70.f, 100, "BACK", CColor::White(), 42);
 	}
 	else 
@@ -402,20 +412,32 @@ void CMyGame::CharStatsDraw(CGraphics* g)
 
 void CMyGame::enemySpawn()
 {
+	
 	enum allEnemiesTypes { EN2, OGRO };
 
 	float randomSpawnPoint = rand() % 100 + 50;
+	if (enemyOneSpawnDelay == 0)
+	{
+		enemyOneSpawnDelay = enemyTwoSpawnDelay = GetTime() + InitSpawnDelay;
+	}
 
-	//Enemy ONe
+	//4 spawn points
+	CVector spawnPos[4] =
+	{
+		CVector(5500 + randomSpawnPoint,100,5400 + randomSpawnPoint),
+		CVector(5500 + randomSpawnPoint,100,5400 + randomSpawnPoint),
+		CVector(-5500 + randomSpawnPoint,100,5400 + randomSpawnPoint),
+		CVector(-5500 + randomSpawnPoint,100,5400 + randomSpawnPoint)
+	};
+
 	if (enemyOneSpawnDelay < GetTime())
 	{
-		//use Clone instead
+		 
 		AllEnemies.push_back(new Enemy());
 		AllEnemies.back()->init(5500 + randomSpawnPoint, 100, 5400 + randomSpawnPoint, OGRO, *map, *portal);
 		enemyOneSpawnDelay = GetTime() + 5000 + rand() % 3000;
 		totalEnemiesOnHold++;
 	}
-
 
 	//EnemyTwo
 	if (enemyTwoSpawnDelay < GetTime())
@@ -429,7 +451,7 @@ void CMyGame::enemySpawn()
 
 	//start a wave
 	int howManyEnemiesWasOnhold = 0; // if not enought -> dont show alert
-	if (totalEnemiesOnHold == totalEnemiesToSpawn + rand() % 2)
+	if (totalEnemiesOnHold == totalEnemiesToSpawn)
 	{
 
 		for (auto enemy : AllEnemies)
@@ -437,15 +459,10 @@ void CMyGame::enemySpawn()
 			if (enemy->OnSpawnHold) howManyEnemiesWasOnhold++;
 			enemy->OnSpawnHold = false;
 			totalEnemiesOnHold = 0;
-			totalEnemiesToSpawn += 2;
+			totalEnemiesToSpawn += 1;
 		}
 
 		dialogBox->showBox(1, 9,9, 1, 3000); // speaker id , text id , priority
-
-		if (howManyEnemiesWasOnhold == totalEnemiesToSpawn)
-		{
-
-		}
 	}
 }
 
@@ -456,28 +473,25 @@ void CMyGame::enemySpawn()
 void CMyGame::OnKeyDown(SDLKey sym, SDLMod mod, Uint16 unicode)
 {
 	//Player KeyBoard Controller
-	if (!IsMenuMode()) player->OnKeyDown(sym, currentMousePos);
+	if (!IsPaused()) player->OnKeyDown(sym, currentMousePos);
 
 	//Start
 	MainMenuController(sym);
-
-
 }
 
 void CMyGame::OnLButtonDown(Uint16 x, Uint16 y)
 {
 	
 	//player Left Btn
-	if (!IsMenuMode() && !IsPaused() && !cutscene->isCutscenePlaying) 
+	if (!IsPaused() && currentMenuState == IN_GAME)
 		player->OnLButtonDown(ScreenToFloorCoordinate(x, y), currentMousePos, GetTime());
 
 	//If shopping (but armor/damage)
 	if (IsPaused() && currentMenuState == SHOP)  shop->OnLButtonDown(x, y);
 
 	//SHOP X BTN EXIT
-	if (IsPaused() && !shop->isPlayerShoping && gameStarted &&  currentMenuState == SHOP)
+	if (IsPaused() && !shop->isPlayerShoping && currentMenuState == SHOP)
 	{
-		//	enemy->enemyModel.ResetTime();
 		ResumeGame();
 		SetGameMode(MODE_RUNNING);
 		currentMenuState = IN_GAME;
@@ -514,9 +528,9 @@ void CMyGame::MainMenuController(SDLKey sym)
 	{
 		cutscene->dialogNumber = 10; //skip dialog
 	}
-	else if ((IsMenuMode() || IsPaused()) && sym == SDLK_ESCAPE  && gameStarted && (currentMenuState == MAIN_MENU || currentMenuState == CHAR_STATS || currentMenuState == SHOP) )
+
+	else if (IsPaused() && sym == SDLK_ESCAPE  && gameStarted && (currentMenuState == MAIN_MENU || currentMenuState == CHAR_STATS || currentMenuState == SHOP) )
 	{
-		//	enemy->enemyModel.ResetTime();
 		HideMouse();
 		SetGameMode(MODE_RUNNING);
 		currentMenuState = IN_GAME;
@@ -524,11 +538,10 @@ void CMyGame::MainMenuController(SDLKey sym)
 	}
 
 
-
 	//LOADING COMPLETED
-	if ((IsMenuMode() || IsPaused()) && sym == 13 && currentMenuState == LOADING_SCREEN && loadingScreen->loadingCompleted)
+	if (sym == 13 && currentMenuState == LOADING_SCREEN && loadingScreen->loadingCompleted)
 	{
-		OnStartLevel(1);
+		//OnStartLevel(1);
 		StartGame();
 		gameStarted = true;
 		cutscene->startCutscene(0);
@@ -537,7 +550,7 @@ void CMyGame::MainMenuController(SDLKey sym)
 
 
 	////******* IF NOT IN MENU MODE -> RETURN~~~~~~~~~~~~~~~~~~~~~~
-	//if ((!IsMenuMode() && !gameStarted) || (gameStarted && !IsPaused())) return;
+	if (!IsPaused()) return;
 
 	//******* IF SHOW_CONTROLLERS
 	if (currentMenuState == SHOW_CONTROLLERS )
@@ -545,18 +558,18 @@ void CMyGame::MainMenuController(SDLKey sym)
 		if (sym == 13 || sym == SDLK_ESCAPE) currentMenuState = MAIN_MENU;
 	}
 
-	
-
 	//******* IF MAIN_MENU
 	else if (currentMenuState == MAIN_MENU )
 	{
 		//Start
 		if (sym == 13 && mainMenuOptionSelection == NEW_GAME)
 		{
+			OnStartLevel(1);
 			SetGameMode(MODE_MENU); // to update loading sprite
 			loadingScreen->init();
-			currentMenuState = LOADING_SCREEN;
 			loadingScreen->loadingStarted = true;
+			currentMenuState = LOADING_SCREEN;
+			
 			
 		}
 

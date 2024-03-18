@@ -6,12 +6,12 @@
 Radar::Radar(float w, float h)
 {
 	radarBg.LoadImage("radarBg.jpg");
-	radarBg.SetSize(300, 300);
-	radarBg.SetPosition(w - 150, 150);
+	radarBg.SetSize(180, 180);
+	radarBg.SetPosition(w - 90, 90);
 
 	// char screen
 	dot.LoadImage("dot.png");
-	dot.SetSize(10, 10);
+	dot.SetSize(7, 7);
 	
 }
 
@@ -25,40 +25,38 @@ void Radar::OnUpdate(Uint32 t, std::vector<Enemy*>& AllEnemies, Player& player)
 	localPlayer = &player;
 }
 
+
+
+
+
 void Radar::OnDraw(CGraphics* g)
 {
 	radarBg.Draw(g);
- 
+
+
 	for (auto enemy : localAllEnemies)
 	{
 		if (enemy->OnSpawnHold) continue;
-		float radarCenterPos = 150;
-		dot.SetColor(CColor::Red());
-		//CSprite* enemyDot = new CSprite(dot);
 
-		float enemyPosX = enemy->enemyModel->GetX() / 7500 * 300;
-		float resultX = radarCenterPos + (enemyPosX / 2);
-
-		float enemyPosZ = enemy->enemyModel->GetZ() / 7500 * 300;
-		float resultZ = radarCenterPos - (enemyPosZ / 2);
-
-
-		dot.SetPosition(1620 + resultX, resultZ);
-		dot.SetSize(10, 10);
-		dot.Draw(g);
+		DrawDot(enemy->enemyModel->GetX(), enemy->enemyModel->GetZ(), CColor::Red(), g);
 	}
 
 	//player
-	float radarCenterPos = 150;
-	float enemyPosX = localPlayer->playerModel.GetX() / 7500 * 300;
-	float resultX = radarCenterPos + (enemyPosX / 2);
+	DrawDot(localPlayer->playerModel.GetX(), localPlayer->playerModel.GetZ(), CColor::Green(), g);
+}
 
-	float enemyPosZ = localPlayer->playerModel.GetZ() / 7500 * 300;
+
+void Radar::DrawDot(float posX, float posZ, CColor color, CGraphics* g)
+{
+	float radarCenterPos = 90;
+	float PosX = posX / 7500 * 180;
+	float resultX = radarCenterPos + (PosX / 2);
+
+	float enemyPosZ = posZ / 7500 * 180;
 	float resultZ = radarCenterPos - (enemyPosZ / 2);
-	dot.SetPosition(1620 + resultX, resultZ);
-	dot.SetSize(10, 10);
-	dot.SetColor(CColor::Green());
-	dot.Draw(g);
 
+	dot.SetPosition(1740 + resultX, resultZ);
+	dot.SetColor(color);
+	dot.Draw(g);
 
 }

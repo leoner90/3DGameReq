@@ -12,6 +12,12 @@
 
 Player::Player()
 {
+
+	dashVfx.LoadModel("rainDrop/rainDrop.obj");
+	//rainDrop.SetY(50);
+	dashVfx.SetScale(0.5f);
+
+
 	isPlayerDead = playerPreDeahAnimation = false;
 	font.LoadDefault();
 
@@ -41,6 +47,7 @@ Player::Player()
 	footsteps.Play("playerFootsteps.wav", -1);
 	footsteps.SetVolume(3);
 	footsteps.Pause();
+
 }
 
 void Player::init()
@@ -135,6 +142,9 @@ void Player::OnUpdate(Uint32 t, bool Dkey, bool Akey, bool Wkey, bool Skey, Map&
 	playerShots.Update(t);
 	lastFramePos = playerModel.GetPositionV();
 	playerModel.Update(t);
+
+	dashEffect.Update(t);
+	dashEffect.delete_if(true);
 }
 
 //*************** 2D RENDER ***************
@@ -143,7 +153,7 @@ void Player::OnDraw(CGraphics* g, UIDialogBox& dialogBox, Shop& shop)
 	if (!onStartGameEvent) 
 	{
 		onStartGameEvent = true;
-		dialogBox.showBox(0, 15, 17, 1, 4000);
+		dialogBox.showBox(0, 15, 17, 2, 4000);
 	}
 
 	if (!firstBlinkyMeet)
@@ -154,9 +164,8 @@ void Player::OnDraw(CGraphics* g, UIDialogBox& dialogBox, Shop& shop)
 		if (distance < 1200)
 		{
 			firstBlinkyMeet = true;
-			dialogBox.showBox(1, 18, 20, 1, 4000);
+			dialogBox.showBox(1, 18, 20, 3, 4000);
 		}
-		
 	}
 }
 
@@ -165,6 +174,8 @@ void Player::OnRender3D(CGraphics* g, CCamera& world)
 {
 	playerShots.Draw(g);
 	playerModel.Draw(g);
+
+	dashEffect.Draw(g);
 	
 }
 
@@ -275,22 +286,38 @@ void Player::OnKeyDown(SDLKey sym, CVector currentMousePos)
 {
 	if (sym == SDLK_q)
 	{
-		CVector* mouseDirection = localMouse;
-		CVector* dash = mouseDirection;
-
 		switch (curentSkillSelected)
 		{
 		case RECALL:
-			playerModel.SetPositionV(localPortal->portal.GetPositionV());
+			if (CurrentEnergy >= 50)
+			{
+				playerModel.SetPositionV(localPortal->portal.GetPositionV());
+				CurrentEnergy -= 50;
+			}
 			break;
 		case DASH:
-			if (CurrentEnergy >= 25)
+			if (CurrentEnergy >= 25 && playerCurrentState != INDASH)
 			{
 				CurrentEnergy -= 25;
-				playerModel.SetPositionV(playerModel.GetPositionV() + CVector(dash->GetX(), 0, dash->GetZ()));
 				playerCurrentState = INDASH;
 				playerModel.PlayAnimation("dash", 150, false);
+			 
+				CVector displ = CVector(localMouse->GetX() - playerModel.GetX(), 0, localMouse->GetZ() - playerModel.GetZ());
+				CVector dash = displ.Normalized();
+				for (int i = 0; i < 50; i++)
+				{
+					CModel* p = dashVfx.Clone();
+					p->SetPositionV(playerModel.GetPositionV() + CVector(0,100,0));
+					p->SetDirection(playerModel.GetRotation());
+					p->SetSpeed(rand() % 1200);
+					p->Die(500);
+					dashEffect.push_back(p);
+				}
+			 
+				playerModel.SetPositionV(playerModel.GetPositionV() + dash * 500);
 				playerModel.SetSpeed(0);
+
+			
 			}
 			break;
 		default:
