@@ -38,7 +38,7 @@ Player::Player()
 	playerModel.AddAnimation("dash", 560, 576);
 
 	//Shooting
-	bullet.LoadModel("bullet/bullet.obj");
+	bullet.LoadModel("bullet/Bullet2.obj");
 	bullet.SetScale(25.f);
 	shootingDelay = 500;
 	playerDamage = 100;
@@ -129,7 +129,7 @@ void Player::OnUpdate(Uint32 t, bool Dkey, bool Akey, bool Wkey, bool Skey, Map&
 	{ 
 		for (auto enemy : AllEnemies) 
 		{
-			if (pShot->HitTest(enemy->enemyModel->GetPositionV(), 150)) //add distance
+			if (pShot->HitTest(enemy->enemyModel->GetPositionV() , 250)) //add distance
 			{
 				if (enemy->preDeahAnimation) continue;
 				pShot->Delete();
@@ -385,22 +385,16 @@ void Player::OnLButtonDown(CVector pos, CVector currentMousePos, long t)
 	{
 		playerCurrentState = INATTACK;
 		attackDelay = t + shootingDelay;
-		playerModel.Stop();
-		playerModel.SetRotationToPoint(currentMousePos.x, currentMousePos.z);
  
-	 
-		// create a new shot as a short line
+		
 		CModel* pShot = bullet.Clone();
-		pShot->SetPositionV(playerModel.GetPositionV() + CVector(20, 75, 0));
-		// rotation and direction same as the player
-		pShot->SetDirection(playerModel.GetRotation());
-		pShot->SetRotation(playerModel.GetRotation() - 90);
-		//pShot->SetRotation(playerModel.GetRotation());
+		pShot->SetPositionV(playerModel.GetPositionV() + CVector(0, 100, 0));
+		pShot->SetDirectionAndRotationToPoint(localMouse->GetX(), localMouse->GetZ());
 		pShot->SetSpeed(3000);
 		pShot->Die(500);
 		playerShots.push_back(pShot);
+
 		//sound
-	 
 		shotSound.Play("shotSound.wav");
 		shotSound.SetVolume(20);
 	}

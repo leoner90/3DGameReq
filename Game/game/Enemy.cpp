@@ -13,7 +13,7 @@ CModelMd3* Enemy::enemyModelTwo = new CModelMd3();
 
 Enemy::Enemy()
 {
-	enemyModelOne->LoadModel("enemies/65.md3");
+	enemyModelOne->LoadModel("enemies/63.md3");
 	enemyModelOne->SetScale(15.5f);
 	
 
@@ -180,7 +180,7 @@ void Enemy::OnUpdate(Uint32 t, Player &player, Map& map, std::vector<Enemy*>& Al
 //*************** 2D RENDER ***************
 void Enemy::OnDraw(CGraphics* g, CVector enemyPos)
 {
-	if (isDead) return;
+	if (isDead|| OnSpawnHold) return;
  
 	enemyHpbar.SetPosition(enemyPos.x, enemyPos.y + 30);
 
@@ -230,7 +230,7 @@ void Enemy::Attack()
 void Enemy::OnRender3D(CGraphics* g)
 {
 	if (isDead) return;
-	enemyModel->Draw(g);
+	if(!OnSpawnHold) enemyModel->Draw(g);
  
 }
 

@@ -81,6 +81,7 @@ void CMyGame::OnStartLevel(int level)
 	gameStarted = false;
 	SetGameMode(MODE_PAUSED);
 	deathScreenTimer = 0;
+	camera.rotation.y = YcameraInitState;
 
 }
 

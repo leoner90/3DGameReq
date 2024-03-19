@@ -31,7 +31,7 @@ Cutscene::Cutscene(float w, float h)
 
 	portal.LoadModel("portal/portalAnimated.md3");
 	portal.SetScale(230.f);
-	portal.SetPosition(400, 80, 300);
+	portal.SetPosition(400, 60, 300);
 	portal.AddAnimation("portalOpen", 1, 43);
 
 
@@ -41,9 +41,11 @@ Cutscene::Cutscene(float w, float h)
 
 void Cutscene::init(float w, float h)
 {
+	cout << "init" << endl;
 	//ship position Resets
 	shipModel.SetPosition(1400, 3500, 1400);
 	shipModel.SetDirectionAndRotationToPoint(0, 0);
+	shipModel.SetDirection(0, 0, 0);
 	shipModel.SetRotation(0,0,0);
 	shipModel.SetSpeed(-75);
 
@@ -52,14 +54,18 @@ void Cutscene::init(float w, float h)
 	dialogNumber = 0;
 	blackScreenTimer = 0;
 	shiprotationalAngelY = 0;
-	curentCutSceneNum = 0;
+	curentCutSceneNum = -1;
 	cutSceneEndDimOn = false;
 	delay = 0;
 
+	portal.PlayAnimation(0, 0, 0, false);
+	playerModel.SetPosition(1500, 0, 1500);
 
 	cutsceneTwoStarted = false;
 	CutSceneTwoReachedPortal = false;
-	
+
+	cutcceneCameraPosition = CVector(0, 0, 0);
+	particleList.delete_all();
 }
 
 void Cutscene::Update(Uint32 t, UIDialogBox& dialogBox)
@@ -69,7 +75,7 @@ void Cutscene::Update(Uint32 t, UIDialogBox& dialogBox)
 	localTime = t;
 	if (curentCutSceneNum == 0)
 	{
-		shipModel.Update(t);
+		
 		cutSceneOne();
 		
 	}
@@ -78,6 +84,13 @@ void Cutscene::Update(Uint32 t, UIDialogBox& dialogBox)
 	{
 		cutSceneTwo();
 	}
+
+	shipModel.Update(t);
+	playerModel.Update(localTime);
+	particleList.Update(localTime);
+
+	particleList.delete_if(true);
+
 }
 
 void Cutscene::Draw2d(CGraphics* g)
@@ -224,6 +237,7 @@ void Cutscene::cutSceneTwo()
 {
 	if (!cutsceneTwoStarted)
 	{
+		shiprotationalAngelY = 0.5;
 		cutsceneTwoStarted = true;
 		localDialogBox->showBox(0, 22, 22, 4000);
 
@@ -252,7 +266,7 @@ void Cutscene::cutSceneTwo()
 			p->SetRotation(float(rand() % 180), float(rand() % 360), 0);
 			p->SetDirectionV(p->GetRotationV()); // align direction with rotation
 			p->SetSpeed(rand() % 250);
-			p->Die(4000);
+			p->Die(3000);
 			particleList.push_back(p);
 		}
 	}
@@ -270,10 +284,8 @@ void Cutscene::cutSceneTwo()
 		engineSound.Pause();
 	}
 
-	cutcceneCameraPosition = CVector(playerModel.GetX(), playerModel.GetY(), playerModel.GetZ());
+	cutcceneCameraPosition = CVector(playerModel.GetX() - 200,  playerModel.GetY() , playerModel.GetZ() - 300);
 	portal.Update(localTime);
-	playerModel.Update(localTime);
-	particleList.Update(localTime);
 }
 
 
