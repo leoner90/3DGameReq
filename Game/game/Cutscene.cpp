@@ -33,10 +33,6 @@ Cutscene::Cutscene(float w, float h)
 	portal.SetScale(230.f);
 	portal.SetPosition(400, 60, 300);
 	portal.AddAnimation("portalOpen", 1, 43);
-
-
-
-
 }
 
 void Cutscene::init(float w, float h)
@@ -60,11 +56,13 @@ void Cutscene::init(float w, float h)
 
 	portal.PlayAnimation(0, 0, 0, false);
 	playerModel.SetPosition(1500, 0, 1500);
+	playerModel.SetSpeed(0);
 
 	cutsceneTwoStarted = false;
 	CutSceneTwoReachedPortal = false;
 
 	cutcceneCameraPosition = CVector(0, 0, 0);
+
 	particleList.delete_all();
 }
 
@@ -77,19 +75,20 @@ void Cutscene::Update(Uint32 t, UIDialogBox& dialogBox)
 	{
 		
 		cutSceneOne();
-		
+		shipModel.Update(t);
 	}
 	
 	if (curentCutSceneNum == 1)
 	{
 		cutSceneTwo();
+		playerModel.Update(localTime);
+			particleList.Update(localTime);
+	particleList.delete_if(true);
 	}
 
-	shipModel.Update(t);
-	playerModel.Update(localTime);
-	particleList.Update(localTime);
+	
+	
 
-	particleList.delete_if(true);
 
 }
 
@@ -235,12 +234,15 @@ void Cutscene::cutSceneOne()
 
 void Cutscene::cutSceneTwo()
 {
+
+	
+
 	if (!cutsceneTwoStarted)
 	{
 		shiprotationalAngelY = 0.5;
 		cutsceneTwoStarted = true;
 		localDialogBox->showBox(0, 22, 22, 4000);
-
+		
 		playerModel.SetSpeed(300);
 		playerModel.PlayAnimation("runF", 22, true);
 		playerModel.SetDirectionAndRotationToPoint(400, 300);
@@ -248,9 +250,12 @@ void Cutscene::cutSceneTwo()
 
 
 
-	CVector displ = playerModel.GetPositionV() - CVector(400, 0, 300);
+
+
+	CVector displ =CVector(400, 0, 300) - playerModel.GetPositionV() ;
 	float distance = hypot(displ.GetX(), displ.GetZ());
 
+	cout << playerModel.GetX() << "/////" << playerModel.GetY() << endl;
 
 	if (distance <= 50 && !CutSceneTwoReachedPortal)
 	{
@@ -282,6 +287,11 @@ void Cutscene::cutSceneTwo()
 	{
 		isCutscenePlaying = false;
 		engineSound.Pause();
+
+		cutsceneTwoStarted = false;
+		CutSceneTwoReachedPortal = false;
+
+		particleList.delete_all();
 	}
 
 	cutcceneCameraPosition = CVector(playerModel.GetX() - 200,  playerModel.GetY() , playerModel.GetZ() - 300);

@@ -56,13 +56,13 @@ void CMyGame::OnInitialize()
 void CMyGame::OnStartLevel(int level)
 {
 	map->init();
-	cutscene->init(localW, localH); 	//cutscene
 	player->init();//Main inits
 	shop->init(localW, localH); //Shop init
 	playerInterface->init(localW, localH); //player Interface init
 	dialogBox->init(); // dialog Box init
 	portal->init();
 	radar->init();
+	cutscene->init(localW, localH); 	//cutscene
 
 	//****ENEMIES
 	for (auto enemy : AllEnemies) 

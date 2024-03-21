@@ -49,7 +49,7 @@ Portal::Portal(float gameWidth, float gameHeigth)
 
 void Portal::init()
 {
-	TotaltimeForPortalToCharg = 60000 * 3; // min
+	TotaltimeForPortalToCharg = 60000 * 0.1; // min
 	portalChargePerSec = 1000; //
 
 	rechargeTime = 30000; //30 sec recharge if got too many damage

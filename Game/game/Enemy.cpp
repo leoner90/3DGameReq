@@ -13,8 +13,8 @@ CModelMd3* Enemy::enemyModelTwo = new CModelMd3();
 
 Enemy::Enemy()
 {
-	enemyModelOne->LoadModel("enemies/63.md3");
-	enemyModelOne->SetScale(15.5f);
+	enemyModelOne->LoadModel("enemies/mon01.md3");
+	enemyModelOne->SetScale(25.5f);
 	
 
 	enemyModelTwo->LoadModel("enemies/65.md3");
@@ -41,7 +41,11 @@ void Enemy::init(int posX, int poxY, int posZ, int enemyType, Map& map, Portal& 
 		
 		enemyDamage = 50;
 		enemySpeed = 300 + rand() % 250;
+		enemyModel->AddAnimation("run", 1, 29);
+		enemyModel->AddAnimation("attack", 35, 59);
+		enemyModel->AddAnimation("dead", 65, 82);
 
+	
 
 	}
 	else if (localEnemyType == 1)
@@ -50,6 +54,9 @@ void Enemy::init(int posX, int poxY, int posZ, int enemyType, Map& map, Portal& 
 		enemyMaxHp = enemyCurrentHp = 400;
 		enemyModel = enemyModelTwo->Clone();
 		enemySpeed = 200 + rand() % 200;
+
+		enemyModel->AddAnimation("run", 10, 40);
+		enemyModel->AddAnimation("attack", 0, 10);
 		
 		//choose Random Portal Part To Attack
 		CVector portalPartsPostions[4]
@@ -62,8 +69,7 @@ void Enemy::init(int posX, int poxY, int posZ, int enemyType, Map& map, Portal& 
 		randomPortalPartPos = portalPartsPostions[rand() % 4];
 	}
 	
-	enemyModel->AddAnimation("run", 10, 40);
-	enemyModel->AddAnimation("attack", 0, 10);
+	
 
 	// enemy model
 
@@ -100,7 +106,7 @@ void Enemy::OnUpdate(Uint32 t, Player &player, Map& map, std::vector<Enemy*>& Al
 	{
 		if (deathAnimationTimer == 0)
 		{
-			enemyModel->PlayAnimation("attack", 12, true);
+			enemyModel->PlayAnimation("dead", 8, true);
 			deathAnimationTimer = 1000 + t;
 		}
 		else if(deathAnimationTimer < t) isDead = true;
@@ -131,12 +137,12 @@ void Enemy::OnUpdate(Uint32 t, Player &player, Map& map, std::vector<Enemy*>& Al
 		{
 			enemyModel->SetDirectionAndRotationToPoint(localPlayer->playerModel.GetPositionV().GetX(), localPlayer->playerModel.GetPositionV().GetZ());
 			enemyModel->SetSpeed(enemySpeed);
-			enemyModel->PlayAnimation("run", 22, true);
+			enemyModel->PlayAnimation("run", 42, true);
 		}
 		else 
 		{
 			enemyModel->SetSpeed(0);
-			enemyModel->PlayAnimation("attack", 12, true);
+			enemyModel->PlayAnimation("attack", 22, true);
 			Attack();
 		}
 	}
