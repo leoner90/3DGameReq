@@ -41,6 +41,7 @@ public:
 	void OnKeyDown(SDLKey sym , CVector currentMousePos);
 	void playerGettingDamage(float damage);
 	void playerCollision(std::vector<Enemy*> AllEnemies);
+	void addLoot(int enemyType, CVector enemyPos);
 	
 	//player movement
 	CVector lastFramePos;
@@ -52,7 +53,7 @@ public:
  
 
 	//Player Current Skill
-	enum PlayerSkills{RECALL,DASH};
+	enum PlayerSkills{DASH, RECALL};
 	int curentSkillSelected;
 
 	//Sounds
@@ -66,7 +67,7 @@ public:
 	CFont font;
 
 	//resouces
-	int  armorComponents, weaponComponents;
+	int  armorComponents, weaponComponents, bossLoot;
 
 	//death handler
 	bool isPlayerDead;
@@ -81,6 +82,16 @@ public:
 	bool onStartGameEvent, firstBlinkyMeet;
 
 	CModelList dashEffect;
-	CModel dashVfx;
+	CModel dashVfx, onDamageVfx;
 
+	CModelList lootList, onHitEffect;
+	float currentExp;
+
+	//loot
+	CModel lootItemOne, lootItemTwo, lootItemThree;
+
+	float dashCoolDown;
+
+private:
+	long localTime;
 };

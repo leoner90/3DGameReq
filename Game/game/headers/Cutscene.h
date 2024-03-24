@@ -1,5 +1,5 @@
 #pragma once
-
+class Player;
 class UIDialogBox;
 
 class Cutscene
@@ -9,7 +9,7 @@ public:
  
 	enum Cutsenes {START,END};
 	CModel shipModel;
-	void init(float w, float h);
+	void init(float w, float h, Player& player);
 	void Update(Uint32 t, UIDialogBox& dialogBox);
 	void Draw2d(CGraphics* g);
 	void Draw3d(CGraphics* g);
@@ -39,7 +39,7 @@ private:
 	CSoundPlayer test;
 	bool cutSceneEndDimOn;
 
-	CModelMd3 portal, playerModel;
+	CModelMd3 portal;
 
 	float delay;
 	bool cutsceneTwoStarted, CutSceneTwoReachedPortal; // to redo
@@ -48,6 +48,10 @@ private:
 	CModelList particleList;
 
 	CVector initRotation, initPos, initVelocity;
+
+	Player* localPlayer;
+
+	CModel portalVfx;
 };
 
  

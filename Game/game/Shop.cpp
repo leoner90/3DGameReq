@@ -10,15 +10,16 @@ Shop::Shop(float w, float h)
 	font.LoadDefault();
 
 	//shop
-	testRobot.LoadModel("shop/testRobot.md3");
-	testRobot.LoadTexture("shop/shopTextures.jpg");
+	testRobot.LoadModel("shop/shop.md3");
+	//testRobot.LoadTexture("shop/shopTextures.jpg");
 	testRobot.SetScale(45.5f);
 	testRobot.SetPosition(1500, 0, 400);
-	testRobot.AddAnimation("idle", 1, 110);
-	testRobot.PlayAnimation("idle", 30, true);
+	testRobot.SetRotation(60);
+	testRobot.AddAnimation("idle", 0, 0);
+	testRobot.AddAnimation("active", 1, 54);
+ 
 
 	//shop
-
 	shopImg.LoadImage("shop.jpg");
 	shopImg.SetSize((float)w, (float)h);
 	shopImg.SetPosition((float)w / 2, (float)h / 2);
@@ -53,11 +54,13 @@ void Shop::OnUpdate(Uint32 t, Player& player, UIDialogBox& dialogBox)
 	if (distance < 300)
 	{
 		shopIsInRange = true;
+		testRobot.PlayAnimation("active", 30, false);
 		if(!dialogBox.isBoxShowen) dialogBox.showBox(1 ,12,12, 0);
 	}
 	else
 	{
 		 shopIsInRange = false;
+		 testRobot.PlayAnimation("idle", 30, false);
 		 if (dialogBox.isBoxShowen && dialogBox.currentPriority == 0) dialogBox.hideBox();
 	}
 }

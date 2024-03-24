@@ -45,6 +45,12 @@ public:
 	
 	~CTerrain() 
 	{ 
+		if (heightmap)
+		{
+			// delete heightmap
+			for (int n = 0; n < width; n++) delete[] heightmap[n];
+			delete[] heightmap;
+		}
 		glDeleteTextures(1, &TextureID);
 	}
 
@@ -80,6 +86,7 @@ public:
 	
 	
 	void LoadTexture(string filename);
+	void LoadHeightMap(string filename);
 	
 	void SetColor( const CColor& c) { Color.Set( c);  }
 	void SetTiling( bool tile) { tiling=tile;}

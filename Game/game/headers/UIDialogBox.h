@@ -18,7 +18,7 @@ public:
 	void showBox(int speakerId, int textIdStart, int textIdEnd, int priority, float autohideBoxin = -1 );
 	void hideBox();
 	float dialogBoxHideSpeed, dialogBoxShowSpeed;
-	float speakerImgMarginTop, speakerImgMarginLeft;
+	float speakerImgMarginTop, speakerImgMarginLeft, textMarginLeft;
 	CSprite dialogBoxBg;
 	int currentPriority;
 private:

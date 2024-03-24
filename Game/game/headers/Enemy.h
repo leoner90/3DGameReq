@@ -9,12 +9,12 @@ class Enemy
 public:
 	Enemy();
 	~Enemy();
-	void init(int posX, int poxY, int posZ, int enemyType, Map& map, Portal& portal);
+	void init(CVector enemyPos, int enemyType, Map& map, Portal& portal, CModelMd3& enemyModel);
 	void OnUpdate(Uint32 t, Player& player, Map& map, std::vector<Enemy*>& AllEnemies, int thisEnemyIndex, Portal& portal);
 	void OnDraw(CGraphics* g, CVector enemyPos);
 	void Attack();
 	void OnRender3D(CGraphics* g);
-	void EnemyGetDamage(float damage);
+	void EnemyGetDamage(float damage, CModel Vfx);
 	//void EnemyControl();
  
 	CModelMd3* enemyModel;
@@ -43,10 +43,10 @@ public:
 
 	CVector randomPortalPartPos;
 
+
 	bool OnSpawnHold;
  
 
-
-	static CModelMd3* enemyModelOne;
-	static CModelMd3* enemyModelTwo;
+	CModelList onHitEffect;
+	CModel Vfx;
 };

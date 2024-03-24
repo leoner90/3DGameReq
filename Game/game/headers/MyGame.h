@@ -20,7 +20,7 @@ public:
 private:
 	CSprite startScreen, mainMenushowControlers, CharStatsMenu, deathScreen;
 	CFont font;
-	
+
 	// Main Objects
 	Map* map;
 	Player* player;
@@ -64,8 +64,8 @@ private:
 	void  OnLButtonDown(Uint16 x, Uint16 y);
 
 	//Game Modes
-	enum GameModes{MAIN_MENU, CHAR_STATS, SHOP, IN_GAME, CUTSCENE, SHOW_CONTROLLERS, DEATHSCREEN, LOADING_SCREEN};
-	enum mainMenuOptions{NEW_GAME, CONTROLS, EXIT};
+	enum GameModes { MAIN_MENU, CHAR_STATS, SHOP, IN_GAME, CUTSCENE, SHOW_CONTROLLERS, DEATHSCREEN, LOADING_SCREEN };
+	enum mainMenuOptions { NEW_GAME, CONTROLS, EXIT };
 
 	GameModes currentMenuState;
 	bool gameStarted;
@@ -91,7 +91,14 @@ private:
 	CSprite mousePointer;
 	CModel skydome;
 
-	float YcameraInitState;
-	
+	float YcameraInitState, ZcameraInitState, XcameraInitState, YcameraInitRotation;
+
 	float localH, localW;
+
+
+	//Static
+	CModelMd3* enemyModelOne;
+	CModelMd3* enemyModelTwo;
+	CModelMd3* boss;
+	bool isBossSpawn = false;
 };

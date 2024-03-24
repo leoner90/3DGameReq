@@ -54,6 +54,12 @@ typedef struct
 	char name[16];                // frame name
 } anim_frame;
 
+typedef struct	// frame of an obj model
+{
+	GLuint listid;
+	float minx, maxx, miny, maxy, minz, maxz;
+} obj_frame;
+
 class CModel
 {
 public:
@@ -66,9 +72,8 @@ CModel()
 }
 	
 	
-CModel(float x, float y, float z, float width, float height, float depth, const CColor& color=CColor::Blue())
+CModel(float x, float y, float z, float width, float height, float depth, const CColor& color=CColor::Blue()) : CModel()
 {
-	Init();
 	Position.x=x; Position.y=y; Position.z=z;
 	minx=-width/2; maxx=width/2; miny=-height/2; maxy=height/2; minz=-depth/2; maxz=depth/2; Scale=1;
 	Color.Set(color);
@@ -99,6 +104,9 @@ protected:
 	string materialFile;
     unsigned char numG;
 	group* groups;
+	
+	material* materials; 
+    unsigned char numMat;
 	
 	// model vertex, texture and normal data 
 	unsigned int numTris;
@@ -155,6 +163,12 @@ protected:
 	anim_frame* framedata;
 	unsigned short numAnims;
 	unsigned short selectedAnimation;
+	
+	// list of obj models as frames
+	// will be handled as display list objects
+	obj_frame* objframes;
+	int numObjFrames;
+
 
 
 public:
@@ -359,7 +373,7 @@ public:
 	void SetColor( Uint8 r, Uint8 g, Uint8 b, Uint8 a=100) { Color.Set( (float)r/255.0f,(float)g/255.0f,(float)b/255.0f,(float)a/100.0f); border=false;}
 	void SetColor( const CColor& color) 		{ Color.Set( color); border=false; }
 	void SetColors( const CColor& fillColor, const CColor& borderColor ) { Color.Set( fillColor); Color2.Set( borderColor); border=true; }
-	void SetAlpha( int alpha) 			{ Color.SetAlpha( (float)alpha/100.0f);}
+	void SetAlpha( float alpha) 			{ Color.SetAlpha( alpha);}
 	void SetFilled( bool fill)			{ filled=fill; }
 	void ShowBorder(bool b=true) { border=b; }
 	void SetBrightness(float brightness) { Brightness = brightness; }
@@ -372,6 +386,9 @@ public:
     virtual bool LoadModel(string obj_filename);
     
     bool LoadTexture(string bmp_filename);
+    
+	// Experimental: Add an obj file sequence as an animation
+    bool LoadAnimationSequence(string obj_filename, int start_frame, int stop_frame);
     
 	virtual bool LoadModel(string obj_filename, string bmp_filename);
          

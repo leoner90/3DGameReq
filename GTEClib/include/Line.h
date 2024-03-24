@@ -98,9 +98,9 @@ class CLine : public CModel
 	   glLineWidth( Width); 
        glPushMatrix();
 		  glTranslatef( Position.x, Position.y, Position.z);  	// transformation to world coordinates
-		  glRotatef( Rotation.x, 1, 0, 0 );       // rotation around x-axis
-		  glRotatef( Rotation.y, 0, 1, 0 );       // rotation around y-axis
-		  glRotatef( Rotation.z, 0, 0, 1 );
+		  glRotatef(Rotation.y, 0, 1, 0);       // rotation around y-axis
+		  glRotatef(Rotation.z, 0, 0, 1);       // rotation around z-axis
+		  glRotatef(Rotation.x, 1, 0, 0);       // rotation around x-axis
 		  //glTranslatef(localPosition.x, localPosition.y, localPosition.z);
 		  glScalef( Scale, Scale, Scale); 
 		glBegin(GL_LINES);

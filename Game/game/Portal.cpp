@@ -49,7 +49,7 @@ Portal::Portal(float gameWidth, float gameHeigth)
 
 void Portal::init()
 {
-	TotaltimeForPortalToCharg = 60000 * 0.1; // min
+	TotaltimeForPortalToCharg = 60000 * 5; // min
 	portalChargePerSec = 1000; //
 
 	rechargeTime = 30000; //30 sec recharge if got too many damage
@@ -69,6 +69,7 @@ void Portal::init()
 	isPortalReseting = false;
 	damageDelay = 0;
 	font.LoadDefault();
+	portalChargeInPercent = 0;
 }
 
 void Portal::OnUpdate(Uint32 t, UIDialogBox& dialogBox)
@@ -84,7 +85,6 @@ void Portal::OnUpdate(Uint32 t, UIDialogBox& dialogBox)
 	if (damageDelay < localTime && !isPortalReseting)
 	{
 		portalUnderAttack = false;
-		
 	}
 
 	if (portalResetTimer <= localTime && portalResetTimer !=0)
@@ -103,7 +103,7 @@ void Portal::OnUpdate(Uint32 t, UIDialogBox& dialogBox)
 
 	//prevFrameTime != 0???
 	if (!portalUnderAttack ) currentportalChargingTime += (float)deltatime * portalChargePerSec;
-	float portalChargeInPercent = currentportalChargingTime / TotaltimeForPortalToCharg * 100.f;
+	portalChargeInPercent = currentportalChargingTime / TotaltimeForPortalToCharg * 100.f;
 
 	//float to integer - so not really accurate
 	portalHpBar.SetHealth((int)portalChargeInPercent);

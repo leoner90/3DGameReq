@@ -7,18 +7,9 @@
 
 //*************** INIT ***************
 
-//Static
-CModelMd3* Enemy::enemyModelOne = new CModelMd3();
-CModelMd3* Enemy::enemyModelTwo = new CModelMd3();
-
 Enemy::Enemy()
 {
-	enemyModelOne->LoadModel("enemies/mon01.md3");
-	enemyModelOne->SetScale(25.5f);
-	
 
-	enemyModelTwo->LoadModel("enemies/65.md3");
-	enemyModelTwo->SetScale(15.5f);
 }
 
 Enemy::~Enemy()
@@ -26,34 +17,28 @@ Enemy::~Enemy()
 	delete enemyModel;
 }
 
-void Enemy::init(int posX, int poxY, int posZ, int enemyType, Map& map, Portal& portal)
+void Enemy::init(CVector enemyPos, int enemyType, Map& map, Portal& portal, CModelMd3& enemyMod)
 {
-
-
 	localPortal = &portal;
-	enemyModel = new CModelMd3();
+	enemyModel = enemyMod.Clone();
 
 	localEnemyType = enemyType;
+
 	if (localEnemyType == 0) 
 	{
 		enemyMaxHp = enemyCurrentHp = 200;
-		enemyModel = enemyModelOne->Clone();
-		
 		enemyDamage = 50;
-		enemySpeed = 300 + rand() % 250;
+		enemySpeed = 400 + rand() % 250;
 		enemyModel->AddAnimation("run", 1, 29);
 		enemyModel->AddAnimation("attack", 35, 59);
 		enemyModel->AddAnimation("dead", 65, 82);
-
-	
-
 	}
 	else if (localEnemyType == 1)
 	{
 		enemyDamage = 50;
 		enemyMaxHp = enemyCurrentHp = 400;
-		enemyModel = enemyModelTwo->Clone();
-		enemySpeed = 200 + rand() % 200;
+	
+		enemySpeed = 400 + rand() % 250;
 
 		enemyModel->AddAnimation("run", 10, 40);
 		enemyModel->AddAnimation("attack", 0, 10);
@@ -68,16 +53,24 @@ void Enemy::init(int posX, int poxY, int posZ, int enemyType, Map& map, Portal& 
 		};
 		randomPortalPartPos = portalPartsPostions[rand() % 4];
 	}
-	
-	
 
+	//boss
+	else if (localEnemyType == 2)
+	{
+		enemyDamage = 350;
+		enemyMaxHp = enemyCurrentHp = 2400;
+
+		enemySpeed = 400 + rand() % 200;
+
+		enemyModel->AddAnimation("run", 1, 29);
+		enemyModel->AddAnimation("attack", 35, 59);
+		enemyModel->AddAnimation("dead", 65, 82);
+	}
+	
 	// enemy model
 
 	//enemyModel.SetToFloor(0);
-
-	
-	
-	enemyModel->SetPosition(posX, poxY, posZ);
+	enemyModel->SetPositionV(enemyPos);
 	
 	enemyModel->SetDirectionAndRotationToPoint(0, 0);
 	isDead = preDeahAnimation = false;
@@ -92,7 +85,8 @@ void Enemy::init(int posX, int poxY, int posZ, int enemyType, Map& map, Portal& 
 	OnSpawnHold = true;
 
 	enemyModel->SetToFloor(0);
-	
+
+	onHitEffect.delete_all();
 }
 
 //*************** UPDATE ***************
@@ -104,13 +98,18 @@ void Enemy::OnUpdate(Uint32 t, Player &player, Map& map, std::vector<Enemy*>& Al
 
 	if (preDeahAnimation)
 	{
+		
 		if (deathAnimationTimer == 0)
 		{
 			enemyModel->PlayAnimation("dead", 8, true);
-			deathAnimationTimer = 1000 + t;
+			enemyModel->SetSpeed(0);
+			deathAnimationTimer = 2000 + t;
 		}
 		else if(deathAnimationTimer < t) isDead = true;
-	 
+		
+		onHitEffect.Update(t);
+		onHitEffect.delete_if(true);
+		enemyModel->Update(t);
 		return;
 	}
 
@@ -129,7 +128,7 @@ void Enemy::OnUpdate(Uint32 t, Player &player, Map& map, std::vector<Enemy*>& Al
 		i++;
 	}
 
-	if (localEnemyType == 0 && !OnSpawnHold)
+	if ((localEnemyType == 0 || localEnemyType == 2)  && !OnSpawnHold)
 	{	
 		CVector displ = localPlayer->playerModel.GetPositionV() - enemyModel->GetPositionV();
 		float distance = hypot(displ.GetX(), displ.GetZ());
@@ -142,7 +141,7 @@ void Enemy::OnUpdate(Uint32 t, Player &player, Map& map, std::vector<Enemy*>& Al
 		else 
 		{
 			enemyModel->SetSpeed(0);
-			enemyModel->PlayAnimation("attack", 22, true);
+			enemyModel->PlayAnimation("attack", 24, true);
 			Attack();
 		}
 	}
@@ -172,7 +171,7 @@ void Enemy::OnUpdate(Uint32 t, Player &player, Map& map, std::vector<Enemy*>& Al
 		}
 		else
 		{
-			enemyModel->PlayAnimation("attack", 12, true);
+			enemyModel->PlayAnimation("attack", 10, true);
 			enemyModel->SetSpeed(0);
 			Attack();
 		}
@@ -181,6 +180,9 @@ void Enemy::OnUpdate(Uint32 t, Player &player, Map& map, std::vector<Enemy*>& Al
 	float remainingHpInPercentage = enemyCurrentHp / (enemyMaxHp / 100);
 	enemyHpbar.SetHealth(remainingHpInPercentage);
 	enemyModel->Update(t);
+
+	onHitEffect.Update(t);
+	onHitEffect.delete_if(true);
 }
 
 //*************** 2D RENDER ***************
@@ -205,7 +207,7 @@ void Enemy::Attack()
 		if (enemyModel->HitTest(&localPlayer->playerModel))
 		{
 			localPlayer->playerGettingDamage(enemyDamage);
-			attackDelay = 2000 + localTime;
+			attackDelay = 1000 + localTime;
 		}
 	}
 	else if (localEnemyType == 1 && attackDelay < localTime)
@@ -214,7 +216,7 @@ void Enemy::Attack()
 		if (localPortal->isPortalReseting && enemyModel->HitTest(&localPlayer->playerModel))
 		{
 			localPlayer->playerGettingDamage(enemyDamage);
-			attackDelay = 2000 + localTime;
+			attackDelay = 1000 + localTime;
 		}
 		// Attack Portal 
 		else if	
@@ -226,9 +228,18 @@ void Enemy::Attack()
 				)
 			{
 				localPortal->portalGettingDamaged(enemyDamage);
-				attackDelay = 2000 + localTime;
+				attackDelay = 1000 + localTime;
 			}
 			
+	}
+	else if (localEnemyType == 2 && attackDelay < localTime)
+	{
+		// Attack player  
+		if (enemyModel->HitTest(&localPlayer->playerModel))
+		{
+			localPlayer->playerGettingDamage(enemyDamage);
+			attackDelay = 1000 + localTime;
+		}
 	}
 }
 
@@ -237,11 +248,27 @@ void Enemy::OnRender3D(CGraphics* g)
 {
 	if (isDead) return;
 	if(!OnSpawnHold) enemyModel->Draw(g);
+	onHitEffect.Draw(g);
+	
  
 }
 
-void Enemy::EnemyGetDamage(float damage)
+void Enemy::EnemyGetDamage(float damage , CModel Vfx)
 {
+
+	for (int i = 0; i < 15; i++)
+	{
+		CModel* p = Vfx.Clone();
+		p->SetPositionV(enemyModel->GetPositionV() + CVector(0, 100, 0));
+		p->SetDirection(rand() % 360);
+		p->SetSpeed(rand() % 200);
+		p->SetColor(CColor::Green());
+		p->Die(250);
+		onHitEffect.push_back(p);
+	}
+
+
+
 	OnSpawnHold = false; // in case attacking at spawn point
 
 	enemyCurrentHp -= damage;
@@ -249,9 +276,9 @@ void Enemy::EnemyGetDamage(float damage)
 
 	if (enemyCurrentHp <= 0)
 	{
-		if (localEnemyType == 0) localPlayer->weaponComponents++;
-		else if (localEnemyType == 1) localPlayer->armorComponents++;
+		localPlayer->addLoot(localEnemyType, enemyModel->GetPositionV());
 		preDeahAnimation = true;
+		localPlayer->currentExp += enemyMaxHp;
 	}
 }
 

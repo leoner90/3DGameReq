@@ -157,8 +157,8 @@ bool CGameApp::OpenFullScreen()
 
 bool CGameApp::Run(CGame *pgame)
 {
-	cout << "GTEC engine v1.9.5" << endl;
-	cout << "(c) 2012-2023 Andreas Hoppe" << endl;
+	cout << "GTEC engine v1.9.7" << endl;
+	cout << "(c) 2012-2024 Andreas Hoppe" << endl;
 	
 	// set graphics context
 	pgame->SetGraphics (graphics);
@@ -265,6 +265,7 @@ bool CGameApp::Run(CGame *pgame)
 		   gamecycles++;
            GameTime = Uint32(gamecycles*period);
 		   pGame->SetGameTime( GameTime);
+		   //pGame->AdvanceGameTime(period);
 		   pGame->OnUpdate();
 		}
 		

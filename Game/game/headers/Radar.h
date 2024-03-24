@@ -18,7 +18,7 @@ private:
 
 	std::vector<Enemy*> localAllEnemies;
 	Player* localPlayer;
-
+	float radarSize;
 };
 
  

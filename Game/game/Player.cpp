@@ -14,8 +14,10 @@ Player::Player()
 {
 
 	dashVfx.LoadModel("rainDrop/rainDrop.obj");
-	//rainDrop.SetY(50);
-	dashVfx.SetScale(0.5f);
+	dashVfx.SetScale(0.2f);
+
+	onDamageVfx.LoadModel("rainDrop/rainDrop.obj");
+	onDamageVfx.SetScale(0.2f);
 
 
 	isPlayerDead = playerPreDeahAnimation = false;
@@ -23,30 +25,38 @@ Player::Player()
 
 	//model
 	playerModel.LoadModel("Player/myra.md3");
-	playerModel.LoadTexture("Player/myraTextures.png");
+	//playerModel.LoadTexture("Player/text.png");
 	playerModel.SetScale(25.5f);
 
 
 	//animation
-	playerModel.AddAnimation("runF", 255, 276);
-	playerModel.AddAnimation("runB", 280, 295);
-	playerModel.AddAnimation("runR", 300, 317);
-	playerModel.AddAnimation("runL", 320, 336);
-	playerModel.AddAnimation("hit", 340, 421);
-	playerModel.AddAnimation("idle", 1, 249);
-	playerModel.AddAnimation("death", 425, 556);
-	playerModel.AddAnimation("dash", 560, 576);
+	playerModel.AddAnimation("runF", 42, 63);
+	playerModel.AddAnimation("runB", 64, 80);
+	playerModel.AddAnimation("runR", 82, 99);
+	playerModel.AddAnimation("runL", 101, 117);
+	playerModel.AddAnimation("hit", 119, 200);
+	playerModel.AddAnimation("idle", 1, 40);
+	playerModel.AddAnimation("death", 202, 312);
+	playerModel.AddAnimation("dash", 314, 330);
 
 	//Shooting
 	bullet.LoadModel("bullet/Bullet2.obj");
 	bullet.SetScale(25.f);
-	shootingDelay = 500;
-	playerDamage = 100;
 
 	//sounds
 	footsteps.Play("playerFootsteps.wav", -1);
 	footsteps.SetVolume(3);
 	footsteps.Pause();
+
+
+	//Loot
+	lootItemOne.LoadModel("resources/techno.obj");
+	lootItemOne.SetScale(25.5f);
+	lootItemTwo.LoadModel("resources/bio.obj");
+	lootItemTwo.SetScale(25.5f);
+	lootItemThree.LoadModel("resources/bioCORE.obj");
+	lootItemThree.SetScale(25.5f);
+
 
 }
 
@@ -57,34 +67,44 @@ void Player::init()
 	isPlayerMoving = false;
 	playerShots.delete_all();
 	playerCurrentState = UNOCCUPIED;
-	curentSkillSelected = 0;
+	curentSkillSelected = DASH;
+	currentExp = 0;
 
 	//stats
-	playerMaxHp = playerCurrentHp = 1000;
+	playerMaxHp = playerCurrentHp = 500;
 	maxEnergy = CurrentEnergy = 100;
 	playerCurrentArmor = playerMaxArmor = 100;
 
 	//resources
-	armorComponents = weaponComponents = 0;
+	armorComponents = weaponComponents = bossLoot = 0;
 
 	isPlayerDead = playerPreDeahAnimation =  false;
 	playerdeathAnimationTimer = 0;
 	onStartGameEvent = firstBlinkyMeet = false;
+
+	onHitEffect.delete_all();
+	dashCoolDown = 0;
+
+	//shooting
+	shootingDelay = 250;
+	playerDamage = 50;
 }
 
 //*************** UPDATE ***************
 void Player::OnUpdate(Uint32 t, bool Dkey, bool Akey, bool Wkey, bool Skey, Map& map, std::vector<Enemy*> AllEnemies, CVector& mousePos, Portal& portal)
 {
+	//if dead -> return (do nothing)
+	if (isPlayerDead) return;
+
 	localMouse = &mousePos; 
 	localPortal = &portal;
 	localMap = &map;
-
+	localTime = t;
 	//getDeltaTime
 	deltatime = (t - prevFrameTime) / 1000  ; //in sec
 	prevFrameTime = t;
  
-	//if dead -> return (do nothing)
-	if (isPlayerDead) return;
+	
 
 	//if pre-dead -> play animation of death , set dead status true by the end
 	float remainingHpInPercentage = playerCurrentHp / (playerMaxHp / 100);
@@ -98,6 +118,7 @@ void Player::OnUpdate(Uint32 t, bool Dkey, bool Akey, bool Wkey, bool Skey, Map&
 			playerdeathAnimationTimer = 3000 + t;
 		}
 		else if (playerdeathAnimationTimer < t) isPlayerDead = true;
+		playerModel.SetSpeed(0);
 		playerModel.Update(t);
 		return;
 	}
@@ -110,8 +131,8 @@ void Player::OnUpdate(Uint32 t, bool Dkey, bool Akey, bool Wkey, bool Skey, Map&
 	}
 
 	//Energy Recovery
-	float energyRegenPerSec = 50;
-	float armorRegenPerSec = 10;
+	float energyRegenPerSec = 10;
+	float armorRegenPerSec = 5;
 	if (CurrentEnergy < maxEnergy) CurrentEnergy += deltatime * energyRegenPerSec;
 
 	 
@@ -133,18 +154,49 @@ void Player::OnUpdate(Uint32 t, bool Dkey, bool Akey, bool Wkey, bool Skey, Map&
 			{
 				if (enemy->preDeahAnimation) continue;
 				pShot->Delete();
-				enemy->EnemyGetDamage(playerDamage);
+				enemy->EnemyGetDamage(playerDamage, onDamageVfx); // to redo vfx ......
 			}
 		}
 	}
 
+	//LOOT - DROP
+	for (auto item : lootList)
+	{
+		if (playerModel.HitTest(item->GetPositionV(), 150))  
+		{
+			int itemType = item->GetStatus();
+			switch (itemType)
+			{
+			case 0:
+				armorComponents++;
+				break;
+			case 1:
+				weaponComponents++;
+				break;
+			case 2:
+				bossLoot++;
+				break;
+			default:
+				break;
+			}
+			item->Delete();
+		}
+	}
+
+	lootList.delete_if(true);
+	lootList.Update(t);
+
 	playerShots.delete_if(true);
 	playerShots.Update(t);
+
 	lastFramePos = playerModel.GetPositionV();
 	playerModel.Update(t);
 
 	dashEffect.Update(t);
 	dashEffect.delete_if(true);
+
+	onHitEffect.Update(t);
+	onHitEffect.delete_if(true);
 }
 
 //*************** 2D RENDER ***************
@@ -174,14 +226,45 @@ void Player::OnRender3D(CGraphics* g, CCamera& world)
 {
 	playerShots.Draw(g);
 	playerModel.Draw(g);
-
+	lootList.Draw(g);
 	dashEffect.Draw(g);
+	onHitEffect.Draw(g);
 	
+}
+
+double magnitude(const std::vector<double>& vec) {
+	double sum_of_squares = 0;
+	for (double component : vec) {
+		sum_of_squares += component * component;
+	}
+	return sqrt(sum_of_squares);
 }
 
 //*************** PLAYER CONTROLER ***************
 void Player::PlayerControl(bool Dkey, bool Akey, bool Wkey , bool Skey )
 {
+
+	CVector charVelocityV = CVector(playerModel.GetXVelocity(), playerModel.GetYVelocity(), playerModel.GetZVelocity());
+	CVector mousePos = CVector(localMouse->GetX(), localMouse->GetY(), localMouse->GetZ());
+	CVector displ = mousePos - playerModel.GetPositionV();
+	
+	CVector normalizedPlayerVelocityV = charVelocityV.Normalized();
+
+
+	float PlayerMagnitude = charVelocityV.Magnitude();
+	float DisplMagnitude = displ.Magnitude();
+
+
+	float dotProduct = charVelocityV.Dot(displ);
+
+
+	//float angel = dotProduct / (PlayerMagnitude * DisplMagnitude);
+	
+	cout << acos(dotProduct) * 180.0 / M_PI << endl;
+	
+	
+
+
 	if (playerModel.AnimationFinished() && playerCurrentState == INDASH) playerCurrentState = UNOCCUPIED;
 	if (playerCurrentState == INDASH) return;
 
@@ -225,15 +308,9 @@ void Player::PlayerControl(bool Dkey, bool Akey, bool Wkey , bool Skey )
 		playerModel.PlayAnimation("idle", 20, true);
 	}
 
-
-	float x = playerModel.GetXVelocity();
-	float y = playerModel.GetZVelocity();
-	//int dotproduct = playerModel.GetXVelocity() * localMouse.GetX() + playerModel.GetZVelocity() * localMouse.GetZ();
-	//int crossProduct = playerModel.GetXVelocity() * localMouse.GetZ() + playerModel.GetZVelocity() * localMouse.GetX();
-
 	if ((playerModel.GetZ() > localMouse->GetZ() || playerModel.GetX() > localMouse->GetX()) && Wkey )
 	{
-		playerModel.SetSpeed(450);
+		playerModel.SetSpeed(650);
 		playerModel.PlayAnimation("runF", 22, true);
 	}
 	
@@ -252,7 +329,7 @@ void Player::PlayerControl(bool Dkey, bool Akey, bool Wkey , bool Skey )
 		
 	else if (playerModel.GetZ() < localMouse->GetZ() && Skey)
 	{
-		playerModel.SetSpeed(450);
+		playerModel.SetSpeed(650);
 		playerModel.PlayAnimation("runF", 22, true);
 	}
 		
@@ -296,21 +373,22 @@ void Player::OnKeyDown(SDLKey sym, CVector currentMousePos)
 			}
 			break;
 		case DASH:
-			if (CurrentEnergy >= 25 && playerCurrentState != INDASH)
+			if (dashCoolDown < localTime && playerCurrentState != INDASH)
 			{
-				CurrentEnergy -= 25;
+				dashCoolDown = localTime + 3000;
 				playerCurrentState = INDASH;
 				playerModel.PlayAnimation("dash", 150, false);
 			 
 				CVector displ = CVector(localMouse->GetX() - playerModel.GetX(), 0, localMouse->GetZ() - playerModel.GetZ());
 				CVector dash = displ.Normalized();
-				for (int i = 0; i < 50; i++)
+				for (int i = 0; i < 120; i++)
 				{
 					CModel* p = dashVfx.Clone();
 					p->SetPositionV(playerModel.GetPositionV() + CVector(0,100,0));
-					p->SetDirection(playerModel.GetRotation());
-					p->SetSpeed(rand() % 1200);
-					p->Die(500);
+					p->SetColor(CColor::Blue());
+					p->SetDirection(rand() % 360);
+					p->SetSpeed(rand() % 400);
+					p->Die(300);
 					dashEffect.push_back(p);
 				}
 			 
@@ -328,6 +406,17 @@ void Player::OnKeyDown(SDLKey sym, CVector currentMousePos)
 
 void Player::playerGettingDamage(float damage)
 {
+	for (int i = 0; i < 15; i++)
+	{
+		CModel* p = onDamageVfx.Clone();
+		p->SetPositionV(playerModel.GetPositionV() + CVector(0, 100, 0));
+		p->SetDirection(rand() % 360);
+		p->SetSpeed(rand() % 200);
+		p->SetColor(CColor::Red());
+		p->Die(250);
+		onHitEffect.push_back(p);
+	}
+
 	playerCurrentArmor -= damage;
 
 	if (playerCurrentArmor < 0)
@@ -373,6 +462,17 @@ void Player::playerCollision(std::vector<Enemy*> AllEnemies)
 	}
 }
 
+void Player::addLoot(int enemyType, CVector enemyPos)
+{
+	float chance = rand() % 100;
+	if (chance < 40) return;
+	if(enemyType ==  0) lootList.push_back(lootItemOne.Clone());
+	else if (enemyType == 1) lootList.push_back(lootItemTwo.Clone());
+	else if (enemyType == 2) lootList.push_back(lootItemThree.Clone());
+	lootList.back()->SetPositionV(enemyPos);
+	lootList.back()->SetStatus(enemyType);
+}
+
  
 void Player::OnMouseMove(CVector currentMousePos)
 {
@@ -402,12 +502,12 @@ void Player::OnLButtonDown(CVector pos, CVector currentMousePos, long t)
 
 void Player::playerOnWheelUp()
 {
-	if (curentSkillSelected == RECALL) curentSkillSelected = DASH;
-	else if (curentSkillSelected == DASH) curentSkillSelected = RECALL;
+	//if (curentSkillSelected == RECALL) curentSkillSelected = DASH;
+	//else if (curentSkillSelected == DASH) curentSkillSelected = RECALL;
 }
 
 void Player::playerOnWheelDown()
 {
-	if (curentSkillSelected == RECALL) curentSkillSelected = DASH;
-	else if (curentSkillSelected == DASH) curentSkillSelected = RECALL;
+	//if (curentSkillSelected == RECALL) curentSkillSelected = DASH;
+	//else if (curentSkillSelected == DASH) curentSkillSelected = RECALL;
 }

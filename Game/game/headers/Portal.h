@@ -28,6 +28,7 @@ public:
 	 float prevFrameTime, deltatime;
 	 float currentportalChargingTime;
 	 bool isPortalCharged;
+	 float portalChargeInPercent;
 private:
 	CSprite  portalIcon;
 	float localH, localW, localTime;

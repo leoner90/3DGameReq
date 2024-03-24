@@ -18,13 +18,14 @@ public:
 	
 	CHealthBar hbar, energyBar, armorBar;
 
-	CSprite healtIcon, armorIcon, energyIcon, skillBar, sprintSkillLogo, callbackSkillIcon;
+	CSprite skillBar, sprintSkillLogoOn, sprintSkillLogoOff, callbackSkillIcon, mainEnergyUI;
 private:
 	Player* localPlayer;
 	float localH, localW;
-	CSprite weaponComponent, armorComponent;
+	CSprite weaponComponent, armorComponent, bossComponent;
 
 	float skillBarY;
+	float localTime;
 };
 
  

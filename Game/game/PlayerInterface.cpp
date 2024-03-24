@@ -10,56 +10,60 @@ PlayerInterface::PlayerInterface(float gameWidth, float gameHeigth)
 	localW = gameWidth;
 	font.LoadDefault();
 
+
+
+	//energyBar
+
+	energyBar.SetSize(205, 15);
+	energyBar.SetPosition(218, 93); 
+	energyBar.SetColors(CColor::Yellow(), CColor::Black(), CColor::Black());
+
 	// setup healthbar
-	hbar.SetSize(140, 15);
-	hbar.SetPosition(115, gameHeigth - 30.f);
+	hbar.SetSize(95, 25);
+	hbar.SetPosition(165, 53);
 	hbar.SetColors(CColor::Red(), CColor::Black(), CColor::Black());
 
 	//Armor Bar
-	armorBar.SetSize(140, 15);
-	armorBar.SetPosition(115, gameHeigth - 55.f);
+	armorBar.SetSize(95, 25);
+	armorBar.SetPosition(272, 53);
 	armorBar.SetColors(CColor::Gray(), CColor::Black(), CColor::Black());
 
-	//energyBar
-	energyBar.SetSize(140, 15);
-	energyBar.SetPosition(115, gameHeigth - 80.f); 
-	energyBar.SetColors(CColor::Yellow(), CColor::Black(), CColor::Black());
 
-	//icons
-	healtIcon.LoadImage("healthIcon.png");
-	healtIcon.SetSize(20, 20);
-	healtIcon.SetPosition(25, gameHeigth - 30.f);
-
-	armorIcon.LoadImage("armorIcon.png");
-	armorIcon.SetSize(20, 20);
-	armorIcon.SetPosition(25, gameHeigth - 55.f);
-
-	energyIcon.LoadImage("energyIcon.png");
-	energyIcon.SetSize(20, 20);
-	energyIcon.SetPosition(25, gameHeigth - 80.f);
+	mainEnergyUI.LoadImage("mainEnergyUI.png");
+	mainEnergyUI.SetSize(300, 150);
+	mainEnergyUI.SetPosition(180, 100);
 
 	//Resources Icons
-	armorComponent.LoadImage("armorComponent.png");
+	armorComponent.LoadImage("techoCore.png");
 	armorComponent.SetSize(25, 30);
-	armorComponent.SetPosition(localW - 170, localH - 30);
+	armorComponent.SetPosition(localW - 90, localH - 30);
 
-	weaponComponent.LoadImage("weaponComponent.png");
+	weaponComponent.LoadImage("bio.png");
 	weaponComponent.SetSize(30, 30);
-	weaponComponent.SetPosition(localW - 75, localH - 30);
+	weaponComponent.SetPosition(localW - 90, localH - 75);
+
+	bossComponent.LoadImage("bioCore.png");
+	bossComponent.SetSize(30, 30);
+	bossComponent.SetPosition(localW - 90, localH - 120);
 
 	skillBarY = 240;
-	//skillBar
-	skillBar.LoadImage("skillBar.png");
-	skillBar.SetSize(80, 80);
-	skillBar.SetPosition(localW - 60, skillBarY);
 
-	sprintSkillLogo.LoadImage("sprintSkillLogo.png");
-	sprintSkillLogo.SetSize(80, 80);
-	sprintSkillLogo.SetPosition(localW - 65, skillBarY - 5);
+	//skillBar
+	sprintSkillLogoOn.LoadImage("sprintSkillLogo.png");
+	sprintSkillLogoOn.SetSize(80, 80);
+	sprintSkillLogoOn.SetPosition(localW - 65, skillBarY - 5);
+
+	sprintSkillLogoOff.LoadImage("sprintSkillLogoOnReload.png");
+	sprintSkillLogoOff.SetSize(80, 80);
+	sprintSkillLogoOff.SetPosition(localW - 65, skillBarY - 5);
+
+
 
 	callbackSkillIcon.LoadImage("callbackSkillIcon.png");
 	callbackSkillIcon.SetSize(80, 80);
 	callbackSkillIcon.SetPosition(localW - 65, skillBarY - 5);
+
+
 }
 
 void PlayerInterface::init(int gameWidth, int gameHeigth)
@@ -72,6 +76,7 @@ void PlayerInterface::init(int gameWidth, int gameHeigth)
 void PlayerInterface::OnUpdate(Uint32 t, Player& player, UIDialogBox& dialogBox)
 {
 	localPlayer = &player;
+	localTime = t;
 	float remainingHpInPercentage = localPlayer->playerCurrentHp / (localPlayer->playerMaxHp / 100);
 	float remainingEnergyInPercentage = localPlayer->CurrentEnergy / (localPlayer->maxEnergy / 100);
 	float remainingArmorInPercentage = localPlayer->playerCurrentArmor / (localPlayer->playerMaxArmor / 100);
@@ -86,31 +91,43 @@ void PlayerInterface::OnDraw(CGraphics* g)
 	hbar.Draw(g);
 	energyBar.Draw(g);
 	armorBar.Draw(g);
-	skillBar.Draw(g);
+	mainEnergyUI.Draw(g);
  
-	switch (localPlayer->curentSkillSelected)
+
+	int currentSkillSelected = localPlayer->curentSkillSelected;
+
+	if (currentSkillSelected == 0)
 	{
-	case 0:
+		if(localPlayer->dashCoolDown < localTime)
+			sprintSkillLogoOn.Draw(g);
+		else
+			sprintSkillLogoOff.Draw(g);
+	}
+	else if(currentSkillSelected == 1)
 		callbackSkillIcon.Draw(g);
-		break;
-	case 1:
-		sprintSkillLogo.Draw(g);
-		break;
-	default:
-		break;
-	} 
 	 
-	//icons
-	healtIcon.Draw(g);
-	armorIcon.Draw(g);
-	energyIcon.Draw(g);
 
 	//resources
-	armorComponent.Draw(g);
-	font.DrawNumber(localW - 145, localH - 40, localPlayer->armorComponents, CColor::White(), 30);
+	if (localPlayer->armorComponents > 0)
+	{
+		armorComponent.Draw(g);
+		font.DrawNumber(localW - 50, localH - 45, localPlayer->armorComponents, CColor::White(), 30);
+	}
 
-	weaponComponent.Draw(g);
-	font.DrawNumber(localW - 50, localH - 40, localPlayer->weaponComponents, CColor::White(), 30);
+	if (localPlayer->weaponComponents > 0)
+	{
+		weaponComponent.Draw(g);
+		font.DrawNumber(localW - 50, localH - 90, localPlayer->weaponComponents, CColor::White(), 30);
+	}
+
+	if (localPlayer->bossLoot > 0)
+	{
+		bossComponent.Draw(g);
+		font.DrawNumber(localW - 50, localH - 135, localPlayer->bossLoot, CColor::White(), 30);
+	}
+	
+
+	
 }
 
  

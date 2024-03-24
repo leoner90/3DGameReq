@@ -47,7 +47,7 @@ Map::Map()
 
 	//ship
 	shipModel.LoadModel("test/test.obj");
-	shipModel.SetScale(1150.f);
+	shipModel.SetScale(1550.f);
 	shipModel.SetPosition(5100, -5, 4550);
 	shipModel.SetSpeed(0);
 	shipModel.Rotate(25, 25, 25);

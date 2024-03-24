@@ -14,7 +14,10 @@
 CMyGame::CMyGame()
 {
 	HideMouse();
-	YcameraInitState = camera.rotation.y;
+	YcameraInitRotation = camera.rotation.y;
+	ZcameraInitState = camera.position.z;
+	XcameraInitState = camera.position.x;
+	YcameraInitState = camera.position.x;
 }
 //*************** INIT ***************
 void CMyGame::OnInitialize()
@@ -50,27 +53,39 @@ void CMyGame::OnInitialize()
 	font.LoadDefault();
 	EnableFog();
 	//make sure that sld handels all the input not a window //SDL_WM_GrabInput(SDL_GRAB_ON);
+
+	
+	//enemies
+	enemyModelOne = new CModelMd3();
+	enemyModelTwo = new CModelMd3();
+	boss = new CModelMd3();
+	enemyModelOne->LoadModel("enemies/mon01.md3");
+	enemyModelOne->SetScale(25.5f);
+
+	enemyModelTwo->LoadModel("enemies/65.md3");
+	enemyModelTwo->SetScale(15.5f);
+
+	boss->LoadModel("enemies/mon01.md3");
+	boss->SetScale(45.5f);
 }
 
 //ON NEW GAME START
 void CMyGame::OnStartLevel(int level)
 {
 	map->init();
-	player->init();//Main inits
+
 	shop->init(localW, localH); //Shop init
 	playerInterface->init(localW, localH); //player Interface init
 	dialogBox->init(); // dialog Box init
 	portal->init();
 	radar->init();
-	cutscene->init(localW, localH); 	//cutscene
+	cutscene->init(localW, localH, *player); 	//cutscene
+	player->init();//Main inits
 
 	//****ENEMIES
-	for (auto enemy : AllEnemies) 
-	{
-		delete enemy;
-	}
-
+	for (auto enemy : AllEnemies) delete enemy;
 	AllEnemies.clear();
+
 	totalEnemiesOnHold = 0;
 	totalEnemiesToSpawn = 4;
 	InitSpawnDelay = 60000 * 0.5; // spawn start , not the wave
@@ -79,9 +94,15 @@ void CMyGame::OnStartLevel(int level)
 
 	//resets
 	gameStarted = false;
+	camera.rotation.y = YcameraInitRotation;
+	camera.position.z = ZcameraInitState;
+	camera.position.x = XcameraInitState;
+	camera.position.y = YcameraInitState;
+
 	SetGameMode(MODE_PAUSED);
 	deathScreenTimer = 0;
-	camera.rotation.y = YcameraInitState;
+	isBossSpawn = false;
+	
 
 }
 
@@ -112,7 +133,8 @@ void CMyGame::OnUpdate()
 	if (!cutscene->isCutscenePlaying && currentMenuState == CUTSCENE && cutscene->curentCutSceneNum == 0)
 	{
 		currentMenuState = IN_GAME;
-		camera.rotation.y = YcameraInitState;
+		camera.rotation.y = YcameraInitRotation;
+		camera.position.z = 650;
 	}
 
 	if (currentMenuState == CUTSCENE && gameStarted)
@@ -164,22 +186,18 @@ void CMyGame::OnUpdate()
  
 
 	//Enemies delete
-	int i = 0;
-	for (auto enemy : AllEnemies) {
 
-		enemy->OnUpdate(GetTime(), *player, *map, AllEnemies, i, *portal);
+	for (auto enemy : AllEnemies) {
+		//o = enemy todo
+		enemy->OnUpdate(GetTime(), *player, *map, AllEnemies, 0, *portal);
 
 		//* if regular enemie dead -> delete;
 		if (enemy->isDead) 
 		{
-			AllEnemies.erase(AllEnemies.begin() + i);
-			//delete enemy;
-			//i--;
-		}
-
-		i++;
+			delete enemy;
+			AllEnemies.erase(find(AllEnemies.begin(), AllEnemies.end(), enemy));
+		}	
 	}
-
 }
 
 //*************** 2D RENDER ***************
@@ -254,7 +272,7 @@ void CMyGame::CameraControl(CGraphics* g)
 	glScalef(world.scale, world.scale, world.scale);  // scale the game world
 	glTranslatef(world.position.x, world.position.y, world.position.z);  // translate game world
 
-	glTranslatef(0, 0, camera.position.z);  // translate game world in z-axis direction
+	glTranslatef(0, 0, camera.position.z  );  // translate game world in z-axis direction
 	glRotatef(camera.rotation.x + 50, 1, 0, 0);	// rotate game world around x-axis
 	if (currentMenuState == CUTSCENE && gameStarted )
 		camera.rotation.y -= cutscene->shiprotationalAngelY / 2;
@@ -262,19 +280,14 @@ void CMyGame::CameraControl(CGraphics* g)
 	
 	glRotatef(camera.rotation.y , 0, 1, 0);	// rotate game world around x-axis
 
-	// -----  Player camera control ----------
-
-	// rotate game world with player and face forward
-	//glRotatef(-player->playerModel.GetRotation() + 90, 0, 1, 0);
-
+	// rotate game world with player and face forward //glRotatef(-player->playerModel.GetRotation() + 90, 0, 1, 0);
 	// move camera up from player position. Camera will rise with the player
 	if (currentMenuState == CUTSCENE && gameStarted )
 		glTranslatef(0, -cutscene->cutcceneCameraPosition.GetY() - camera.position.y , 220);
 	else
 		glTranslatef(0, -player->playerModel.GetY() - camera.position.y, 0);
 
-	// draw the skydome before game world is translated
-   // it makes the skydome stationary
+   // it makes the skydome stationary / draw the skydome before game world is translated
 	skydome.Draw(g);
 	
 	// position game world at the player position (excluding skydome)
@@ -308,7 +321,7 @@ void CMyGame::InitSpritesAndModels()
 	mainMenushowControlers.SetPosition((float)Width / 2, (float)Height / 2);
 
 	// char screen
-	CharStatsMenu.LoadImage("charStats.jpg");
+	CharStatsMenu.LoadImage("charStats.png");
 	CharStatsMenu.SetSize((float)Width, (float)Height);
 	CharStatsMenu.SetPosition((float)Width / 2, (float)Height / 2);
 
@@ -402,19 +415,26 @@ void CMyGame::CharStatsDraw(CGraphics* g)
 	
 	//resources
 	font.DrawText((float)Width / 2, (float)Height - 400, "ARMOR PARTS:", CColor::White(), 18);
-	font.DrawNumber((float)Width / 2 + 100, (float)Height - 400, player->armorComponents, CColor::White(), 18);
+	font.DrawNumber((float)Width / 2 + 160, (float)Height - 400, player->armorComponents, CColor::White(), 18);
 
 	font.DrawText((float)Width / 2, (float)Height - 450, "WEAPON  PARTS:", CColor::White(), 18);
-	font.DrawNumber((float)Width / 2 + 100, (float)Height - 450, player->weaponComponents, CColor::White(), 18);
+	font.DrawNumber((float)Width / 2 + 160, (float)Height - 450, player->weaponComponents, CColor::White(), 18);
 
 	font.DrawText((float)Width / 2, (float)Height - 500, "SKILLS:", CColor::White(), 18);
+
+
+	//EXP
+	font.DrawText((float)Width / 2, (float)Height - 550, "EXP", CColor::White(), 18);
+	font.DrawNumber((float)Width / 2 + 100, (float)Height - 550, player->currentExp, CColor::White(), 18);
+ 
+
 }
 
 
 void CMyGame::enemySpawn()
 {
 	
-	enum allEnemiesTypes { EN2, OGRO };
+	enum allEnemiesTypes { EN2, OGRO, BOSS };
 
 	float randomSpawnPoint = rand() % 100 + 50;
 	if (enemyOneSpawnDelay == 0)
@@ -426,16 +446,18 @@ void CMyGame::enemySpawn()
 	CVector spawnPos[4] =
 	{
 		CVector(5500 + randomSpawnPoint,100,5400 + randomSpawnPoint),
-		CVector(5500 + randomSpawnPoint,100,5400 + randomSpawnPoint),
+		CVector(5500 + randomSpawnPoint,100,-5400 + randomSpawnPoint),
+		CVector(-5500 + randomSpawnPoint,100,-5400 + randomSpawnPoint),
 		CVector(-5500 + randomSpawnPoint,100,5400 + randomSpawnPoint),
-		CVector(-5500 + randomSpawnPoint,100,5400 + randomSpawnPoint)
+	
 	};
 
+	//EnemyOne
 	if (enemyOneSpawnDelay < GetTime())
 	{
 		 
 		AllEnemies.push_back(new Enemy());
-		AllEnemies.back()->init(5500 + randomSpawnPoint, 100, 5400 + randomSpawnPoint, OGRO, *map, *portal);
+		AllEnemies.back()->init(spawnPos[rand() % 4], OGRO, *map, *portal, *enemyModelTwo);
 		enemyOneSpawnDelay = GetTime() + 5000 + rand() % 3000;
 		totalEnemiesOnHold++;
 	}
@@ -444,10 +466,20 @@ void CMyGame::enemySpawn()
 	if (enemyTwoSpawnDelay < GetTime())
 	{
 		AllEnemies.push_back(new Enemy());
-		AllEnemies.back()->init(-5500 + randomSpawnPoint, 100, -5400 + randomSpawnPoint, EN2, *map, *portal);
+		AllEnemies.back()->init(spawnPos[rand() % 4], EN2, *map, *portal, *enemyModelOne);
 		enemyTwoSpawnDelay = GetTime() + 5000 + rand() % 2000;
 		totalEnemiesOnHold++;
 	}
+
+	//boss
+	if (portal->portalChargeInPercent > 75 && !isBossSpawn)
+	{
+		isBossSpawn = true;
+		AllEnemies.push_back(new Enemy());
+		AllEnemies.back()->init(spawnPos[rand() % 4], BOSS, *map, *portal, *boss);
+		AllEnemies.back()->OnSpawnHold = false;
+	}
+
 
 
 	//start a wave
@@ -460,9 +492,8 @@ void CMyGame::enemySpawn()
 			if (enemy->OnSpawnHold) howManyEnemiesWasOnhold++;
 			enemy->OnSpawnHold = false;
 			totalEnemiesOnHold = 0;
-			totalEnemiesToSpawn += 1;
 		}
-
+		totalEnemiesToSpawn += 2;
 		dialogBox->showBox(1, 9,9, 1, 3000); // speaker id , text id , priority
 	}
 }
@@ -606,7 +637,11 @@ void CMyGame::OnMouseMove(Uint16 x, Uint16 y, Sint16 relx, Sint16 rely, bool bLe
 {
 	currentMousePos = ScreenToFloorCoordinate(x, y);
 	mousePointer.SetPosition(x, y);
-	player->OnMouseMove(currentMousePos);
+
+	//player rotation to mouse pos
+	if(currentMenuState == IN_GAME && !player->playerPreDeahAnimation) player->OnMouseMove(currentMousePos);
+
+	//camera rotation
 	if (cameraMovement)
 	{
 		float addX = cameraControlMouseInitPose.GetX() - x;

@@ -74,7 +74,7 @@ bool CModelMd3::LoadMd3(string filename)
 
         // ------------------ Read texture coordinates and surface normals --------------
 
-        //groups = new group[256];
+        if (groups == NULL) groups = new group[256];
         numG = (unsigned char)md3Header->numMeshSurfaces;
         numFrames = md3Header->numFrames;
         numTris = 0;
@@ -498,8 +498,8 @@ CModelMd3* CModelMd3::Clone()
     m->norm = norm;
 
     m->numG = numG;
-    memcpy(m->groups, groups, numG * (sizeof(group)));
-    //m->groups = groups;
+    //memcpy(m->groups, groups, numG * (sizeof(group)));
+    m->groups = groups;
 
    
 	
@@ -514,23 +514,13 @@ CModelMd3* CModelMd3::Clone()
 
 void CModelMd3::Clear()
 {
+    
 	if (!isCloned)
 	{
      if (modeldata != NULL) delete[] modeldata;
-     if (vert != NULL) delete[] vert;
-     if (norm != NULL) delete[] norm;
-     if (tex != NULL) delete[] tex;
-     for (unsigned char n = 0; n < numG; n++) glDeleteTextures(1, (GLuint*)&groups[n].mat.texture_ID);
-     //if (groups != NULL) delete[] groups;
-     if (framedata != NULL) delete[] framedata;
-     glDeleteTextures(1, &TextureID);
     }
+   
     
-    if (groups != NULL) delete[] groups;
-    numTris = 0; vert = NULL; norm = NULL; tex = NULL;
-    numG = 0;  groups = NULL; modeldata = NULL; md3Header = NULL;
-    framedata = NULL;
-    numAnims = 0; selectedAnimation = 0;
 
     if (childNode != NULL)
     {

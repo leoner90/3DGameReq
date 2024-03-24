@@ -22,7 +22,8 @@ UIDialogBox::UIDialogBox(float w, float h)
 
 	dialogBoxShowSpeed = 20;
 	speakerImgMarginTop = 80;
-	speakerImgMarginLeft = 240;
+	speakerImgMarginLeft = 200;
+	textMarginLeft = 0.25;
 
 	//DIALOGS
 	name[MYNE] = "Myne";
@@ -49,13 +50,14 @@ UIDialogBox::UIDialogBox(float w, float h)
 	text[16] = "Looks like this ship will never fly again.\n";
 	text[17] =
 		"I wonder how Blinky is doing, although he’s a robot\n"
-		"he’s not immortal, it seems that during landing he was thrown towards that strange portal";
+		"he’s not immortal, it seems that during landing\n"
+		"he was thrown towards that strange portal";
 
 	text[18] = "Myne!!! You alive.\n";
-	text[19] = "Wonderful, I started to charge this ancient portal, it's our ticket home\n";
+	text[19] = "Wonderful, I started to charge this ancient portal,\n it's our ticket home";
 	text[20] =
-		"But I'm afraid it's woke up all the monsters around, you have to survive \n"
-		"while the portal is charging";
+				"But I'm afraid it's woke up all the monsters around,\n"
+				"you have to survive while the portal is charging";
 
 	text[21] = "Portal is back to life";
 
@@ -87,8 +89,10 @@ void UIDialogBox::OnUpdate(long t, bool fullWidth)
 	}
 	else 
 	{
-		dialogBoxBg.SetSize(localW - 180, dialogBoxBg.GetHeight()); // 300 size of RADAR
-		dialogBoxBg.SetPosition(localW / 2 - 90, dialogBoxBg.GetY());
+		dialogBoxBg.SetSize(localW - 520, dialogBoxBg.GetHeight());  
+		dialogBoxBg.SetPosition(localW / 2 + 80 , dialogBoxBg.GetY());
+		speakerImgMarginLeft = 500;
+		textMarginLeft = 0.4;
 	}
  
 
@@ -109,6 +113,7 @@ void UIDialogBox::OnUpdate(long t, bool fullWidth)
 		dialogBoxHideSpeed += 8;
 		dialogBoxBg.SetPosition(dialogBoxBg.GetX(), dialogBoxBg.GetY() - dialogBoxHideSpeed);
 		speakerImg.SetPosition(speakerImg.GetX(), speakerImg.GetY() - dialogBoxHideSpeed);
+		MyneImg.SetPosition(speakerImg.GetX(), speakerImg.GetY() - dialogBoxHideSpeed);
 
 		if (dialogBoxHideSpeed >= dialogBoxBg.GetHeight() / 4)
 		{
@@ -157,8 +162,8 @@ void UIDialogBox::OnDraw(CGraphics* g)
 
 	if (textShow && dialogBoxBg.GetY() >= dialogBoxBg.GetHeight() / 2)
 	{
-		font.DrawText(localW * 0.25, 110, name[speaker], CColor::Yellow(), 26);
-		textConverter->splitTextToLines(text[dialogNumber], localW * 0.25, 80, 22);	
+		font.DrawText(localW * textMarginLeft, 110, name[speaker], CColor::Yellow(), 26);
+		textConverter->splitTextToLines(text[dialogNumber], localW * textMarginLeft, 80, 22);
 	}
  	
 }

@@ -5,13 +5,14 @@
 
 Radar::Radar(float w, float h)
 {
-	radarBg.LoadImage("radarBg.jpg");
-	radarBg.SetSize(180, 180);
-	radarBg.SetPosition(w - 90, 90);
+	radarSize = 180;
+	radarBg.LoadImage("radarBg2.png");
+	radarBg.SetSize(radarSize, radarSize);
+	radarBg.SetPosition(w - (radarSize / 2), radarSize/ 2 + 10);
 
 	// char screen
 	dot.LoadImage("dot.png");
-	dot.SetSize(7, 7);
+	dot.SetSize(10, 10);
 	
 }
 
@@ -48,11 +49,11 @@ void Radar::OnDraw(CGraphics* g)
 
 void Radar::DrawDot(float posX, float posZ, CColor color, CGraphics* g)
 {
-	float radarCenterPos = 90;
-	float PosX = posX / 7500 * 180;
+	float radarCenterPos = radarSize / 2;
+	float PosX = posX / 7500 * (radarSize - 40);
 	float resultX = radarCenterPos + (PosX / 2);
 
-	float enemyPosZ = posZ / 7500 * 180;
+	float enemyPosZ = posZ / 7500 * (radarSize - 40);
 	float resultZ = radarCenterPos - (enemyPosZ / 2);
 
 	dot.SetPosition(1740 + resultX, resultZ);
