@@ -22,8 +22,7 @@ UIDialogBox::UIDialogBox(float w, float h)
 
 	dialogBoxShowSpeed = 20;
 	speakerImgMarginTop = 80;
-	speakerImgMarginLeft = 200;
-	textMarginLeft = 0.25;
+
 
 	//DIALOGS
 	name[MYNE] = "Myne";
@@ -75,6 +74,8 @@ void UIDialogBox::init()
 	currentPriority = -1;
 	autoHideTimer = 0;
 	hideInSec = 0;
+	speakerImgMarginLeft = 200;
+	textMarginLeft = 0.25;
 }
 
 void UIDialogBox::OnUpdate(long t, bool fullWidth)
@@ -95,8 +96,6 @@ void UIDialogBox::OnUpdate(long t, bool fullWidth)
 		textMarginLeft = 0.4;
 	}
  
-
-
 
 	//hide
 	if ((autoHideTimer && isBoxShowen) || (hideInSec < localTime && hideInSec != 0 )) // manual hide called or autohide(hideInSec) timer is off

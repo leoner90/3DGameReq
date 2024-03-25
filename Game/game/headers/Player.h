@@ -20,18 +20,22 @@ public:
 	CModelList playerShots;
 	CModel bullet;
 
-	float playerDamage;
+	float playerDamage, chargedDamage;
 	float shootingDelay;
 	float attackDelay;
- 
+	bool chargedShot;
+	bool isShotCharged;
+	float startChargedShotTimer;
+	float totalTimeToCharge;
 
 	//local variables
 	Map* localMap;
 	Portal* localPortal;
+	std::vector<Enemy*> localEnemies;
 	
 	//Main Functions
 	void init();
-	void OnUpdate(Uint32 t, bool Dkey, bool Akey, bool Wkey, bool Skey, Map& map, std::vector<Enemy*> AllEnemies, CVector& mousePos, Portal& portal);
+	void OnUpdate(Uint32 t, bool Dkey, bool Akey, bool Wkey, bool Skey, Map& map, std::vector<Enemy*> AllEnemies, CVector& mousePos, Portal& portal, CVector playerWorldPos);
 	void OnDraw(CGraphics* g, UIDialogBox& dialogBox, Shop& shop);
 	void PlayerControl(bool Dkey, bool Akey, bool Wkey, bool Skey);
 	void OnRender3D(CGraphics* g, CCamera& world);
@@ -42,27 +46,36 @@ public:
 	void playerGettingDamage(float damage);
 	void playerCollision(std::vector<Enemy*> AllEnemies);
 	void addLoot(int enemyType, CVector enemyPos);
-	
-	//player movement
+	void playerShotsHandler();
+	void lootHandler();
+	void performShot();
+
+	void OnRButtonDown(long t);
+	void OnRButtonUp();
+	void OnMouseMove(CVector currentMousePos);
+
 	CVector lastFramePos;
-
-
-	//3D Models
 	CModelMd3 playerModel;
-
- 
 
 	//Player Current Skill
 	enum PlayerSkills{DASH, RECALL};
 	int curentSkillSelected;
 
 	//Sounds
-	CSoundPlayer footsteps;
-	CSoundPlayer shotSound;
+	CSoundPlayer footsteps, shotSound, hitSound, deathSound, dashSound, PickUpLootSound, charginShotSound;
+ 
+
+
 	bool isPlayerMoving;
 	
-	enum playerStates { UNOCCUPIED, INATTACK, INDASH };
+	enum playerStates { UNOCCUPIED, INATTACK, INDASH, INDAMAGE };
+	float dashCoolDown;
+	float dashTimer;
+	bool isPlayerInDamage;
+	float InDamageStunDelayTimer;
+	float repeatStunDelayTimer;
 	playerStates playerCurrentState;
+	playerStates savedPrevPlayerState;
 
 	CFont font;
 
@@ -75,7 +88,7 @@ public:
 	Uint32 playerdeathAnimationTimer;
 
 	float prevFrameTime , deltatime;
-	void OnMouseMove(CVector currentMousePos);
+
  
 	CVector* localMouse;
 
@@ -90,8 +103,14 @@ public:
 	//loot
 	CModel lootItemOne, lootItemTwo, lootItemThree;
 
-	float dashCoolDown;
-
+	
+	float energyRegenPerSec;
+	float armorRegenPerSec;
 private:
 	long localTime;
+
+	CHealthBar ShotChargeBar; 
+	float ShotChargeBarOffset;
+
+	float saveAngle;
 };

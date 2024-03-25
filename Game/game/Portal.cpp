@@ -29,20 +29,25 @@ Portal::Portal(float gameWidth, float gameHeigth)
 	portalPartFour.SetScale(75.f);
 	portalPartFour.SetPosition(400, 0, -100);
 
-	//portal
-	portalHpBar.SetSize(140, 15);
-	portalHpBar.SetPosition(115, gameHeigth - 105);
-	portalHpBar.SetColors(CColor::DarkBlue(), CColor::Black(), CColor::Black());
 
 	//portal
 	resetHpBar.SetSize(140, 5);
-	resetHpBar.SetPosition(115, gameHeigth - 113);
+	resetHpBar.Rotate(90);
+	resetHpBar.SetPosition(gameWidth -  22, 378);
 	resetHpBar.SetColors(CColor::Red(), CColor::Black(), CColor::Black());
 
 
-	portalIcon.LoadImage("portalIcon.png");
-	portalIcon.SetSize(20, 20);
-	portalIcon.SetPosition(25, gameHeigth - 105);
+	//portal
+	portalHpBar.SetSize(580, 14);
+	portalHpBar.Rotate(90);
+	portalHpBar.SetPosition(gameWidth - 37, 600);
+	portalHpBar.SetColors(CColor::DarkBlue(), CColor::Black(), CColor::Black());
+
+	//portal UI
+	portaChargelUI.LoadImage("poertalCharge.png");
+	portaChargelUI.SetSize(25, 600);
+	portaChargelUI.SetPosition(gameWidth - 40, 600);
+
 
 	isPortalCharged = false;
 }
@@ -118,12 +123,14 @@ void Portal::OnUpdate(Uint32 t, UIDialogBox& dialogBox)
 
 void Portal::OnDraw(CGraphics* g)
 {
+
 	portalHpBar.Draw(g);
 	resetHpBar.Draw(g);
-	portalIcon.Draw(g);
+	portaChargelUI.Draw(g);
+ 
 	if (isPortalReseting)
 	{
-		font.DrawNumber(190, localH - 113, (portalResetTimer - localTime) / 1000, CColor::Red(), 18);
+		font.DrawNumber(localW - 22, 310, (portalResetTimer - localTime) / 1000, CColor::Red(), 18);
 	}
 	
 }

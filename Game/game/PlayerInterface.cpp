@@ -33,6 +33,11 @@ PlayerInterface::PlayerInterface(float gameWidth, float gameHeigth)
 	mainEnergyUI.SetSize(300, 150);
 	mainEnergyUI.SetPosition(180, 100);
 
+
+
+
+
+
 	//Resources Icons
 	armorComponent.LoadImage("techoCore.png");
 	armorComponent.SetSize(25, 30);
@@ -56,8 +61,6 @@ PlayerInterface::PlayerInterface(float gameWidth, float gameHeigth)
 	sprintSkillLogoOff.LoadImage("sprintSkillLogoOnReload.png");
 	sprintSkillLogoOff.SetSize(80, 80);
 	sprintSkillLogoOff.SetPosition(localW - 65, skillBarY - 5);
-
-
 
 	callbackSkillIcon.LoadImage("callbackSkillIcon.png");
 	callbackSkillIcon.SetSize(80, 80);
@@ -92,7 +95,7 @@ void PlayerInterface::OnDraw(CGraphics* g)
 	energyBar.Draw(g);
 	armorBar.Draw(g);
 	mainEnergyUI.Draw(g);
- 
+
 
 	int currentSkillSelected = localPlayer->curentSkillSelected;
 

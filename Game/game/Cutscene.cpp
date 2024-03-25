@@ -111,7 +111,8 @@ void Cutscene::cutSceneOne()
 	if (dialogSwitcherTimer == 0 )
 	{
 		dialogSwitcherTimer = localTime + 8000;
-		engineSound.Play("engineSound.wav", -1);
+		engineSound.Play("engine.wav", -1);
+		engineSound.SetVolume(90);
 	}
 
  
@@ -148,6 +149,7 @@ void Cutscene::cutSceneOne()
 		shipModel.SetSpeed(-150);
 		shiprotationalAngelY = 0.5;
 		explosionSound.Play("explosion.wav");
+		explosionSound.SetVolume(30);
 		dialogNumber++;
 	}
 
@@ -197,6 +199,10 @@ void Cutscene::cutSceneOne()
 
 	if (dialogNumber == 10)
 	{
+		engineSound.Pause();
+		crashSound.Play("crash.wav", -1);
+		crashSound.SetVolume(60);
+
 		if(localDialogBox->isBoxShowen) localDialogBox->hideBox();
 		dialogNumber++;
 	}
@@ -204,15 +210,18 @@ void Cutscene::cutSceneOne()
 
 	if (dialogNumber == 11 && isCutscenePlaying)
 	{
+	
 		if (!cutSceneEndDimOn) cutSceneEndDimOn = true;
 		blackScreenTimer += 2;
 		darkTransition.SetAlpha(blackScreenTimer);
 	}
 
+
 	if (blackScreenTimer >= 100)
 	{
-		isCutscenePlaying = false;
 		engineSound.Pause();
+		isCutscenePlaying = false;
+		crashSound.Pause();
 	}
 
 	shipModel.SetDirectionV(shipModel.GetRotationV());

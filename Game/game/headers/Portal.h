@@ -30,7 +30,7 @@ public:
 	 bool isPortalCharged;
 	 float portalChargeInPercent;
 private:
-	CSprite  portalIcon;
+	CSprite  portaChargelUI;
 	float localH, localW, localTime;
 	UIDialogBox* localDialogBox;
 	float underAttackMsgDelay;

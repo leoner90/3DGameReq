@@ -49,4 +49,9 @@ public:
 
 	CModelList onHitEffect;
 	CModel Vfx;
+
+	float bossChargedAttackDelay , chargingAttack;
+	bool isBossChargingAttack;
+
+	CSoundPlayer deathSound;
 };

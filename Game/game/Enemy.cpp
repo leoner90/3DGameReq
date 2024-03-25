@@ -28,7 +28,7 @@ void Enemy::init(CVector enemyPos, int enemyType, Map& map, Portal& portal, CMod
 	{
 		enemyMaxHp = enemyCurrentHp = 200;
 		enemyDamage = 50;
-		enemySpeed = 400 + rand() % 250;
+		enemySpeed = 350 + rand() % 250;
 		enemyModel->AddAnimation("run", 1, 29);
 		enemyModel->AddAnimation("attack", 35, 59);
 		enemyModel->AddAnimation("dead", 65, 82);
@@ -38,7 +38,7 @@ void Enemy::init(CVector enemyPos, int enemyType, Map& map, Portal& portal, CMod
 		enemyDamage = 50;
 		enemyMaxHp = enemyCurrentHp = 400;
 	
-		enemySpeed = 400 + rand() % 250;
+		enemySpeed = 350 + rand() % 250;
 
 		enemyModel->AddAnimation("run", 10, 40);
 		enemyModel->AddAnimation("attack", 0, 10);
@@ -62,9 +62,12 @@ void Enemy::init(CVector enemyPos, int enemyType, Map& map, Portal& portal, CMod
 
 		enemySpeed = 400 + rand() % 200;
 
-		enemyModel->AddAnimation("run", 1, 29);
-		enemyModel->AddAnimation("attack", 35, 59);
-		enemyModel->AddAnimation("dead", 65, 82);
+		enemyModel->AddAnimation("run", 10, 44);
+		enemyModel->AddAnimation("attack", 50, 72);
+		enemyModel->AddAnimation("chargingForAttack", 83, 125);
+		enemyModel->AddAnimation("chargedAttack", 141, 153);
+		enemyModel->AddAnimation("chargeAttackStop", 160, 165);
+		enemyModel->AddAnimation("dead", 170, 199);
 	}
 	
 	// enemy model
@@ -87,6 +90,9 @@ void Enemy::init(CVector enemyPos, int enemyType, Map& map, Portal& portal, CMod
 	enemyModel->SetToFloor(0);
 
 	onHitEffect.delete_all();
+
+	bossChargedAttackDelay = 0;
+	isBossChargingAttack = false;
 }
 
 //*************** UPDATE ***************
@@ -101,9 +107,9 @@ void Enemy::OnUpdate(Uint32 t, Player &player, Map& map, std::vector<Enemy*>& Al
 		
 		if (deathAnimationTimer == 0)
 		{
-			enemyModel->PlayAnimation("dead", 8, true);
+			enemyModel->PlayAnimation("dead", 16, false);
 			enemyModel->SetSpeed(0);
-			deathAnimationTimer = 2000 + t;
+			deathAnimationTimer = 1500 + t;
 		}
 		else if(deathAnimationTimer < t) isDead = true;
 		
@@ -234,6 +240,33 @@ void Enemy::Attack()
 	}
 	else if (localEnemyType == 2 && attackDelay < localTime)
 	{
+
+		if (bossChargedAttackDelay < localTime && !isBossChargingAttack)
+		{
+			isBossChargingAttack = true;
+			bossChargedAttackDelay = 20000 + localTime; //delay
+
+			chargingAttack = 1000 + localTime;
+			enemyModel->PlayAnimation("chargingForAttack", 42, false);
+		}
+
+ 
+
+		if (isBossChargingAttack && chargingAttack < localTime) 
+		{
+			isBossChargingAttack = false;
+			enemyModel->PlayAnimation("chargedAttack", 12, false);
+		}
+		else
+		{
+			return;
+		}
+
+ 
+		//enemyModel->AddAnimation("chargeAttackStop", 160, 165);
+
+ 
+
 		// Attack player  
 		if (enemyModel->HitTest(&localPlayer->playerModel))
 		{
@@ -249,13 +282,11 @@ void Enemy::OnRender3D(CGraphics* g)
 	if (isDead) return;
 	if(!OnSpawnHold) enemyModel->Draw(g);
 	onHitEffect.Draw(g);
-	
- 
 }
 
 void Enemy::EnemyGetDamage(float damage , CModel Vfx)
 {
-
+	if (preDeahAnimation) return;
 	for (int i = 0; i < 15; i++)
 	{
 		CModel* p = Vfx.Clone();
@@ -276,6 +307,7 @@ void Enemy::EnemyGetDamage(float damage , CModel Vfx)
 
 	if (enemyCurrentHp <= 0)
 	{
+		deathSound.Play("monsterDeath.wav");
 		localPlayer->addLoot(localEnemyType, enemyModel->GetPositionV());
 		preDeahAnimation = true;
 		localPlayer->currentExp += enemyMaxHp;

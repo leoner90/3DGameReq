@@ -28,7 +28,8 @@ public:
 private:
 	int blackScreenTimer;
 
-	CSoundPlayer explosionSound, engineSound;
+	CSoundPlayer explosionSound, engineSound, crashSound;
+
 
 	CSprite screenEdges, darkTransition;
 

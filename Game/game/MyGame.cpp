@@ -60,13 +60,14 @@ void CMyGame::OnInitialize()
 	enemyModelTwo = new CModelMd3();
 	boss = new CModelMd3();
 	enemyModelOne->LoadModel("enemies/mon01.md3");
+	enemyModelOne->LoadTexture("enemies/mon01.png");
 	enemyModelOne->SetScale(25.5f);
 
 	enemyModelTwo->LoadModel("enemies/65.md3");
 	enemyModelTwo->SetScale(15.5f);
 
-	boss->LoadModel("enemies/mon01.md3");
-	boss->SetScale(45.5f);
+	boss->LoadModel("enemies/boss.md3");
+	boss->SetScale(30.5f);
 }
 
 //ON NEW GAME START
@@ -88,7 +89,7 @@ void CMyGame::OnStartLevel(int level)
 
 	totalEnemiesOnHold = 0;
 	totalEnemiesToSpawn = 4;
-	InitSpawnDelay = 60000 * 0.5; // spawn start , not the wave
+	InitSpawnDelay = 60000 *  0.5; // spawn start , not the wave
 	enemyOneSpawnDelay = enemyTwoSpawnDelay = 0; // init SPAWN DELAY -> set In Enemy Spawn fun!!!!!!
 	//****
 
@@ -135,6 +136,8 @@ void CMyGame::OnUpdate()
 		currentMenuState = IN_GAME;
 		camera.rotation.y = YcameraInitRotation;
 		camera.position.z = 650;
+		rainBgEffect.Play("rain.wav");
+		rainBgEffect.SetVolume(60);
 	}
 
 	if (currentMenuState == CUTSCENE && gameStarted)
@@ -178,7 +181,7 @@ void CMyGame::OnUpdate()
 	portal->OnUpdate(t, *dialogBox);
 	bool fullWidth = false;
 	dialogBox->OnUpdate(t, fullWidth);
-	player->OnUpdate(t, IsKeyDown(SDLK_d), IsKeyDown(SDLK_a), IsKeyDown(SDLK_w), IsKeyDown(SDLK_s), *map, AllEnemies, currentMousePos, *portal);
+	player->OnUpdate(t, IsKeyDown(SDLK_d), IsKeyDown(SDLK_a), IsKeyDown(SDLK_w), IsKeyDown(SDLK_s), *map, AllEnemies, currentMousePos, *portal, WorldToScreenCoordinate(player->playerModel.GetPositionV()));
 	playerInterface->OnUpdate(t, *player, *dialogBox);
 	shop->OnUpdate(t, *player, *dialogBox);
 	radar->OnUpdate(t, AllEnemies, *player);
@@ -391,43 +394,39 @@ void CMyGame::MaiMenuDraw(CGraphics* g)
 void CMyGame::CharStatsDraw(CGraphics* g)
 {
 	CharStatsMenu.Draw(g);
+
+	//exp
+	font.DrawNumber(686, (float)Height - 468, player->currentExp, CColor::White(), 38);
+ 
 	//damage
-	font.DrawText((float)Width / 2, (float)Height - 200, "DAMAGE", CColor::White(), 18);
-	font.DrawNumber((float)Width / 2 + 100, (float)Height - 200, player->playerDamage, CColor::White(), 18);
-
-	//hp
-	font.DrawText((float)Width / 2, (float)Height -250 , "HEALTH", CColor::White(), 18);
-	font.DrawNumber((float)Width / 2 + 100, (float)Height - 250, player->playerCurrentHp , CColor::White(), 18);
-	font.DrawText((float)Width / 2 + 120, (float)Height - 250, " / ", CColor::White(), 18);
-	font.DrawNumber((float)Width /2 + 140, (float)Height - 250, player->playerMaxHp, CColor::White(), 18);
-
-	//armor
-	font.DrawText((float)Width / 2, (float)Height - 300, "ARMOR", CColor::White(), 18);
-	font.DrawNumber((float)Width / 2 + 100, (float)Height - 300, player->playerCurrentArmor, CColor::White(), 18);
-	font.DrawText((float)Width / 2 + 120, (float)Height - 300, " / ", CColor::White(), 18);
-	font.DrawNumber((float)Width / 2 + 140, (float)Height - 300, player->playerMaxArmor, CColor::White(), 18);
+	font.DrawNumber(686, (float)Height - 650, player->playerDamage, CColor::White(), 38);
+	
+	//rateOf Fire
+	font.DrawNumber(686, (float)Height - 770, player->shootingDelay, CColor::White(), 38);
+	
+	//energy Charge rate regen
+	font.DrawNumber(686, (float)Height - 880, player->energyRegenPerSec, CColor::White(), 38);
 
 	//ENERGY
-	font.DrawText((float)Width / 2, (float)Height - 350, "ENERGY", CColor::White(), 18);
-	font.DrawNumber((float)Width / 2 + 100, (float)Height - 350, player->CurrentEnergy, CColor::White(), 18);
-	font.DrawText((float)Width / 2 + 120, (float)Height - 350, " / ", CColor::White(), 18);
-	font.DrawNumber((float)Width / 2 + 140, (float)Height - 350, player->maxEnergy, CColor::White(), 18);
+	font.DrawNumber(1493, (float)Height - 468, player->CurrentEnergy, CColor::White(), 38);
+	font.DrawText(1493 + 50, (float)Height - 468, " / ", CColor::White(), 38);
+	font.DrawNumber(1493 + 100, (float)Height - 468, player->maxEnergy, CColor::White(), 38);
+
+
+	//HP
+	font.DrawNumber(1493 , (float)Height - 650, player->playerCurrentHp , CColor::White(), 38);
+	font.DrawText(1493 + 50, (float)Height - 650, " / ", CColor::White(), 38);
+	font.DrawNumber(1493 + 100, (float)Height - 650, player->playerMaxHp, CColor::White(), 38);
+
+	//Armor
+	font.DrawNumber(1493, (float)Height - 770, player->playerCurrentArmor, CColor::White(), 38);
+	font.DrawText(1493 + 50, (float)Height - 770, " / ", CColor::White(), 38);
+	font.DrawNumber(1493 + 100, (float)Height - 770, player->playerMaxArmor, CColor::White(), 38);
+
+	//Armor
+	font.DrawNumber(1493, (float)Height - 880, player->armorRegenPerSec, CColor::White(), 38);
+;
 	
-	//resources
-	font.DrawText((float)Width / 2, (float)Height - 400, "ARMOR PARTS:", CColor::White(), 18);
-	font.DrawNumber((float)Width / 2 + 160, (float)Height - 400, player->armorComponents, CColor::White(), 18);
-
-	font.DrawText((float)Width / 2, (float)Height - 450, "WEAPON  PARTS:", CColor::White(), 18);
-	font.DrawNumber((float)Width / 2 + 160, (float)Height - 450, player->weaponComponents, CColor::White(), 18);
-
-	font.DrawText((float)Width / 2, (float)Height - 500, "SKILLS:", CColor::White(), 18);
-
-
-	//EXP
-	font.DrawText((float)Width / 2, (float)Height - 550, "EXP", CColor::White(), 18);
-	font.DrawNumber((float)Width / 2 + 100, (float)Height - 550, player->currentExp, CColor::White(), 18);
- 
-
 }
 
 
@@ -472,8 +471,10 @@ void CMyGame::enemySpawn()
 	}
 
 	//boss
-	if (portal->portalChargeInPercent > 75 && !isBossSpawn)
+	if (portal->portalChargeInPercent > 70 && !isBossSpawn)
 	{
+		bossSpawnSound.Play("boss.wav");
+		bossSpawnSound.SetVolume(30);
 		isBossSpawn = true;
 		AllEnemies.push_back(new Enemy());
 		AllEnemies.back()->init(spawnPos[rand() % 4], BOSS, *map, *portal, *boss);
@@ -484,6 +485,7 @@ void CMyGame::enemySpawn()
 
 	//start a wave
 	int howManyEnemiesWasOnhold = 0; // if not enought -> dont show alert
+
 	if (totalEnemiesOnHold == totalEnemiesToSpawn)
 	{
 
@@ -540,17 +542,20 @@ void CMyGame::MainMenuController(SDLKey sym)
 	{
 		if (sym == SDLK_ESCAPE)
 		{
+			player->footsteps.Pause();// bug with a speed
 			SetGameMode(MODE_PAUSED);
 			currentMenuState = MAIN_MENU;
 		}
 		else if (sym == SDLK_c)
 		{
+			player->footsteps.Pause();// bug with a speed
 			SetGameMode(MODE_PAUSED);
 			currentMenuState = CHAR_STATS;
 		}
 
 		else if (sym == SDLK_e && shop->shopIsInRange)
 		{
+			player->footsteps.Pause(); // bug with a speed
 			SetGameMode(MODE_PAUSED);
 			currentMenuState = SHOP;
 			ShowMouse();
@@ -558,7 +563,7 @@ void CMyGame::MainMenuController(SDLKey sym)
 	}
 	else if (sym == SDLK_ESCAPE && gameStarted && currentMenuState == CUTSCENE)
 	{
-		cutscene->dialogNumber = 10; //skip dialog
+		cutscene->dialogNumber = 11; //skip dialog
 	}
 
 	else if (IsPaused() && sym == SDLK_ESCAPE  && gameStarted && (currentMenuState == MAIN_MENU || currentMenuState == CHAR_STATS || currentMenuState == SHOP) )
@@ -673,4 +678,15 @@ void CMyGame::OnMButtonDown(Uint16 x, Uint16 y)
 void CMyGame::OnMButtonUp(Uint16 x, Uint16 y)
 {
 	cameraMovement = false;
+}
+
+
+void CMyGame::OnRButtonDown(Uint16 x, Uint16 y)
+{
+	player->OnRButtonDown(GetTime());
+}
+
+void CMyGame::OnRButtonUp(Uint16 x, Uint16 y)
+{
+	player->OnRButtonUp();
 }

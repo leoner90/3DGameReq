@@ -61,7 +61,9 @@ private:
 
 	// Keyboard Event Handlers
 	virtual void OnKeyDown(SDLKey sym, SDLMod mod, Uint16 unicode);
-	void  OnLButtonDown(Uint16 x, Uint16 y);
+	virtual void OnLButtonDown(Uint16 x, Uint16 y);
+	virtual void OnRButtonDown(Uint16 x, Uint16 y);
+	virtual void OnRButtonUp(Uint16 x, Uint16 y);
 
 	//Game Modes
 	enum GameModes { MAIN_MENU, CHAR_STATS, SHOP, IN_GAME, CUTSCENE, SHOW_CONTROLLERS, DEATHSCREEN, LOADING_SCREEN };
@@ -80,6 +82,8 @@ private:
 
 	//sound
 	CSoundPlayer mainBgMusic;
+	CSoundPlayer rainBgEffect;
+	CSoundPlayer bossSpawnSound;
 
 	void OnMButtonDown(Uint16 x, Uint16 y);
 	void OnMButtonUp(Uint16 x, Uint16 y);
