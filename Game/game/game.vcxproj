@@ -93,9 +93,16 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <Text Include="level.txt" />
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="headers\Cutscene.h" />
+    <ClInclude Include="headers\loadingScreen.h" />
+    <ClInclude Include="headers\Map.h" />
+    <ClInclude Include="headers\Portal.h" />
+    <ClInclude Include="headers\Radar.h" />
+    <ClInclude Include="headers\textConverter.h" />
     <ClInclude Include="headers\UIDialogBox.h" />
     <ClInclude Include="headers\Enemy.h" />
     <ClInclude Include="headers\MyGame.h" />
@@ -107,6 +114,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Enemy.cpp" />
+    <ClCompile Include="Cutscene.cpp" />
+    <ClCompile Include="Radar.cpp" />
+    <ClCompile Include="textConverter.cpp" />
+    <ClCompile Include="Portal.cpp" />
+    <ClCompile Include="loadingScreen.cpp" />
     <ClCompile Include="UIDialogBox.cpp" />
     <ClCompile Include="Map.cpp" />
     <ClCompile Include="PlayerInterface.cpp" />

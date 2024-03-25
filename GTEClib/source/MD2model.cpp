@@ -202,6 +202,7 @@ bool CModelMd2::LoadMd2(string filename)
 
 
         // --- read texture file name (if not already done) ---
+        if (groups == NULL) groups = new group[256];
         if (md2Header->numSkins == 1 && numG == 0)
         {
             string skin;
@@ -491,8 +492,8 @@ CModelMd2* CModelMd2::Clone()
 
     // copy group data
     m->numG = numG;
-    memcpy(m->groups, groups, numG * (sizeof(group)));
-    //m->groups = groups;
+    //memcpy(m->groups, groups, numG * (sizeof(group)));
+    m->groups = groups;
 
 	
     if (childNode != NULL)
@@ -506,22 +507,12 @@ CModelMd2* CModelMd2::Clone()
 
 void CModelMd2::Clear()
 {
+    
 	if (!isCloned)
 	{
      if (modeldata != NULL) delete[] modeldata;
-     if (vert != NULL) delete[] vert;
-     if (norm != NULL) delete[] norm;
-     if (tex != NULL) delete[] tex;
-     //if (groups != NULL) delete[] groups;
-     if (framedata != NULL) delete[] framedata;
-     glDeleteTextures(1, &TextureID);
+     
     }
-    
-    if (groups != NULL) delete[] groups;
-    numTris = 0; vert = NULL; norm = NULL; tex = NULL;
-    numG = 0;  groups = NULL; modeldata = NULL; md2Header = NULL;
-    framedata = NULL;
-    numAnims = 0; selectedAnimation = 0;
 
     if (childNode != NULL)
     {

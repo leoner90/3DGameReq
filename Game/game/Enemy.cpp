@@ -3,52 +3,81 @@
 #include "headers/Player.h"
 #include "headers/Map.h"
 #include <math.h> 
+#include "headers/Portal.h"
 
 //*************** INIT ***************
 
-void Enemy::init(int posX, int poxY, int posZ, int enemyType, Map& map)
+Enemy::Enemy()
 {
+
+}
+
+Enemy::~Enemy()
+{
+	delete enemyModel;
+}
+
+void Enemy::init(CVector enemyPos, int enemyType, Map& map, Portal& portal, CModelMd3& enemyMod)
+{
+	localPortal = &portal;
+	enemyModel = enemyMod.Clone();
+
 	localEnemyType = enemyType;
+
 	if (localEnemyType == 0) 
 	{
 		enemyMaxHp = enemyCurrentHp = 200;
-		enemyModel.LoadModel("Cobra/enemyOne.md2");
-		enemyDamage = 20;
-		enemySpeed = 100 + rand() % 300;
+		enemyDamage = 50;
+		enemySpeed = 350 + rand() % 250;
+		enemyModel->AddAnimation("run", 1, 29);
+		enemyModel->AddAnimation("attack", 35, 59);
+		enemyModel->AddAnimation("dead", 65, 82);
 	}
 	else if (localEnemyType == 1)
 	{
-		enemyDamage = 20;
+		enemyDamage = 50;
 		enemyMaxHp = enemyCurrentHp = 400;
-		enemyModel.LoadModel("Ogro/ogro.md2");
-		enemySpeed = 100 + rand() % 200;
+	
+		enemySpeed = 350 + rand() % 250;
 
+		enemyModel->AddAnimation("run", 10, 40);
+		enemyModel->AddAnimation("attack", 0, 10);
+		
 		//choose Random Portal Part To Attack
 		CVector portalPartsPostions[4]
 		{
-			{ map.portalPartOne.GetPositionV().GetX(), 0, map.portalPartOne.GetPositionV().GetZ() },
-			{ map.portalPartTwo.GetPositionV().GetX(), 0, map.portalPartTwo.GetPositionV().GetZ() },
-			{ map.portalPartThree.GetPositionV().GetX(), 0, map.portalPartThree.GetPositionV().GetZ() },
-			{ map.portalPartFour.GetPositionV().GetX(), 0, map.portalPartFour.GetPositionV().GetZ() }
+			{ localPortal->portalPartOne.GetPositionV().GetX(), 0, localPortal->portalPartOne.GetPositionV().GetZ() },
+			{ localPortal->portalPartTwo.GetPositionV().GetX(), 0, localPortal->portalPartTwo.GetPositionV().GetZ() },
+			{ localPortal->portalPartThree.GetPositionV().GetX(), 0, localPortal->portalPartThree.GetPositionV().GetZ() },
+			{ localPortal->portalPartFour.GetPositionV().GetX(), 0, localPortal->portalPartFour.GetPositionV().GetZ() }
 		};
 		randomPortalPartPos = portalPartsPostions[rand() % 4];
 	}
-	
-	enemyModel.AddAnimation("run", 1, 35);
-	enemyModel.AddAnimation("attack", 23, 86);
 
+	//boss
+	else if (localEnemyType == 2)
+	{
+		enemyDamage = 350;
+		enemyMaxHp = enemyCurrentHp = 2400;
+
+		enemySpeed = 400 + rand() % 200;
+
+		enemyModel->AddAnimation("run", 10, 44);
+		enemyModel->AddAnimation("attack", 50, 72);
+		enemyModel->AddAnimation("chargingForAttack", 83, 125);
+		enemyModel->AddAnimation("chargedAttack", 141, 153);
+		enemyModel->AddAnimation("chargeAttackStop", 160, 165);
+		enemyModel->AddAnimation("dead", 170, 199);
+	}
+	
 	// enemy model
-	enemyModel.SetScale(3.5f); 
+
 	//enemyModel.SetToFloor(0);
+	enemyModel->SetPositionV(enemyPos);
 	
-	enemyModel.SetScale(2.5f);
-	enemyModel.SetPosition(posX, poxY, posZ);
-	
-	enemyModel.SetDirectionAndRotationToPoint(0, 0);
+	enemyModel->SetDirectionAndRotationToPoint(0, 0);
 	isDead = preDeahAnimation = false;
 	
-	
-
 	enemyHpbar.SetSize(35, 3);
 	enemyHpbar.SetColor(CColor::Blue());
 	enemyHpbar.SetHealth(100);
@@ -58,33 +87,35 @@ void Enemy::init(int posX, int poxY, int posZ, int enemyType, Map& map)
 	//wait at spawn point
 	OnSpawnHold = true;
 
+	enemyModel->SetToFloor(0);
 
-	//TO delete
-	spawnPoint.LoadModel("portal/portalPart.obj");
-	spawnPoint.SetScale(8.f);
-	spawnPoint.SetPosition(2500, 0, 700);
+	onHitEffect.delete_all();
 
-	spawnPoint2.LoadModel("portal/portalPart.obj");
-	spawnPoint2.SetScale(8.f);
-	spawnPoint2.SetPosition(3800, 0, 400);
-
+	bossChargedAttackDelay = 0;
+	isBossChargingAttack = false;
 }
 
 //*************** UPDATE ***************
-void Enemy::OnUpdate(long t, Player &player, Map& map, std::vector<Enemy*>& AllEnemies, int thisEnemyIndex)
+void Enemy::OnUpdate(Uint32 t, Player &player, Map& map, std::vector<Enemy*>& AllEnemies, int thisEnemyIndex, Portal& portal)
 {
+	localPortal = &portal;
 	//if dead -> return (do nothing)
 	if (isDead) return;
 
 	if (preDeahAnimation)
 	{
+		
 		if (deathAnimationTimer == 0)
 		{
-			enemyModel.PlayAnimation("attack", 12, true);
-			deathAnimationTimer = 1000 + t;
+			enemyModel->PlayAnimation("dead", 16, false);
+			enemyModel->SetSpeed(0);
+			deathAnimationTimer = 1500 + t;
 		}
 		else if(deathAnimationTimer < t) isDead = true;
-	 
+		
+		onHitEffect.Update(t);
+		onHitEffect.delete_if(true);
+		enemyModel->Update(t);
 		return;
 	}
 
@@ -96,100 +127,151 @@ void Enemy::OnUpdate(long t, Player &player, Map& map, std::vector<Enemy*>& AllE
 	for (auto enemy : AllEnemies)
 	{
 		if (i == thisEnemyIndex) continue;
-		if (enemyModel.HitTest(&enemy->enemyModel) )
+		if (enemyModel->HitTest(enemy->enemyModel) )
 		{
-			//
 			//enemyModel.SetPosition(enemyModel.GetPositionV().GetX() + 2, enemyModel.GetPositionV().GetY(), enemyModel.GetPositionV().GetZ()+ 2 );
 		}
 		i++;
 	}
 
-	if (localEnemyType == 0 && !OnSpawnHold)
+	if ((localEnemyType == 0 || localEnemyType == 2)  && !OnSpawnHold)
 	{	
-		CVector displ = localPlayer->playerModel.GetPositionV() - enemyModel.GetPositionV();
+		CVector displ = localPlayer->playerModel.GetPositionV() - enemyModel->GetPositionV();
 		float distance = hypot(displ.GetX(), displ.GetZ());
 		if (distance > 60)
 		{
-			enemyModel.SetDirectionAndRotationToPoint(localPlayer->playerModel.GetPositionV().GetX(), localPlayer->playerModel.GetPositionV().GetZ());
-			enemyModel.SetSpeed(enemySpeed);
-			enemyModel.PlayAnimation("run", 12, true);
+			enemyModel->SetDirectionAndRotationToPoint(localPlayer->playerModel.GetPositionV().GetX(), localPlayer->playerModel.GetPositionV().GetZ());
+			enemyModel->SetSpeed(enemySpeed);
+			enemyModel->PlayAnimation("run", 42, true);
 		}
 		else 
 		{
-			enemyModel.SetSpeed(0);
-			enemyModel.PlayAnimation("attack", 12, true);
+			enemyModel->SetSpeed(0);
+			enemyModel->PlayAnimation("attack", 24, true);
 			Attack();
 		}
 	}
 
+	//Enemy 2
 	else if (localEnemyType == 1 && !OnSpawnHold)
 	{
-		CVector displ = CVector{ randomPortalPartPos.GetX() , 0, randomPortalPartPos.GetZ() } - enemyModel.GetPositionV();
+		CVector displ = CVector{ randomPortalPartPos.GetX() , 0, randomPortalPartPos.GetZ() } - enemyModel->GetPositionV();
 		float distance = hypot(displ.GetX(), displ.GetZ());
 
-		if (distance > 60)
+
+		CVector displPlayer = localPlayer->playerModel.GetPositionV() - enemyModel->GetPositionV();
+		float distanceToPlayer = hypot(displPlayer.GetX(), displPlayer.GetZ());
+
+		if (localPortal->isPortalReseting && distanceToPlayer > 60)
 		{
-			
-			enemyModel.SetSpeed(enemySpeed);
-			enemyModel.SetDirectionAndRotationToPoint(randomPortalPartPos.GetX(), randomPortalPartPos.GetZ());
-			enemyModel.PlayAnimation("run", 12, true);
+			enemyModel->SetDirectionAndRotationToPoint(localPlayer->playerModel.GetPositionV().GetX(), localPlayer->playerModel.GetPositionV().GetZ());
+			enemyModel->SetSpeed(enemySpeed);
+			enemyModel->PlayAnimation("run", 22, true);
+		}
+
+		else if (distance > 60 && !localPortal->isPortalReseting)
+		{
+			enemyModel->SetSpeed(enemySpeed);
+			enemyModel->SetDirectionAndRotationToPoint(randomPortalPartPos.GetX(), randomPortalPartPos.GetZ());
+			enemyModel->PlayAnimation("run", 22, true);
 		}
 		else
 		{
-			enemyModel.PlayAnimation("attack", 12, true);
-			enemyModel.SetSpeed(0);
+			enemyModel->PlayAnimation("attack", 10, true);
+			enemyModel->SetSpeed(0);
 			Attack();
 		}
-	
 	}
 	//if pre-dead -> play animation of death , set dead status true by the end
 	float remainingHpInPercentage = enemyCurrentHp / (enemyMaxHp / 100);
 	enemyHpbar.SetHealth(remainingHpInPercentage);
+	enemyModel->Update(t);
 
-	enemyModel.Update(t);
+	onHitEffect.Update(t);
+	onHitEffect.delete_if(true);
 }
 
 //*************** 2D RENDER ***************
 void Enemy::OnDraw(CGraphics* g, CVector enemyPos)
 {
-	if (isDead) return;
+	if (isDead|| OnSpawnHold) return;
  
 	enemyHpbar.SetPosition(enemyPos.x, enemyPos.y + 30);
 
-	CVector displ = localPlayer->playerModel.GetPositionV() - enemyModel.GetPositionV();
+	CVector displ = localPlayer->playerModel.GetPositionV() - enemyModel->GetPositionV();
 	float distance = hypot(displ.GetX(), displ.GetZ());
 	
 	if(distance < 1200 && !preDeahAnimation) enemyHpbar.Draw(g);
-
-	//todelete
-
+	 
 }
 
 void Enemy::Attack()
 {
-
 	if (localEnemyType == 0 && attackDelay < localTime)
 	{
 		// Attack player  
-		if (enemyModel.HitTest(&localPlayer->playerModel))
+		if (enemyModel->HitTest(&localPlayer->playerModel))
 		{
 			localPlayer->playerGettingDamage(enemyDamage);
-			attackDelay = 2000 + localTime;
+			attackDelay = 1000 + localTime;
 		}
 	}
 	else if (localEnemyType == 1 && attackDelay < localTime)
 	{
-		// Attack Portal 
-
-		if (
-				enemyModel.HitTest(&localMap->portalPartOne) || 
-				enemyModel.HitTest(&localMap->portalPartTwo) ||
-				enemyModel.HitTest(&localMap->portalPartThree) ||
-				enemyModel.HitTest(&localMap->portalPartFour)
-			)
+		// Attack player 
+		if (localPortal->isPortalReseting && enemyModel->HitTest(&localPlayer->playerModel))
 		{
-			localMap->portal.SetHealth(localMap->portal.GetHealth() - 5);
-			attackDelay = 2000 + localTime;
+			localPlayer->playerGettingDamage(enemyDamage);
+			attackDelay = 1000 + localTime;
+		}
+		// Attack Portal 
+		else if	
+				 (
+				enemyModel->HitTest(&localPortal->portalPartOne) ||
+				enemyModel->HitTest(&localPortal->portalPartTwo) ||
+				enemyModel->HitTest(&localPortal->portalPartThree) ||
+				enemyModel->HitTest(&localPortal->portalPartFour)
+				)
+			{
+				localPortal->portalGettingDamaged(enemyDamage);
+				attackDelay = 1000 + localTime;
+			}
+			
+	}
+	else if (localEnemyType == 2 && attackDelay < localTime)
+	{
+
+		if (bossChargedAttackDelay < localTime && !isBossChargingAttack)
+		{
+			isBossChargingAttack = true;
+			bossChargedAttackDelay = 20000 + localTime; //delay
+
+			chargingAttack = 1000 + localTime;
+			enemyModel->PlayAnimation("chargingForAttack", 42, false);
+		}
+
+ 
+
+		if (isBossChargingAttack && chargingAttack < localTime) 
+		{
+			isBossChargingAttack = false;
+			enemyModel->PlayAnimation("chargedAttack", 12, false);
+		}
+		else
+		{
+			return;
+		}
+
+ 
+		//enemyModel->AddAnimation("chargeAttackStop", 160, 165);
+
+ 
+
+		// Attack player  
+		if (enemyModel->HitTest(&localPlayer->playerModel))
+		{
+			localPlayer->playerGettingDamage(enemyDamage);
+			attackDelay = 1000 + localTime;
 		}
 	}
 }
@@ -198,13 +280,26 @@ void Enemy::Attack()
 void Enemy::OnRender3D(CGraphics* g)
 {
 	if (isDead) return;
-	enemyModel.Draw(g);
-	spawnPoint.Draw(g);
-	spawnPoint2.Draw(g);
+	if(!OnSpawnHold) enemyModel->Draw(g);
+	onHitEffect.Draw(g);
 }
 
-void Enemy::EnemyGetDamage(float damage)
+void Enemy::EnemyGetDamage(float damage , CModel Vfx)
 {
+	if (preDeahAnimation) return;
+	for (int i = 0; i < 15; i++)
+	{
+		CModel* p = Vfx.Clone();
+		p->SetPositionV(enemyModel->GetPositionV() + CVector(0, 100, 0));
+		p->SetDirection(rand() % 360);
+		p->SetSpeed(rand() % 200);
+		p->SetColor(CColor::Green());
+		p->Die(250);
+		onHitEffect.push_back(p);
+	}
+
+
+
 	OnSpawnHold = false; // in case attacking at spawn point
 
 	enemyCurrentHp -= damage;
@@ -212,9 +307,10 @@ void Enemy::EnemyGetDamage(float damage)
 
 	if (enemyCurrentHp <= 0)
 	{
-		if (localEnemyType == 0) localPlayer->weaponComponents++;
-		else if (localEnemyType == 1) localPlayer->armorComponents++;
+		deathSound.Play("monsterDeath.wav");
+		localPlayer->addLoot(localEnemyType, enemyModel->GetPositionV());
 		preDeahAnimation = true;
+		localPlayer->currentExp += enemyMaxHp;
 	}
 }
 

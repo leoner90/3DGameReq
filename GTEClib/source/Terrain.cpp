@@ -1,6 +1,40 @@
 
 #include "Terrain.h"
 
+
+void CTerrain::LoadHeightMap(string filename)
+{
+	string fname = "images/" + filename;
+	SDL_Surface* image1 = IMG_Load(fname.c_str());
+	if (image1 == NULL)
+	{
+		cout << "ERROR: " << fname << " could not be loaded from the images folder" << endl;
+		return;
+	}
+	cout << "Loading: " << fname << " " << (int)image1->format->BitsPerPixel << endl;
+
+	width = image1->w;
+	height = image1->h;
+
+	heightmap = new unsigned char*[width];
+	for (int n = 0; n < width; n++) heightmap[n] = new unsigned char[height];
+
+	unsigned char* source = (unsigned char*)image1->pixels;
+	int index = 0;
+	for (int x=0; x < width; x++)
+		for (int y = 0; y < height; y++)
+		{
+			heightmap[x][y] = source[index++];
+
+		}
+
+	cout << (int)heightmap[66][26] << endl;
+
+
+
+	SDL_FreeSurface(image1);
+}
+
 void CTerrain::LoadTexture(string filename)
 {
 	string fname = "images/" + filename;

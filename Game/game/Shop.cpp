@@ -3,21 +3,23 @@
 #include "headers/Player.h"
 #include "headers/UIDialogBox.h"
 
-void Shop::init(float w, float h)
+Shop::Shop(float w, float h)
 {
 	Width = w;
 	Height = h;
 	font.LoadDefault();
-	shopIsInRange = false;
+
 	//shop
-	testRobot.LoadModel("Player/testRobot.md3");
+	testRobot.LoadModel("shop/shop.md3");
+	//testRobot.LoadTexture("shop/shopTextures.jpg");
 	testRobot.SetScale(45.5f);
 	testRobot.SetPosition(1500, 0, 400);
-	testRobot.AddAnimation("idle", 1, 110);
-	testRobot.PlayAnimation("idle", 30, true);
+	testRobot.SetRotation(60);
+	testRobot.AddAnimation("idle", 0, 0);
+	testRobot.AddAnimation("active", 1, 54);
+ 
 
 	//shop
-
 	shopImg.LoadImage("shop.jpg");
 	shopImg.SetSize((float)w, (float)h);
 	shopImg.SetPosition((float)w / 2, (float)h / 2);
@@ -31,12 +33,17 @@ void Shop::init(float w, float h)
 	upgradeArmorBtn.SetPosition((float)w / 2 + (w / 100 * 20), (float)h - (h / 100 * 60));
 
 	exitShopBtn.LoadImage("shopCancelBtn.png");
-	exitShopBtn.SetSize(50,50);
+	exitShopBtn.SetSize(50, 50);
 	exitShopBtn.SetPosition((float)w / 2 + (w / 100 * 42), (float)h - (h / 100 * 24));
+}
+
+void Shop::init(float w, float h)
+{
+	shopIsInRange = false;
 
 }
  
-void Shop::OnUpdate(long t, Player& player, UIDialogBox& dialogBox)
+void Shop::OnUpdate(Uint32 t, Player& player, UIDialogBox& dialogBox)
 {
 	localPlayer = &player;
 	testRobot.Update(t);
@@ -47,12 +54,13 @@ void Shop::OnUpdate(long t, Player& player, UIDialogBox& dialogBox)
 	if (distance < 300)
 	{
 		shopIsInRange = true;
-		
-		if(!dialogBox.isBoxShowen) dialogBox.showBox(0 ,0, 0);
+		testRobot.PlayAnimation("active", 30, false);
+		if(!dialogBox.isBoxShowen) dialogBox.showBox(1 ,12,12, 0);
 	}
 	else
 	{
 		 shopIsInRange = false;
+		 testRobot.PlayAnimation("idle", 30, false);
 		 if (dialogBox.isBoxShowen && dialogBox.currentPriority == 0) dialogBox.hideBox();
 	}
 }

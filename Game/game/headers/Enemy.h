@@ -2,23 +2,27 @@
 
 class Player;
 class Map;
+class Portal;
 
 class Enemy
 {
 public:
-	void init(int posX, int poxY, int posZ, int enemyType, Map& map);
-	void OnUpdate(long t, Player& player, Map& map, std::vector<Enemy*>& AllEnemies, int thisEnemyIndex);
+	Enemy();
+	~Enemy();
+	void init(CVector enemyPos, int enemyType, Map& map, Portal& portal, CModelMd3& enemyModel);
+	void OnUpdate(Uint32 t, Player& player, Map& map, std::vector<Enemy*>& AllEnemies, int thisEnemyIndex, Portal& portal);
 	void OnDraw(CGraphics* g, CVector enemyPos);
 	void Attack();
 	void OnRender3D(CGraphics* g);
-	void EnemyGetDamage(float damage);
+	void EnemyGetDamage(float damage, CModel Vfx);
 	//void EnemyControl();
  
-	CModelMd2 enemyModel;
+	CModelMd3* enemyModel;
 
 	//local
 	Player* localPlayer;
 	Map* localMap;
+	Portal* localPortal;
 	Uint32 localTime;
 
 
@@ -39,9 +43,15 @@ public:
 
 	CVector randomPortalPartPos;
 
+
 	bool OnSpawnHold;
+ 
 
-	//temp To Delete
-	CModel  spawnPoint, spawnPoint2;
+	CModelList onHitEffect;
+	CModel Vfx;
 
+	float bossChargedAttackDelay , chargingAttack;
+	bool isBossChargingAttack;
+
+	CSoundPlayer deathSound;
 };

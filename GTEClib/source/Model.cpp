@@ -18,6 +18,7 @@ CModel::CModel(const CModel& m)
 	filled = m.filled;
 	border = m.border;
 	visible = m.visible;
+	looping = m.looping;
 
 	Position = m.Position;
 	Status = m.Status;
@@ -48,10 +49,16 @@ CModel::CModel(const CModel& m)
 	norm = m.norm;
 	tex = m.tex;
 
-
     numG = m.numG;
-	memcpy(groups, m.groups, numG * (sizeof(group)));
-	//m->groups = groups;
+	//memcpy(groups, m.groups, numG * (sizeof(group)));
+	groups = m.groups;
+	
+	materials=m.materials;
+	numMat=m.numMat;
+	
+	// copy animation obj display lists
+	numObjFrames = m.numObjFrames;
+	objframes = m.objframes;
 
 	ResetTime();
 
@@ -78,25 +85,23 @@ void CModel::Init()
 	Color2.Set(0.5f, 0.5f, 0.5f, 1.0f); // grey
 	Brightness = 1.0f;
 	filled = true; border = false;
-	visible = true;
-	// setup model vertex, texture and normal data 
+	visible = true; looping = false;
+	// setup model vertex, texture, materials and normal data 
 	numTris = 0;
 	vert=NULL;
 	tex=NULL;
 	norm=NULL;
 	TextureID = 0;
-
-	// material groups
+	vert = NULL;
+	norm = NULL;  tex = NULL;
+	framedata = NULL;
+	objframes = NULL;
+	materials = NULL;
+	groups = NULL;
+	numMat = 0;
 	numG = 0;
-	groups = new group[256];
-	groups[0].startIndex = 0;
-	groups[0].endIndex = 0;
-	groups[0].mat.Kd[0] = 0.8f; groups[0].mat.Kd[1] = 0.8f; groups[0].mat.Kd[2] = 0.8f; groups[0].mat.Kd[3] = 1.0f;
-	groups[0].mat.Ks[0] = 0; groups[0].mat.Ks[1] = 0; groups[0].mat.Ks[2] = 0; groups[0].mat.Ks[3] = 1.0f;
-	groups[0].mat.Ka[0] = 0.2f; groups[0].mat.Ka[1] = 0.2f; groups[0].mat.Ka[2] = 0.2f; groups[0].mat.Ka[3] = 1.0f;
-	groups[0].format = 0;
-	groups[0].mat.texture_filename = NULL;
-	groups[0].mat.texture_ID = 0;
+	numObjFrames = 0;
+
 
 	// Time
 	SpriteTime = 0;
@@ -192,7 +197,7 @@ void CModel::PlayAnimation( int start, int stop, float speed, bool loop)
 
 void CModel::PlayAnimation(string name, float speed, bool loop)
 {
-	if (framedata == NULL) return;
+	if (framedata == NULL) return; // no animation
 
 	// have we already selected this animation sequence
 	if (selectedAnimation > 0)
@@ -262,7 +267,7 @@ bool CModel::LoadModel(string obj_filename)
 		return false;
 	}
 	string filename = "models/" + obj_filename;
-	return LoadObj(filename);
+	return LoadObj(filename,true);
 }
 
 bool CModel::LoadModel(string obj_filename, string bmp_filename)
@@ -285,6 +290,124 @@ bool CModel::LoadModel(string obj_filename, string bmp_filename)
 	return false;
 }
 
+bool CModel::LoadAnimationSequence(string obj_filename, int start_frame, int stop_frame)
+{
+	if (numObjFrames + stop_frame - start_frame > 1020)
+	{
+		cout << "exceeding number of frames" << endl;
+		return false;
+	}
+	
+	if (obj_filename.find(".obj") < 1 && obj_filename.find(".OBJ") < 1)
+	{
+		cout << "ERROR: " << obj_filename << " is not an OBJ file" << endl;
+		return false;
+	}
+	string filename = "models/" + obj_filename;
+	// loading first frame
+	if( !LoadObj(filename)) return false;
+
+	if (objframes == NULL) objframes = new obj_frame[1024]; 
+	
+	// loading subsequent frames without materials
+	for (int n=start_frame; n <= stop_frame; n++)
+	{
+	 // generating filename for next frame
+	 string nextfile = filename;
+	 
+	 int numberofzeros = 0;
+	 // identifying numbering system i.e. with or without preceding zeros
+	 for (int i = filename.length() - 4; i >= 0; i--)
+	 {
+		 if ((char)filename[i] >= '0' && (char)filename[i] <= '9') numberofzeros++;
+	 }
+
+	 //cout << numberofzeros << endl;
+
+	 // insert digits if necessary
+	 if (numberofzeros <= 1)
+	 {
+		 numberofzeros = 1;
+		 if (n > 9) { nextfile.insert(nextfile.length() - 5, "0"); numberofzeros = 2; }
+		 if (n > 99) { nextfile.insert(nextfile.length() - 6, "0"); numberofzeros = 3; }
+	 }
+	 
+	 //cout << nextfile << endl;
+	 
+	 // a terribly good hack to encode frame numbers
+	 if (numberofzeros > 0) 
+	 {
+	  nextfile[nextfile.length()-5]=char(48+(n%10)); 
+	  if (numberofzeros > 1) nextfile[nextfile.length()-6]=char(48+(n/10%10));
+	  if (numberofzeros > 2) nextfile[nextfile.length()-7]=char(48+(n/100%10));
+	 }
+	
+		
+	 // load next frames without materials
+	  if( !LoadObj(nextfile, false))  return false; 
+	
+		cout << nextfile << endl;
+		
+		GLuint newList;
+
+	    // Create the id for the list
+	    newList = glGenLists(1);
+
+	    // start list
+	    glNewList(newList,GL_COMPILE_AND_EXECUTE);
+
+	    glPolygonMode( GL_FRONT_AND_BACK, GL_FILL);
+	    for (unsigned char n = 0; n < numG; n++) // draw groups
+	    {
+		      glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE);
+			  glColor4f(Brightness*Color.R*groups[n].mat.Kd[0], Brightness * Color.G*groups[n].mat.Kd[1], Brightness * Color.B*groups[n].mat.Kd[2], groups[n].mat.Kd[3]);
+			  
+			  glBindTexture(GL_TEXTURE_2D, groups[n].mat.texture_ID);
+
+			  // draw vertex array data
+			  glEnableClientState(GL_VERTEX_ARRAY);
+			  glEnableClientState(GL_NORMAL_ARRAY);
+			  if (tex != NULL)
+			  {
+				  glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+				  glTexCoordPointer(2, GL_FLOAT, 0, tex);
+			  }
+			  glVertexPointer(3, GL_FLOAT, 0, vert);
+			  glNormalPointer(GL_FLOAT, 0, norm);
+
+			  unsigned int start = groups[n].startIndex;
+			  unsigned int numTrias = groups[n].endIndex - start;
+			  glDrawArrays(GL_TRIANGLES, start, numTrias);
+
+			  glDisableClientState(GL_VERTEX_ARRAY);
+			  glDisableClientState(GL_NORMAL_ARRAY);
+			  glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+
+			  glBindTexture(GL_TEXTURE_2D, 0);
+		}
+
+			// endList
+			glEndList();
+	        
+			objframes[numObjFrames].listid=newList;
+			objframes[numObjFrames].minx=minx; objframes[numObjFrames].maxx=maxx;
+			objframes[numObjFrames].miny=miny; objframes[numObjFrames].maxy=maxy;
+			objframes[numObjFrames].minz=minz; objframes[numObjFrames].maxz=maxz;
+	        
+			numObjFrames++;
+			
+			if (vert != NULL) delete [] vert;
+			if (norm != NULL) delete [] norm;
+			if (tex != NULL) delete [] tex;
+			vert=NULL; norm=NULL; tex=NULL;
+			numG = 0;
+			numTris=0;
+    }
+	
+ return true;	
+}
+
+
 // load a single texture and assign to all groups
 bool CModel::LoadTexture(string bmp_filename)
 {
@@ -292,6 +415,7 @@ bool CModel::LoadTexture(string bmp_filename)
 	TextureID=LoadTexture(filename,CColor::Black(),false); 
 	// for backward compatability
 	Color.Set(CColor::White());
+	if (groups == NULL) groups = new group[256];
 	for (unsigned char n = 0; n < numG; n++)
 	{
 		groups[n].mat.texture_ID = TextureID;
@@ -334,21 +458,34 @@ void CModel::CalculateNormals()
 
 void CModel::Clear()
 {
+	
 	  if (!isCloned)
 	  {
 	    if (vert != NULL) delete [] vert;
 	    if (norm != NULL) delete [] norm;
 	    if (tex != NULL) delete [] tex;
 		if (framedata != NULL) delete[] framedata;
+		// clean up materials
+		if (materials != NULL) delete[] materials;
 		for (unsigned n = 0; n < numG; n++) glDeleteTextures(1, (GLuint*)&groups[n].mat.texture_ID);
-		//if (groups != NULL) delete[] groups;
+		if (groups != NULL) delete[] groups;
 		glDeleteTextures(1, &TextureID);
+		// delete display lists
+		if (objframes != NULL)
+		{
+			for (int n = 0; n < numObjFrames; n++)
+		    {
+		       glDeleteLists(0, objframes[n].listid);
+		    }
+			delete[] objframes;
+		}
 	  }	
-
-	  if (groups != NULL) delete[] groups;
-	  numTris = 0; vert = NULL; norm = NULL; tex = NULL;
-	  numG = 0;  groups = NULL; framedata = NULL;
-
+	  
+	  //if (groups != NULL) delete[] groups;
+	  //numTris = 0; vert = NULL; norm = NULL; tex = NULL;
+	  
+	  
+	 
 	  if (childNode != NULL)
 	  {
 		  //delete childNode;
@@ -374,14 +511,40 @@ char* CModel::decodeString(char* memblock)
 
 void CModel::Draw(CGraphics* g)
 {
+	// we have an animated obj model
+	if (objframes != NULL && numObjFrames > 0)  
+	{
+		int frame = (int)currentFrame;
+		if (frame > numObjFrames-1) { frame=startFrame; currentFrame=startFrame; }
+		
+		glPolygonMode( GL_FRONT_AND_BACK, GL_FILL);
+		glPushMatrix();
+		 
+		 glTranslatef(Position.x, Position.y, Position.z);  	// transformation to world coordinates
+		 glRotatef(Rotation.y, 0, 1, 0);       // rotation around y-axis
+		 glRotatef(Rotation.z, 0, 0, 1);       // rotation around z-axis
+		 glRotatef(Rotation.x, 1, 0, 0);       // rotation around x-axis
+		 glScalef(Scale, Scale, Scale);
+		
+	    glCallList(objframes[frame].listid);
+		glPopMatrix();
+		
+		minx=objframes[frame].minx; maxx=objframes[frame].maxx; 
+		miny=objframes[frame].miny; maxy=objframes[frame].maxy; 
+		minz=objframes[frame].minz; maxz=objframes[frame].maxz; 
+		 
+	}
 	// any geometry data in vertex array?
-	if (numTris>0)
+	else if (numTris>0)
 	{
 	  glPolygonMode( GL_FRONT_AND_BACK, GL_FILL);
 	  for (unsigned char n = 0; n < numG; n++) // draw groups
 	  {
 		      glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE);
 			  //glColorMaterial(GL_FRONT, GL_DIFFUSE);
+			  if (Color.A < 1.0) // alpha fix
+			  glColor4f(Brightness*Color.R*groups[n].mat.Kd[0], Brightness * Color.G*groups[n].mat.Kd[1], Brightness * Color.B*groups[n].mat.Kd[2], Color.A);
+			  else
 		      glColor4f(Brightness*Color.R*groups[n].mat.Kd[0], Brightness * Color.G*groups[n].mat.Kd[1], Brightness * Color.B*groups[n].mat.Kd[2], groups[n].mat.Kd[3]);
 			  //glColorMaterial(GL_FRONT, GL_AMBIENT);
 			  //glColor4f(Brightness * Color.R*groups[n].mat.Ka[0], Brightness * Color.G*groups[n].mat.Ka[1], Brightness * Color.B*groups[n].mat.Ka[2], groups[n].mat.Ka[3]);
@@ -560,9 +723,9 @@ CVector CModel::GetRotationV()
 	
 	glPushMatrix();
 	 glLoadIdentity();
-	 glRotatef( Rotation.x, 1, 0, 0 );       // rotation around x-axis
-	 glRotatef( Rotation.y, 0, 1, 0 );       // rotation around y-axis
-	 glRotatef( Rotation.z, 0, 0, 1 );       // rotation around z-axis
+	 glRotatef(Rotation.y, 0, 1, 0);       // rotation around y-axis
+	 glRotatef(Rotation.z, 0, 0, 1);       // rotation around z-axis
+	 glRotatef(Rotation.x, 1, 0, 0);       // rotation around x-axis
 	 glGetFloatv(GL_MODELVIEW_MATRIX, view);
 	 
     glPopMatrix();
@@ -603,6 +766,7 @@ CModel* CModel::Clone(CModel* m)
 	m->filled = filled;
 	m->border = border;
 	m->visible = visible;
+	m->looping = looping;
 
 	m->Position = Position;
 	m->Status = Status;
@@ -632,11 +796,17 @@ CModel* CModel::Clone(CModel* m)
 	m->vert = vert;
 	m->norm = norm;
 	m->tex = tex;
-
+	
+	m->materials=materials;
+	m->numMat=numMat;
+	
+	// copy animation obj display lists
+	m->numObjFrames = numObjFrames;
+	m->objframes = objframes;
 
 	m->numG = numG;
-	memcpy(m->groups, groups, numG * (sizeof(group)));
-	//m->groups = groups;
+	//memcpy(m->groups, groups, numG * (sizeof(group)));
+	m->groups = groups;
 
 	m->ResetTime();
 
@@ -676,9 +846,9 @@ CVector CModel::GetLocalPositionV(CVector pos)
 	
 	glPushMatrix();
 	 glLoadIdentity();
-	 glRotatef( Rotation.x, 1, 0, 0 );       // rotation around x-axis
-	 glRotatef( Rotation.y, 0, 1, 0 );       // rotation around y-axis
-	 glRotatef( Rotation.z, 0, 0, 1 );       // rotation around z-axis
+	 glRotatef(Rotation.y, 0, 1, 0);       // rotation around y-axis
+	 glRotatef(Rotation.z, 0, 0, 1);       // rotation around z-axis
+	 glRotatef(Rotation.x, 1, 0, 0);       // rotation around x-axis
 	 glGetFloatv(GL_MODELVIEW_MATRIX, view);
     glPopMatrix();
     
@@ -1175,14 +1345,23 @@ bool CModel::LoadObj(string filename, bool loadmaterial)
 		vector3f* normals = new vector3f[65535];
 		numV = numT = numN = numF = 0;
 
-		// setup model group format
+		// setup model group and generic material
 		numG = 0;
-		groups[numG].format = 0; // 1=v,vt=3,vn=5,vtn=7;
-		groups[numG].startIndex = 0;
-		groups[numG].endIndex = 0;
-		groups[numG].mat.name = "generic";
-		groups[numG].mat.texture_filename = NULL;
-		groups[numG].mat.texture_ID = 0;
+		if (groups == NULL)
+		{
+			groups = new group[256];
+			groups[0].format = 0;
+			groups[0].startIndex = 0;
+			groups[0].endIndex = 0;
+			groups[0].mat.Kd[0] = 0.8f; groups[0].mat.Kd[1] = 0.8f; groups[0].mat.Kd[2] = 0.8f; groups[0].mat.Kd[3] = 1.0f;
+			groups[0].mat.Ks[0] = 0; groups[0].mat.Ks[1] = 0; groups[0].mat.Ks[2] = 0; groups[0].mat.Ks[3] = 1.0f;
+			groups[0].mat.Ka[0] = 0.2f; groups[0].mat.Ka[1] = 0.2f; groups[0].mat.Ka[2] = 0.2f; groups[0].mat.Ka[3] = 1.0f;
+			groups[numG].mat.name = "generic";
+			groups[0].mat.texture_filename = NULL;
+			groups[0].mat.texture_ID = 0;
+		}
+		
+		
 
 		// setup model vertex, texture and normal data 
 		// max 64k triangles/quads per model
@@ -1343,7 +1522,7 @@ bool CModel::LoadObj(string filename, bool loadmaterial)
 						if (values[3] != 0) groups[numG].format = groups[numG].format | 4; //n
 					}
 
-					// --- converting first triangle ----
+					// --- converting first triangles ----
 					unsigned int i = numTris;
 					vert[i++] = vertices[values[1]];
 					vert[i++] = vertices[values[4]];
@@ -1418,6 +1597,7 @@ bool CModel::LoadObj(string filename, bool loadmaterial)
 			maxz = (vertices[n].z > maxz) ? vertices[n].z : maxz;
 		}
 
+	    if (loadmaterial) 
 		cout << "loading.. " << filename << "-> vert: " << numV << " tex: " << numT << " norm: " << numN << " faces: " << numF << " tris: " << numTris / 3; 
 		//cout << minx << " " << maxx << "," << miny << " " << maxy << "," << minz << " " << maxz << endl;
 
@@ -1426,7 +1606,7 @@ bool CModel::LoadObj(string filename, bool loadmaterial)
 		delete[] texCoords;
 		delete[] normals;
 
-		// todo: trim group data arrays
+		// trim group data arrays
 		vector3f* tempV = vert;
 		vector2f* tempT = tex;
 		vector3f* tempN = norm;
@@ -1451,7 +1631,7 @@ bool CModel::LoadObj(string filename, bool loadmaterial)
 
 		numG++;
 
-		cout << " groups: " << (int)numG << endl;
+		if (loadmaterial) cout << " groups: " << (int)numG << endl;
 
 		delete[] tempV;
 		delete[] tempT;
@@ -1460,23 +1640,30 @@ bool CModel::LoadObj(string filename, bool loadmaterial)
 		// we use tris not vertices
 		numTris = numTris / 3;
 
-		if (materialFile.size() > 0)
-		{
-			material* materials = new material[256];
-			unsigned char numMat = 0;
+		if (materials == NULL) materials = new material[256];
+
+        if (loadmaterial)
+        {
+			cout << materialFile << endl;
+		 if (materialFile.size() > 0)
+		 {
 			// extract directory name
 			int diroffset = (int)filename.find_last_of("/");
 			if (diroffset > 0) materialFile.insert(0, filename.substr(0, diroffset + 1));
 			else materialFile.insert(0, "models/");
 
-			if (loadmaterial) numMat = LoadMtl(materialFile, materials);
-			else numMat = LoadMtl("", materials); // just use default material
+			numMat = LoadMtl(materialFile, materials); // add materials to list
 			// assign materials to groups
 			AssignMtl(materials, numMat, groups, numG);
-			// clean up materials
-			delete[] materials;
-		}
-		//else we just use the default colour and material
+			
+		 }
+		 else //we just use the default colour and material
+		 {
+			 numMat = LoadMtl("", materials); // just use default material
+			 AssignMtl(materials, numMat, groups, numG);
+		 }
+	   }
+	   else if (numMat>0) AssignMtl(materials, numMat, groups, numG);
       return true;
 	}
 	cout << "ERROR: Unable to open file: " << filename << endl;
@@ -1512,7 +1699,7 @@ void CModel::AssignMtl(material* materials, unsigned char numMat, group* groups,
 unsigned char CModel::LoadMtl(string filename, material* materials)
 {
 	unsigned char numMat = 0;
-	//material = new material*[256];
+	//material = new material*[256]; // static array with max 255 materials
 	materials[0].name = "generic";
 	materials[0].texture_filename = NULL;
 	materials[0].texture_ID = 0;

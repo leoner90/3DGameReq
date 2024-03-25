@@ -27,6 +27,7 @@ along with this program; If not, see < http://www.gnu.org/licenses/>.
 #include "SpritePoint.h"
 #include "SoundPlayer.h"
 #include "Floor.h"
+#include "Terrain.h"
 #include "Model.h"
 #include "ModelPoint.h"
 #include "Light.h"

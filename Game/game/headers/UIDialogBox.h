@@ -1,39 +1,47 @@
 #pragma once
-#include <iostream>
- 
+class TextConverter;
+
 class UIDialogBox
 {
 public:
+	UIDialogBox(float w, float h);
+
 	//Set current Speacker
-	enum currentSpeaker {  BLINKY, MYNE};
+	enum currentSpeaker {MYNE, BLINKY};
 	int speaker;
 	bool isBoxShowen;
 	bool autoHideTimer;
 
-	void init(float w, float h);
-	void OnUpdate(long t);
+	void init();
+	void OnUpdate(long t, bool fullWidth);
 	void OnDraw(CGraphics* g);
-	void showBox(int speakerId, int textId, int priority, float autohideBoxin = -1 );
+	void showBox(int speakerId, int textIdStart, int textIdEnd, int priority, float autohideBoxin = -1 );
 	void hideBox();
 	float dialogBoxHideSpeed, dialogBoxShowSpeed;
+	float speakerImgMarginTop, speakerImgMarginLeft, textMarginLeft;
 	CSprite dialogBoxBg;
 	int currentPriority;
 private:
 	float localW, localH;
 
-	int dialogNumber;
-	std::string text[5], name[2];
+	int dialogNumber, dialogEndNumber;
+	std::string text[27], name[2];
 	
 	CFont font;
 	//all Speakers logo
 	CSprite speakerImg, MyneImg;
 	
+	vector2f initPosDialogBox, initPosSpeakerImages;
 
 	float localTime;
 	bool textShow;
 	
 	float hideInSec;
-	bool onTop;
+
+
+	float localautohideTime;
+	TextConverter* textConverter;
+
 	 
 };
 

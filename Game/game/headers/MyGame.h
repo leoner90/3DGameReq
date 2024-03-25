@@ -8,33 +8,48 @@ class PlayerInterface;
 class Enemy;
 class Shop;
 class UIDialogBox;
+class Cutscene;
+class LoadingScreen;
+class Portal;
+class Radar;
 
 class CMyGame : public CGame
 {
+public:
+	CMyGame();
 private:
 	CSprite startScreen, mainMenushowControlers, CharStatsMenu, deathScreen;
 	CFont font;
- 
+
 	// Main Objects
 	Map* map;
 	Player* player;
 	PlayerInterface* playerInterface;
 	Shop* shop;
-	Uint32 deathScreenTimer;
-	float  enemyOneSpawnDelay, enemyTwoSpawnDelay;
-	Uint32 totalEnemiesOnHold;
+	Cutscene* cutscene;
 	UIDialogBox* dialogBox;
+	LoadingScreen* loadingScreen;
+	Portal* portal;
+	Radar* radar;
+	std::vector<Enemy*> AllEnemies;
 
+	//death screen
+	Uint32 deathScreenTimer;
 
-	//Enemy* enemy;
+	//enemies spawn properties
+	Uint32 totalEnemiesOnHold;
+	float  enemyOneSpawnDelay, enemyTwoSpawnDelay, InitSpawnDelay;
+	int totalEnemiesToSpawn;
+
 
 	// Game Funtions
 	virtual void OnInitialize();
 	virtual void OnUpdate();
 	virtual void OnDraw(CGraphics* g);
 	virtual void OnRender3D(CGraphics* g);
+	virtual void OnStartLevel(int level);
 	void CameraControl(CGraphics* g);
-	void MainMenyController(SDLKey sym);
+	void MainMenuController(SDLKey sym);
 	void enemySpawn();
 	//INIT SPRITES AND MODELS
 	void InitSpritesAndModels();
@@ -46,11 +61,13 @@ private:
 
 	// Keyboard Event Handlers
 	virtual void OnKeyDown(SDLKey sym, SDLMod mod, Uint16 unicode);
-	void  OnLButtonDown(Uint16 x, Uint16 y);
+	virtual void OnLButtonDown(Uint16 x, Uint16 y);
+	virtual void OnRButtonDown(Uint16 x, Uint16 y);
+	virtual void OnRButtonUp(Uint16 x, Uint16 y);
 
 	//Game Modes
-	enum GameModes{MAIN_MENU, CHAR_STATS, SHOP, IN_GAME, CUTSCENE, SHOW_CONTROLLERS, DEATHSCREEN};
-	enum mainMenuOptions{NEW_GAME, CONTROLS, EXIT};
+	enum GameModes { MAIN_MENU, CHAR_STATS, SHOP, IN_GAME, CUTSCENE, SHOW_CONTROLLERS, DEATHSCREEN, LOADING_SCREEN };
+	enum mainMenuOptions { NEW_GAME, CONTROLS, EXIT };
 
 	GameModes currentMenuState;
 	bool gameStarted;
@@ -59,10 +76,14 @@ private:
 	//fog
 	void EnableFog();
 
+	//pause menus
 	void MaiMenuDraw(CGraphics* g);
 	void CharStatsDraw(CGraphics* g);
+
 	//sound
 	CSoundPlayer mainBgMusic;
+	CSoundPlayer rainBgEffect;
+	CSoundPlayer bossSpawnSound;
 
 	void OnMButtonDown(Uint16 x, Uint16 y);
 	void OnMButtonUp(Uint16 x, Uint16 y);
@@ -70,11 +91,18 @@ private:
 	bool cameraMovement;
 
 	CVector currentMousePos;
-
 	CVector cameraControlMouseInitPose;
-
-	// the skydome is a CModel too
+	CSprite mousePointer;
 	CModel skydome;
 
-	int totalEnemiesToSpawn;
+	float YcameraInitState, ZcameraInitState, XcameraInitState, YcameraInitRotation;
+
+	float localH, localW;
+
+
+	//Static
+	CModelMd3* enemyModelOne;
+	CModelMd3* enemyModelTwo;
+	CModelMd3* boss;
+	bool isBossSpawn = false;
 };
