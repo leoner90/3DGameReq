@@ -22,12 +22,19 @@ private:
 	CFont font;
 	Player* localPlayer;
 	
-	CSprite shopImg, upgradeWeaponBtn, upgradeArmorBtn, exitShopBtn;
-
+	CSprite upgradeBtn, exitShopBtn, pointer;
+	CSprite shopImg, shopEnergyPage, shopDamagePage, shopFireRateePage, shopEnergyRecovPage;
+	CSprite sectionTwoArmor, sectionTwoDash;
 	float Width, Height;
 
+	int shopCurrentPage;
+	int shopCurrentSection;
+
+	int totalPagesCountSectionOne , totalPagesCountSectionTwo;
+	int totalSectionsCount;
 
 
+	float damageUpgrade, fireRateUpgrade, energyUpgrade, energyRecoveryUpgrade, armorUpgrade, armorRepairRateUpgrade, dashUpgrade;
 };
 
  

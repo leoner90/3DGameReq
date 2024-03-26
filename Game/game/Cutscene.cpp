@@ -20,6 +20,7 @@ Cutscene::Cutscene(float w, float h)
 
 	//Cutscene 2
 	portal.LoadModel("portal/portalAnimated.md3");
+	portal.LoadTexture("portal/portal.png");
 	portal.SetScale(230.f);
 	portal.SetPosition(400, 60, 300);
 	portal.AddAnimation("portalOpen", 1, 39);
@@ -235,7 +236,7 @@ void Cutscene::cutSceneTwo()
 		localPlayer->playerModel.SetPosition(1500, 0, 1500);
 		shiprotationalAngelY = 0.3;
 		cutsceneTwoStarted = true;
-		localDialogBox->showBox(0, 22, 22, 3, 3800);
+		localDialogBox->showBox(1, 22, 22, 3, 3800);
 		
 		localPlayer->playerModel.SetSpeed(300);
 		localPlayer->playerModel.PlayAnimation("runF", 22, true);

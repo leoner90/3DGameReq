@@ -40,8 +40,9 @@ void Enemy::init(CVector enemyPos, int enemyType, Map& map, Portal& portal, CMod
 	
 		enemySpeed = 350 + rand() % 250;
 
-		enemyModel->AddAnimation("run", 10, 40);
 		enemyModel->AddAnimation("attack", 0, 10);
+		enemyModel->AddAnimation("run", 10, 40);
+		enemyModel->AddAnimation("dead", 42, 70);
 		
 		//choose Random Portal Part To Attack
 		CVector portalPartsPostions[4]
@@ -65,8 +66,8 @@ void Enemy::init(CVector enemyPos, int enemyType, Map& map, Portal& portal, CMod
 		enemyModel->AddAnimation("run", 10, 44);
 		enemyModel->AddAnimation("attack", 50, 72);
 		enemyModel->AddAnimation("chargingForAttack", 83, 125);
-		enemyModel->AddAnimation("chargedAttack", 141, 153);
-		enemyModel->AddAnimation("chargeAttackStop", 160, 165);
+	//	enemyModel->AddAnimation("chargedAttack", 141, 153);
+	//	enemyModel->AddAnimation("chargeAttackStop", 160, 165);
 		enemyModel->AddAnimation("dead", 170, 199);
 	}
 	
@@ -109,7 +110,10 @@ void Enemy::OnUpdate(Uint32 t, Player &player, Map& map, std::vector<Enemy*>& Al
 		{
 			enemyModel->PlayAnimation("dead", 16, false);
 			enemyModel->SetSpeed(0);
-			deathAnimationTimer = 1500 + t;
+			
+			deathAnimationTimer = 1000 + t;
+
+			if (localEnemyType == 2) deathAnimationTimer = t; // no death animation
 		}
 		else if(deathAnimationTimer < t) isDead = true;
 		
@@ -241,6 +245,7 @@ void Enemy::Attack()
 	else if (localEnemyType == 2 && attackDelay < localTime)
 	{
 
+		/* // CHARGED ATTACK TO DO
 		if (bossChargedAttackDelay < localTime && !isBossChargingAttack)
 		{
 			isBossChargingAttack = true;
@@ -261,17 +266,16 @@ void Enemy::Attack()
 		{
 			return;
 		}
-
+		*/
  
 		//enemyModel->AddAnimation("chargeAttackStop", 160, 165);
 
- 
 
 		// Attack player  
 		if (enemyModel->HitTest(&localPlayer->playerModel))
 		{
 			localPlayer->playerGettingDamage(enemyDamage);
-			attackDelay = 1000 + localTime;
+			attackDelay = 2000 + localTime;
 		}
 	}
 }

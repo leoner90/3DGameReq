@@ -27,40 +27,43 @@ UIDialogBox::UIDialogBox(float w, float h)
 	//DIALOGS
 	name[MYNE] = "Myne";
 	name[BLINKY] = "Blinky";
-
-	text[0] = "Looks Like this planet has a lot of resources , \n we have to check this out";
-	text[1] = "I detect many organic life forms on the surface,\n but their intelligence leaves much to be desired.";
-	text[2] = "We have to be careful down there";
+	//cutscene 1
+	text[0] = "How much longer, Blinky? This is taking forever. ";
+	text[1] = "Just a few more moments, Myne.\nI am almost done scanning the planet.\nJust need to get some reading on the portal system.";
+	text[2] = "God, we are so far away from home. It’s going to take forever to get back. Honestly, why would they bother with-";
 	text[3] = "expl";
 	text[4] = "What Was that?????";
-	text[5] = "Sensor detects a malfunction in engine section";
-	text[6] = "Malfunction?? That sounds more like a big explodition";
-	text[7] = "Ship Control is down , we are falling";
-	text[8] = "It was a pleasure to work with you. gg";
+	text[5] = "Myne, somethings- hap- can’t- repon- shutting- dow-";
+	text[6] = "Blinky? Hey! Blinky!";
+	text[7] = "The ship control is non-responsive, what the hell? What is going on? ";
+	text[8] = "Myne- They’re- Not- Help-";
 
-	text[9] = "BE AWARE Enemies Are Coming!!!!!!!!!!!!!!!!";
+	//other
+	text[9] = "Enemies incoming! ";
 	text[10] = "PORTAL IS UNDER ATTACK";
-	text[11] = "PORTAL OVERLOADED - IT TAKES SOME TIME TO START AGAIN ";
-	text[12] = "PRESS E FOR SHOPING";
-	text[13] = "BE AWARE Enemies Are Coming!!!!!!!!!!!!!!!!";
-	text[15] =
-		"What a landing...\n"
-		"It’s a miracle that I survived.\n";
-	text[16] = "Looks like this ship will never fly again.\n";
-	text[17] =
-		"I wonder how Blinky is doing, although he’s a robot\n"
-		"he’s not immortal, it seems that during landing\n"
-		"he was thrown towards that strange portal";
+	text[11] = "PORTAL OVERLOADED - IT WILL TAKE SOME TIME TO START AGAIN ";
+	text[12] = "PRESS E to Shop";
+	text[13] = "Enemies incoming! ";
 
-	text[18] = "Myne!!! You alive.\n";
-	text[19] = "Wonderful, I started to charge this ancient portal,\n it's our ticket home";
+	//start of the game
+	text[15] =
+		"Well at least the eject system worked.\n"
+		"Blinky is out. What in the world is going on? ";
+
+	text[16] = "The portal. I need to find that portal and \n hope it’s still operational. It’s the only way to get back. ";
+	text[17] = " Hold tight, Blinky. I’ll get you working again and get us out of here.";
+ 
+
+
+	text[18] = "Myne! What happened? Where are we?\n  Wait are we on land? \n Is that the portal?";
+	text[19] = "Yes. We crashed right after you shut down.\n The ship is totalled. Listen? Can you start the portal? ";
 	text[20] =
-				"But I'm afraid it's woke up all the monsters around,\n"
-				"you have to survive while the portal is charging";
+		"Yes. I can. I am wired in to the system. Give me a moment and I- \n"
+		"Myne, the system- it senses tremors. Myne, we have incoming";
+
 
 	text[21] = "Portal is back to life";
-
-	text[22] = "Portal is charged , faster it's time to go";
+	text[22] = "Portal is fully charged. Let’s get out of here, Myne.";
 
 }
 
@@ -83,8 +86,9 @@ void UIDialogBox::OnUpdate(long t, bool fullWidth)
 	localTime = t;
 	
 	//full width in cutsenes , 
-	if (fullWidth)
+	if (fullWidth )
 	{
+		speakerImgMarginLeft = 200;
 		dialogBoxBg.SetSize(localW, dialogBoxBg.GetHeight());
 		dialogBoxBg.SetPosition(localW / 2, dialogBoxBg.GetY());
 	}
@@ -147,6 +151,10 @@ void UIDialogBox::OnDraw(CGraphics* g)
 {
 	if (isBoxShowen )
 	{
+		//cheating
+		if (dialogNumber == 19) speaker = 0;
+		if (dialogNumber == 20) speaker = 1;
+
 		dialogBoxBg.Draw(g);
 		switch (speaker)
 		{

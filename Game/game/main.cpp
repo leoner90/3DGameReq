@@ -12,8 +12,8 @@ CGameApp app;
 
 int main(int argc, char* argv[])
 {
-	app.OpenWindow(1920, 1080, "LetsPlay");
-    //app.OpenFullScreen(1920,1080);
+	//app.OpenWindow(1920, 1080, "LetsPlay");
+    app.OpenFullScreen(1920,1080);
 	app.Run(&game);
 	return(0);
 }

@@ -25,7 +25,7 @@ Player::Player()
 
 	//model
 	playerModel.LoadModel("Player/myne2.md3");
-	playerModel.LoadTexture("Player/skin.png");
+	playerModel.LoadTexture("Player/skin1.png");
 
 	playerModel.SetScale(25.5f);
 
@@ -42,7 +42,7 @@ Player::Player()
 
 	//Shooting
 	bullet.LoadModel("bullet/Bullet2.obj");
-	bullet.SetScale(25.f);
+	bullet.SetScale(8.f);
 
 	//sounds
 	footsteps.Play("footsteps.wav", -1);
@@ -51,9 +51,9 @@ Player::Player()
 
 
 	//Loot
-	lootItemOne.LoadModel("resources/techno.obj");
+	lootItemOne.LoadModel("resources/bio.obj"); // weapon 
 	lootItemOne.SetScale(25.5f);
-	lootItemTwo.LoadModel("resources/bio.obj");
+	lootItemTwo.LoadModel("resources/techno.obj"); // armor
 	lootItemTwo.SetScale(25.5f);
 	lootItemThree.LoadModel("resources/bioCORE.obj");
 	lootItemThree.SetScale(25.5f);
@@ -88,7 +88,7 @@ void Player::init()
 
 	//shooting
 	shootingDelay = 400;
-	playerDamage = 50;
+	playerDamage = 150;
 	chargedDamage = 7; // x
 
 	//Energy Recovery
@@ -239,7 +239,7 @@ void Player::OnDraw(CGraphics* g, UIDialogBox& dialogBox, Shop& shop)
 		CVector displ =  playerModel.GetPositionV() - shop.testRobot.GetPositionV();
 		float distance = hypot(displ.GetX(), displ.GetZ());
 
-		if (distance < 1200)
+		if (distance < 300)
 		{
 			firstBlinkyMeet = true;
 			dialogBox.showBox(1, 18, 20, 3, 4000);
@@ -472,7 +472,7 @@ void Player::playerCollision(std::vector<Enemy*> AllEnemies)
 void Player::addLoot(int enemyType, CVector enemyPos)
 {
 	float chance = rand() % 100;
-	if (chance < 40) return;
+	if (chance < 40 && enemyType != 2) return;
 	if(enemyType ==  0) lootList.push_back(lootItemOne.Clone());
 	else if (enemyType == 1) lootList.push_back(lootItemTwo.Clone());
 	else if (enemyType == 2) lootList.push_back(lootItemThree.Clone());
