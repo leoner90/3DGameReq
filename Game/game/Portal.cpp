@@ -9,6 +9,7 @@ Portal::Portal(float gameWidth, float gameHeigth)
 
 	//PORTAL
 	portal.LoadModel("portal/portal.obj");
+	portal.LoadTexture("portal/portal.png");
 	portal.SetScale(230.f);
 	portal.SetPosition(400, 80, 300);
 	portal.SetHealth(0);

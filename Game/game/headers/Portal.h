@@ -6,37 +6,40 @@ class  Portal
 public:
 	 Portal(float gameWidth, float gameHeigth);
 	//~ Portal();
-
-
-	 CModel portal, portalPartOne, portalPartTwo, portalPartThree, portalPartFour;
-	 float TotaltimeForPortalToCharg;
-	 float rechargeTime;
-	 float portalRechargeTimer;
-	 bool portalUnderAttack, isPortalReseting;
-	 float portalEnergyField; // how many attack portal can handel before going to recharge
-	 float portalResetTimer;
-	 CHealthBar portalHpBar, resetHpBar;
-
-	 float damageDelay; // dellay after hit
-
+	
+	 //main Functions
 	 void init();
 	 void OnUpdate(Uint32 t, UIDialogBox& dialogBox);
 	 void OnDraw(CGraphics* g);
 	 void OnRender3D(CGraphics* g);
+
+	 //Portal Damaged
 	 void portalGettingDamaged(float damageAmount);
 
-	 float prevFrameTime, deltatime;
-	 float currentportalChargingTime;
+	 //To DO getters Setters
 	 bool isPortalCharged;
+	 bool portalUnderAttack, isPortalReseting;
 	 float portalChargeInPercent;
+	 CModel portal, portalPartOne, portalPartTwo, portalPartThree, portalPartFour;
+
 private:
+	CFont font;
 	CSprite  portaChargelUI;
-	float localH, localW, localTime;
 	UIDialogBox* localDialogBox;
+	CHealthBar portalHpBar, resetHpBar;
+
+	float localH, localW, localTime;
 	float underAttackMsgDelay;
 	float portalMaxEnergyField;
-	CFont font;
 	float portalChargePerSec;
+	float TotaltimeForPortalToCharg;
+	float rechargeTime;
+	float portalRechargeTimer;
+	float portalEnergyField; // how many attack portal can handel before going to recharge
+	float portalResetTimer;
+	float damageDelay; // charge delay after hit
+	float prevFrameTime, deltatime;
+	float currentportalChargingTime;
 };
 
  

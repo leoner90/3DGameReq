@@ -1,6 +1,6 @@
 #include "headers/MyGame.h"
-#include "headers/Player.h"
-#include "headers/PlayerInterface.h"
+#include "headers/Player/Player.h"
+#include "headers/Player/PlayerInterface.h"
 #include "headers/Enemy.h"
 #include "headers/Map.h"
 #include "headers/Shop.h"
@@ -65,10 +65,14 @@ void CMyGame::OnInitialize()
 
 	enemyModelTwo->LoadModel("enemies/65.md3");
 	enemyModelTwo->SetScale(15.5f);
+	enemyModelTwo->LoadTexture("enemies/65.png");
 
-	boss->LoadModel("enemies/boss.md3");
+	boss->LoadModel("enemies/boss02.md3");
 	boss->SetScale(30.5f);
+	boss->LoadTexture("enemies/boss2.png");
 }
+
+
 
 //ON NEW GAME START
 void CMyGame::OnStartLevel(int level)
@@ -89,7 +93,7 @@ void CMyGame::OnStartLevel(int level)
 
 	totalEnemiesOnHold = 0;
 	totalEnemiesToSpawn = 4;
-	InitSpawnDelay = 60000 *  0.5; // spawn start , not the wave
+	InitSpawnDelay = 60000 *  0.3; // spawn start , not the wave
 	enemyOneSpawnDelay = enemyTwoSpawnDelay = 0; // init SPAWN DELAY -> set In Enemy Spawn fun!!!!!!
 	//****
 
@@ -104,11 +108,8 @@ void CMyGame::OnStartLevel(int level)
 	deathScreenTimer = 0;
 	isBossSpawn = false;
 	
-
+	rainBgEffect.Pause();
 }
-
-
-
 
 //*************** UPDATE ***************
 void CMyGame::OnUpdate() 
@@ -117,6 +118,7 @@ void CMyGame::OnUpdate()
 	//portal Charged
 	if (portal->isPortalCharged && currentMenuState != CUTSCENE)
 	{
+		player->footsteps.Pause(); // bug with a speed
 		cutscene->startCutscene(1);
 		currentMenuState = CUTSCENE;
 	}
@@ -136,7 +138,7 @@ void CMyGame::OnUpdate()
 		currentMenuState = IN_GAME;
 		camera.rotation.y = YcameraInitRotation;
 		camera.position.z = 650;
-		rainBgEffect.Play("rain.wav");
+		rainBgEffect.Play("rain.wav", -1);
 		rainBgEffect.SetVolume(60);
 	}
 
@@ -259,7 +261,7 @@ void CMyGame::OnRender3D(CGraphics* g)
 
 	CameraControl(g);
 	map->OnRender3D(g);
-	player->OnRender3D(g, world);
+	player->OnRender3D(g);
 	portal->OnRender3D(g);
 	for (auto enemy : AllEnemies) enemy->OnRender3D(g);
 	shop->OnRender3D(g);
@@ -395,9 +397,11 @@ void CMyGame::CharStatsDraw(CGraphics* g)
 {
 	CharStatsMenu.Draw(g);
 
+	//lvl
+	font.DrawNumber(686, (float)Height - 468, 1, CColor::White(), 38);
+
 	//exp
-	font.DrawNumber(686, (float)Height - 468, player->currentExp, CColor::White(), 38);
- 
+	font.DrawNumber(686, (float)Height - 555, player->currentExp, CColor::White(), 38);
 	//damage
 	font.DrawNumber(686, (float)Height - 650, player->playerDamage, CColor::White(), 38);
 	
@@ -457,7 +461,7 @@ void CMyGame::enemySpawn()
 		 
 		AllEnemies.push_back(new Enemy());
 		AllEnemies.back()->init(spawnPos[rand() % 4], OGRO, *map, *portal, *enemyModelTwo);
-		enemyOneSpawnDelay = GetTime() + 5000 + rand() % 3000;
+		enemyOneSpawnDelay = GetTime() + 10000 + rand() % 3000;
 		totalEnemiesOnHold++;
 	}
 
@@ -466,12 +470,12 @@ void CMyGame::enemySpawn()
 	{
 		AllEnemies.push_back(new Enemy());
 		AllEnemies.back()->init(spawnPos[rand() % 4], EN2, *map, *portal, *enemyModelOne);
-		enemyTwoSpawnDelay = GetTime() + 5000 + rand() % 2000;
+		enemyTwoSpawnDelay = GetTime() + 10000 + rand() % 2000;
 		totalEnemiesOnHold++;
 	}
 
 	//boss
-	if (portal->portalChargeInPercent > 70 && !isBossSpawn)
+	if (portal->portalChargeInPercent > 75 && !isBossSpawn)
 	{
 		bossSpawnSound.Play("boss.wav");
 		bossSpawnSound.SetVolume(30);
@@ -509,6 +513,7 @@ void CMyGame::OnKeyDown(SDLKey sym, SDLMod mod, Uint16 unicode)
 	//Player KeyBoard Controller
 	if (!IsPaused()) player->OnKeyDown(sym, currentMousePos);
 
+	if (currentMenuState == SHOP) shop->OnKeyDown(sym);
 	//Start
 	MainMenuController(sym);
 }

@@ -6,53 +6,47 @@ class Cutscene
 {
 public:
 	Cutscene(float w, float h);
- 
-	enum Cutsenes {START,END};
-	CModel shipModel;
+	
+	//Main Functions
 	void init(float w, float h, Player& player);
 	void Update(Uint32 t, UIDialogBox& dialogBox);
 	void Draw2d(CGraphics* g);
 	void Draw3d(CGraphics* g);
+
+	//Cutscenes
 	void cutSceneOne();
 	void cutSceneTwo();
-	
-	float dialogSwitcherTimer;
-	int dialogNumber;
-	bool isCutscenePlaying = true;
-	float shiprotationalAngelY;
-	int curentCutSceneNum;
 	void startCutscene(int sceneNum);
 
+
+	//TODO GETTERS SETTERS
+	bool isCutscenePlaying = true;
+	int dialogNumber;
+	float shiprotationalAngelY;
+	int curentCutSceneNum;
+	float dialogSwitcherTimer;
 	CVector cutcceneCameraPosition;
 
 private:
-	int blackScreenTimer;
+	enum Cutsenes { START, END };
 
+	CModel shipModel;
 	CSoundPlayer explosionSound, engineSound, crashSound;
-
-
 	CSprite screenEdges, darkTransition;
-
-	float localTime;
-
 	UIDialogBox* localDialogBox;
-
 	CSoundPlayer test;
-	bool cutSceneEndDimOn;
-
+	CModel portalPartOne, portalPartTwo, portalPartThree, portalPartFour;
+	CModelList particleList;
+	CVector initRotation, initPos, initVelocity;
+	Player* localPlayer;
+	CModel portalVfx;
 	CModelMd3 portal;
 
+	float localTime;
+	bool cutSceneEndDimOn;
 	float delay;
 	bool cutsceneTwoStarted, CutSceneTwoReachedPortal; // to redo
-	CModel portalPartOne, portalPartTwo, portalPartThree, portalPartFour;
-
-	CModelList particleList;
-
-	CVector initRotation, initPos, initVelocity;
-
-	Player* localPlayer;
-
-	CModel portalVfx;
+	int blackScreenTimer;
 };
 
  

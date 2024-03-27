@@ -1,34 +1,30 @@
 #include "Game.h"
-#include "headers/Player.h"
+#include "headers/Player/Player.h"
 #include "headers/map.h"
 #include "headers/Enemy.h"
 #include "headers/Portal.h"
 #include "headers/UIDialogBox.h"
 #include "headers/Shop.h"
-#include "headers/Player.h"
 
 
-//*************** INIT ***************
+//*************** CONSTRUCTOR ***************
 
 Player::Player()
 {
-
 	dashVfx.LoadModel("rainDrop/rainDrop.obj");
 	dashVfx.SetScale(0.2f);
 
 	onDamageVfx.LoadModel("rainDrop/rainDrop.obj");
 	onDamageVfx.SetScale(0.2f);
 
-
 	isPlayerDead = playerPreDeahAnimation = false;
 	font.LoadDefault();
 
 	//model
 	playerModel.LoadModel("Player/myne2.md3");
-	playerModel.LoadTexture("Player/skin.png");
+	playerModel.LoadTexture("Player/skin1.png");
 
 	playerModel.SetScale(25.5f);
-
 
 	//animation
 	playerModel.AddAnimation("runF", 42, 63);
@@ -42,25 +38,24 @@ Player::Player()
 
 	//Shooting
 	bullet.LoadModel("bullet/Bullet2.obj");
-	bullet.SetScale(25.f);
+	bullet.SetScale(8.f);
 
 	//sounds
 	footsteps.Play("footsteps.wav", -1);
 	footsteps.SetVolume(20);
 	footsteps.Pause();
 
-
 	//Loot
-	lootItemOne.LoadModel("resources/techno.obj");
+	lootItemOne.LoadModel("resources/bio.obj"); // weapon 
 	lootItemOne.SetScale(25.5f);
-	lootItemTwo.LoadModel("resources/bio.obj");
+	lootItemTwo.LoadModel("resources/techno.obj"); // armor
 	lootItemTwo.SetScale(25.5f);
 	lootItemThree.LoadModel("resources/bioCORE.obj");
 	lootItemThree.SetScale(25.5f);
-
-
 }
 
+
+//*************** INIT ***************
 void Player::init()
 {
 	//reset
@@ -88,32 +83,31 @@ void Player::init()
 
 	//shooting
 	shootingDelay = 400;
-	playerDamage = 50;
+	playerDamage = 150;
 	chargedDamage = 7; // x
 
 	//Energy Recovery
 	energyRegenPerSec = 10;
 	armorRegenPerSec = 5;
 
-
 	//charged Shot
 	ShotChargeBar.SetSize(35, 1);
 	ShotChargeBar.SetColors(CColor::Yellow(), CColor::Black(), CColor::Black());
 	ShotChargeBar.SetHealth(0);
 
+	//Reset
 	isPlayerInDamage = false;
 	chargedShot = false;
 	isShotCharged = false;
 	InDamageStunDelayTimer = 0;
 	startChargedShotTimer = 0;
-	totalTimeToCharge = 2000;
-	ShotChargeBarOffset = 150;
-
 	repeatStunDelayTimer = 0;
 	dashTimer = 0;
-
 	footsteps.Pause();
 
+	//shooting reset
+	totalTimeToCharge = 2000;
+	ShotChargeBarOffset = 150;
 }
 
 //*************** UPDATE ***************
@@ -133,9 +127,8 @@ void Player::OnUpdate(Uint32 t, bool Dkey, bool Akey, bool Wkey, bool Skey, Map&
 	deltatime = (t - prevFrameTime) / 1000  ; //in sec
 	prevFrameTime = t;
  
-	
 
-	//if pre-dead -> play animation of death , set dead status true by the end
+	//DEATH HANDLER
 	float remainingHpInPercentage = playerCurrentHp / (playerMaxHp / 100);
 	playerModel.SetHealth(remainingHpInPercentage);
 
@@ -153,23 +146,19 @@ void Player::OnUpdate(Uint32 t, bool Dkey, bool Akey, bool Wkey, bool Skey, Map&
 	}
 
 	//if moving play start footsteps sound
-	if ( isPlayerMoving)
-	{
-		footsteps.Resume();
-	}
-
-	//Energy Recovery
+	if (isPlayerMoving) footsteps.Resume();
  
+	//Energy Recovery
 	if (CurrentEnergy < maxEnergy) CurrentEnergy += deltatime * energyRegenPerSec;
 	if (playerCurrentArmor < playerMaxArmor) playerCurrentArmor += deltatime * armorRegenPerSec;
 
-	
 	//recovery from hit
 	if (isPlayerInDamage && InDamageStunDelayTimer < t)
 	{
 		isPlayerInDamage = false;
 		playerCurrentState = savedPrevPlayerState;
 	} 
+
 	if (isPlayerInDamage) 
 	{
 		playerModel.Update(t);
@@ -179,12 +168,23 @@ void Player::OnUpdate(Uint32 t, bool Dkey, bool Akey, bool Wkey, bool Skey, Map&
 	//Attack Delay 
 	if (attackDelay - t <= 0 && playerCurrentState == INATTACK) playerCurrentState = UNOCCUPIED;
 	
+	//control & collisions
 	playerCollision(AllEnemies);
 	PlayerControl(Dkey, Akey, Wkey, Skey);
+
+	//shots
 	playerShotsHandler();
+
+	//loot
 	lootHandler();
 
+	//charged Shot
+	chargedShotHandler();
+
 	//Update and deletes
+	ShotChargeBar.SetPosition(playerWorldPos.x, playerWorldPos.y + ShotChargeBarOffset);
+	ShotChargeBar.Update(t);
+
 	lootList.delete_if(true);
 	lootList.Update(t);
 
@@ -198,69 +198,43 @@ void Player::OnUpdate(Uint32 t, bool Dkey, bool Akey, bool Wkey, bool Skey, Map&
 	dashEffect.delete_if(true);
 
 	onHitEffect.Update(t);
-	onHitEffect.delete_if(true);
-
-
-
-
-	if (startChargedShotTimer != 0 && !isShotCharged)
-	{
-		float currentChargeinSec = totalTimeToCharge - (startChargedShotTimer - t);
-		int chargePercent = currentChargeinSec / totalTimeToCharge * 100;
-
-		if (chargePercent < 50) ShotChargeBar.SetColor(CColor::Red());
-		else if (chargePercent < 100) ShotChargeBar.SetColor(CColor::Yellow());
-		else if (chargePercent >= 100) ShotChargeBar.SetColor(CColor::Green());
-		ShotChargeBar.SetHealth(chargePercent);
-
-
-		if (startChargedShotTimer < t)
-		{
-			isShotCharged = true;
-		}
-	}
-
-	//WorldToScreenCoordinate(playerModel->enemyModel->GetPositionV())
-	ShotChargeBar.SetPosition(playerWorldPos.x, playerWorldPos.y + ShotChargeBarOffset);
-	ShotChargeBar.Update(t);
+	onHitEffect.delete_if(true);	
 }
 
 //*************** 2D RENDER ***************
 void Player::OnDraw(CGraphics* g, UIDialogBox& dialogBox, Shop& shop)
 {
+	//On Game Start
 	if (!onStartGameEvent) 
 	{
 		onStartGameEvent = true;
 		dialogBox.showBox(0, 15, 17, 2, 4000);
 	}
 
+	//Blinky First Meet
 	if (!firstBlinkyMeet)
 	{
 		CVector displ =  playerModel.GetPositionV() - shop.testRobot.GetPositionV();
 		float distance = hypot(displ.GetX(), displ.GetZ());
 
-		if (distance < 1200)
+		if (distance < 300)
 		{
 			firstBlinkyMeet = true;
 			dialogBox.showBox(1, 18, 20, 3, 4000);
 		}
 	}
 
-	
 	if(ShotChargeBar.GetHealth() > 0 ) ShotChargeBar.Draw(g);
 }
 
 //*************** 3D RENDER ***************
-void Player::OnRender3D(CGraphics* g, CCamera& world)
+void Player::OnRender3D(CGraphics* g)
 {
 	playerShots.Draw(g);
 	playerModel.Draw(g);
 	lootList.Draw(g);
 	dashEffect.Draw(g);
 	onHitEffect.Draw(g);
-
-
-	
 }
 
  
@@ -283,8 +257,7 @@ void Player::PlayerControl(bool Dkey, bool Akey, bool Wkey , bool Skey )
 		float dotProduct = charDirectionV.Dot(normDisp);
 		float angle = acos(dotProduct) * 180.0 / M_PI;
 
-
-	 
+		//Animation Depending on Mouse Position
 		if (angle < 45)
 		{
 			playerModel.SetSpeed(650);
@@ -302,8 +275,6 @@ void Player::PlayerControl(bool Dkey, bool Akey, bool Wkey , bool Skey )
 		}
 	}
  
-
-
 	//moving direction
 	if (Wkey)
 	{
@@ -338,7 +309,6 @@ void Player::PlayerControl(bool Dkey, bool Akey, bool Wkey , bool Skey )
 		isPlayerMoving = false;
 		playerModel.PlayAnimation("idle", 20, true);
 	}
-	
 }
 
 
@@ -388,6 +358,22 @@ void Player::OnKeyDown(SDLKey sym, CVector currentMousePos)
 	}
 }
 
+void Player::chargedShotHandler()
+{
+	if (startChargedShotTimer != 0 && !isShotCharged)
+	{
+		float currentChargeinSec = totalTimeToCharge - (startChargedShotTimer - localTime);
+		int chargePercent = currentChargeinSec / totalTimeToCharge * 100;
+
+		if (chargePercent < 50) ShotChargeBar.SetColor(CColor::Red());
+		else if (chargePercent < 100) ShotChargeBar.SetColor(CColor::Yellow());
+		else if (chargePercent >= 100) ShotChargeBar.SetColor(CColor::Green());
+		ShotChargeBar.SetHealth(chargePercent);
+
+		if (startChargedShotTimer < localTime) isShotCharged = true;
+	}
+}
+
 void Player::playerGettingDamage(float damage)
 {
 	if (playerPreDeahAnimation) return;
@@ -431,9 +417,7 @@ void Player::playerGettingDamage(float damage)
 			isPlayerInDamage = true;
 			playerModel.SetSpeed(0);
 		}
-	
 	}
- 
 }
 
 void Player::playerCollision(std::vector<Enemy*> AllEnemies)
@@ -466,13 +450,12 @@ void Player::playerCollision(std::vector<Enemy*> AllEnemies)
 			playerModel.SetPositionV(lastFramePos);
 		}
 	}*/
-
 }
 
 void Player::addLoot(int enemyType, CVector enemyPos)
 {
 	float chance = rand() % 100;
-	if (chance < 40) return;
+	if (chance < 40 && enemyType != 2) return;
 	if(enemyType ==  0) lootList.push_back(lootItemOne.Clone());
 	else if (enemyType == 1) lootList.push_back(lootItemTwo.Clone());
 	else if (enemyType == 2) lootList.push_back(lootItemThree.Clone());

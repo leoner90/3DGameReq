@@ -1,10 +1,11 @@
 # Material file for Bullet2.obj
 
-newmtl Material.004
-	Ns 360
+newmtl Material.001
+	Ns 250
 	d 1
 	illum 2
 	Kd 0.8 0.8 0.8
 	Ks 0.5 0.5 0.5
 	Ka 1.0 1.0 1.0
+	map_Kd asdas.png
 

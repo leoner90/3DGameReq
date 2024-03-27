@@ -6,22 +6,30 @@ class UIDialogBox
 public:
 	UIDialogBox(float w, float h);
 
-	//Set current Speacker
-	enum currentSpeaker {MYNE, BLINKY};
-	int speaker;
-	bool isBoxShowen;
-	bool autoHideTimer;
-
+	//Main Functions
 	void init();
 	void OnUpdate(long t, bool fullWidth);
 	void OnDraw(CGraphics* g);
+
+	//Show Hide Dialog Box
 	void showBox(int speakerId, int textIdStart, int textIdEnd, int priority, float autohideBoxin = -1 );
 	void hideBox();
+
+	bool isBoxShowen;
+	int currentPriority;
+
+private:
+	//settings
+	bool autoHideTimer;
+	int speaker;
 	float dialogBoxHideSpeed, dialogBoxShowSpeed;
 	float speakerImgMarginTop, speakerImgMarginLeft, textMarginLeft;
+	float hideInSec;
 	CSprite dialogBoxBg;
-	int currentPriority;
-private:
+
+	//Set current Speacker
+	enum currentSpeaker { MYNE, BLINKY };
+
 	float localW, localH;
 
 	int dialogNumber, dialogEndNumber;
@@ -35,14 +43,8 @@ private:
 
 	float localTime;
 	bool textShow;
-	
-	float hideInSec;
 
 
 	float localautohideTime;
-	TextConverter* textConverter;
-
-	 
+	TextConverter* textConverter;	 
 };
-
- 
