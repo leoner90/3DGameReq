@@ -1,6 +1,6 @@
 #include "Game.h"
-#include "headers/Player.h"
-#include "headers/PlayerInterface.h"
+#include "headers/Player/Player.h"
+#include "headers/Player/PlayerInterface.h"
 #include "headers/UIDialogBox.h"
 
 

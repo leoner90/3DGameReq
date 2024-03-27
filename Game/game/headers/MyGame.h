@@ -48,9 +48,11 @@ private:
 	virtual void OnDraw(CGraphics* g);
 	virtual void OnRender3D(CGraphics* g);
 	virtual void OnStartLevel(int level);
+
 	void CameraControl(CGraphics* g);
 	void MainMenuController(SDLKey sym);
 	void enemySpawn();
+
 	//INIT SPRITES AND MODELS
 	void InitSpritesAndModels();
 

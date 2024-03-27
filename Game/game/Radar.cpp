@@ -1,7 +1,7 @@
 #include "Game.h"
 #include "headers/Radar.h"
 #include "headers/Enemy.h"
-#include "headers/Player.h"
+#include "headers/Player/Player.h"
 
 Radar::Radar(float w, float h)
 {

@@ -1,7 +1,7 @@
 #include "headers/MyGame.h"
 #include "headers/Cutscene.h"
 #include "headers/UIDialogBox.h"
-#include "headers/Player.h"
+#include "headers/Player/Player.h"
 
 Cutscene::Cutscene(float w, float h)
 {

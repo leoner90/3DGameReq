@@ -1,6 +1,6 @@
 #include "Game.h"
 #include "headers/Shop.h"
-#include "headers/Player.h"
+#include "headers/Player/Player.h"
 #include "headers/UIDialogBox.h"
 
 Shop::Shop(float w, float h)

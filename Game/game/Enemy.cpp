@@ -1,6 +1,6 @@
 #include "Game.h"
 #include "headers/Enemy.h"
-#include "headers/Player.h"
+#include "headers/Player/Player.h"
 #include "headers/Map.h"
 #include <math.h> 
 #include "headers/Portal.h"

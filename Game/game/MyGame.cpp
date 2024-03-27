@@ -1,6 +1,6 @@
 #include "headers/MyGame.h"
-#include "headers/Player.h"
-#include "headers/PlayerInterface.h"
+#include "headers/Player/Player.h"
+#include "headers/Player/PlayerInterface.h"
 #include "headers/Enemy.h"
 #include "headers/Map.h"
 #include "headers/Shop.h"
@@ -110,9 +110,6 @@ void CMyGame::OnStartLevel(int level)
 	
 	rainBgEffect.Pause();
 }
-
-
-
 
 //*************** UPDATE ***************
 void CMyGame::OnUpdate() 
@@ -264,7 +261,7 @@ void CMyGame::OnRender3D(CGraphics* g)
 
 	CameraControl(g);
 	map->OnRender3D(g);
-	player->OnRender3D(g, world);
+	player->OnRender3D(g);
 	portal->OnRender3D(g);
 	for (auto enemy : AllEnemies) enemy->OnRender3D(g);
 	shop->OnRender3D(g);

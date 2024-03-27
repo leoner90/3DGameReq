@@ -28,13 +28,13 @@
     <ClInclude Include="headers\MyGame.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="headers\Player.h">
+    <ClInclude Include="headers\Player\Player.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="headers\Shop.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="headers\PlayerInterface.h">
+    <ClInclude Include="headers\Player\PlayerInterface.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="headers\Enemy.h">
