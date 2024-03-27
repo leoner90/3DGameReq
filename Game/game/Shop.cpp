@@ -33,7 +33,7 @@ Shop::Shop(float w, float h)
  
 
 	//shop
-	shopImg.LoadImage("shop/shopBg.jpg");
+	shopImg.SetImage("shop/shopBg.jpg");
 	shopImg.SetSize((float)w, (float)h);
 	shopImg.SetPosition((float)w / 2, (float)h / 2);
 
