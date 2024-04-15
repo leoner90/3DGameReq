@@ -36,4 +36,6 @@ private:
 
 	float Width, Height;
 	float damageUpgrade, fireRateUpgrade, energyUpgrade, energyRecoveryUpgrade, armorUpgrade, armorRepairRateUpgrade, dashUpgrade;
+	CSoundPlayer  upgradeSound;
+	CSoundPlayer  notEnoughItemsSound;
 };

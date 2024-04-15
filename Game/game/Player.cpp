@@ -83,7 +83,7 @@ void Player::init()
 
 	//shooting
 	shootingDelay = 400;
-	playerDamage = 150;
+	playerDamage = 80;
 	chargedDamage = 7; // x
 
 	//Energy Recovery
@@ -104,10 +104,12 @@ void Player::init()
 	repeatStunDelayTimer = 0;
 	dashTimer = 0;
 	footsteps.Pause();
+	curentDashAmount = maxDashAmount = 1;
 
 	//shooting reset
 	totalTimeToCharge = 2000;
 	ShotChargeBarOffset = 150;
+
 }
 
 //*************** UPDATE ***************
@@ -164,6 +166,8 @@ void Player::OnUpdate(Uint32 t, bool Dkey, bool Akey, bool Wkey, bool Skey, Map&
 		playerModel.Update(t);
 		return;
 	}
+
+	if (dashCoolDown < localTime && curentDashAmount < maxDashAmount) curentDashAmount++;
  
 	//Attack Delay 
 	if (attackDelay - t <= 0 && playerCurrentState == INATTACK) playerCurrentState = UNOCCUPIED;
@@ -314,7 +318,7 @@ void Player::PlayerControl(bool Dkey, bool Akey, bool Wkey , bool Skey )
 
 void Player::OnKeyDown(SDLKey sym, CVector currentMousePos)
 {
-	if (sym == SDLK_q)
+	if (sym == SDLK_SPACE)
 	{
 		switch (curentSkillSelected)
 		{
@@ -326,8 +330,10 @@ void Player::OnKeyDown(SDLKey sym, CVector currentMousePos)
 			}
 			break;
 		case DASH:
-			if (dashCoolDown < localTime && playerCurrentState != INDASH)
+			
+			if (curentDashAmount > 0 && playerCurrentState != INDASH)
 			{
+				curentDashAmount--;
 				dashCoolDown = localTime + 3000;
 				//dashTimer = 500 + localTime;
 				playerCurrentState = INDASH;
@@ -543,9 +549,10 @@ void Player::OnMouseMove(CVector currentMousePos)
 
 void Player::OnLButtonDown(CVector pos, CVector currentMousePos, long t)
 {
-	if (playerCurrentState == UNOCCUPIED &&  CurrentEnergy >= 5)
+	if (playerCurrentState == UNOCCUPIED &&  CurrentEnergy >= 5 && startChargedShotTimer == 0)
 	{
 		CurrentEnergy -= 5;
+		chargedShot = false;
 		performShot();
 	}
 }
@@ -557,6 +564,7 @@ void Player::OnRButtonDown(long t)
 	{
 		//chargedShot
 		if (startChargedShotTimer == 0) startChargedShotTimer = t + totalTimeToCharge;
+		
 		charginShotSound.Play("chargedshot.wav");
 	}
 }
@@ -564,6 +572,7 @@ void Player::OnRButtonDown(long t)
 
 void Player::OnRButtonUp()
 {
+	charginShotSound.Clear();
 	startChargedShotTimer = 0;
 	ShotChargeBar.SetHealth(0);
 

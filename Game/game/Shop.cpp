@@ -33,7 +33,7 @@ Shop::Shop(float w, float h)
  
 
 	//shop
-	shopImg.SetImage("shop/shopBg.jpg");
+	shopImg.LoadImage("shop/shopBg.jpg");
 	shopImg.SetSize((float)w, (float)h);
 	shopImg.SetPosition((float)w / 2, (float)h / 2);
 
@@ -121,7 +121,7 @@ void Shop::OnUpdate(Uint32 t, Player& player, UIDialogBox& dialogBox)
 
 void Shop::OnDraw(CGraphics* g)
 {
-
+	 
 }
 
 void Shop::OnRender3D(CGraphics* g)
@@ -185,7 +185,7 @@ void Shop::openShop(CGraphics* g)
 			sectionTwoDash.Draw(g);
 			pointer.SetPosition(410, Height - 490);
 			font.DrawNumber(Width - 826, Height - 515, dashUpgrade, CColor::White(), 36);
-			font.DrawNumber(Width - 826, Height - 640, 1, CColor::White(), 36);
+			font.DrawNumber(Width - 826, Height - 640, localPlayer->maxDashAmount, CColor::White(), 36);
 			break;
 		default:
 			break;
@@ -244,8 +244,10 @@ void Shop::OnLButtonDown(float x, float y)
 {
 	if (upgradeBtn.HitTest(x, y))
 	{
+		bool upgradeHappened = false;
 		if (shopCurrentSection == 0 && localPlayer->weaponComponents > 0)
 		{
+			upgradeHappened = true;
 			switch (shopCurrentPage)
 			{
 			case 0:
@@ -273,6 +275,7 @@ void Shop::OnLButtonDown(float x, float y)
 			switch (shopCurrentPage)
 			{
 			case 0:
+				upgradeHappened = true;
 				localPlayer->armorComponents--;
 				localPlayer->playerMaxArmor += armorUpgrade;
 				localPlayer->armorRegenPerSec += armorRepairRateUpgrade;
@@ -280,31 +283,24 @@ void Shop::OnLButtonDown(float x, float y)
 				break;
 			case 1:
 				//DASH
-				localPlayer->armorComponents--;
-				//localPlayer->energyRegenPerSec += dashUpgrade;
+				if (localPlayer->armorComponents < 3) return;
+				upgradeHappened = true;
+				upgradeSound.Play("upgradeSound.wav");
+				localPlayer->armorComponents -= 3;
+				localPlayer->maxDashAmount += dashUpgrade;
 				break;
 			default:
 				break;
 			}
 		}
 
-
-
-
-		/*if (localPlayer->armorComponents > 0)
-		{
-			localPlayer->armorComponents--;
-			localPlayer->playerMaxArmor++;
-		}*/
-			
+		if (upgradeHappened) upgradeSound.Play("upgrade.wav");
+		else notEnoughItemsSound.Play("notEnoughItems.wav");
 	}
-
- 
 
 	if (exitShopBtn.HitTest(x, y))
 	{
 		isPlayerShoping = false;
 		shopCurrentPage = 0;
 	}
-
 }

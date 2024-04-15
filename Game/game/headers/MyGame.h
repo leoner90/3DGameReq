@@ -92,7 +92,7 @@ private:
 
 	bool cameraMovement;
 
-	CVector currentMousePos;
+	CVector currentMousePos, currentMousePosVector;
 	CVector cameraControlMouseInitPose;
 	CSprite mousePointer;
 	CModel skydome;
