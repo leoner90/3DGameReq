@@ -28,7 +28,7 @@ void Enemy::init(CVector enemyPos, int enemyType, Map& map, Portal& portal, CMod
 	{
 		enemyMaxHp = enemyCurrentHp = 200;
 		enemyDamage = 50;
-		enemySpeed = 350 + rand() % 250;
+		enemySpeed = 400 + rand() % 250;
 		enemyModel->AddAnimation("run", 1, 29);
 		enemyModel->AddAnimation("attack", 35, 59);
 		enemyModel->AddAnimation("dead", 65, 82);
@@ -61,11 +61,11 @@ void Enemy::init(CVector enemyPos, int enemyType, Map& map, Portal& portal, CMod
 		enemyDamage = 350;
 		enemyMaxHp = enemyCurrentHp = 2400;
 
-		enemySpeed = 400 + rand() % 200;
+		enemySpeed = 400 + rand() % 250;
 
 		enemyModel->AddAnimation("run", 10, 44);
 		enemyModel->AddAnimation("attack", 50, 72);
-		enemyModel->AddAnimation("chargingForAttack", 83, 125);
+	//	enemyModel->AddAnimation("chargingForAttack", 83, 125);
 	//	enemyModel->AddAnimation("chargedAttack", 141, 153);
 	//	enemyModel->AddAnimation("chargeAttackStop", 160, 165);
 		enemyModel->AddAnimation("dead", 170, 199);
@@ -108,12 +108,14 @@ void Enemy::OnUpdate(Uint32 t, Player &player, Map& map, std::vector<Enemy*>& Al
 		
 		if (deathAnimationTimer == 0)
 		{
-			enemyModel->PlayAnimation("dead", 16, false);
+			int deathFrames = 16;
+			if (localEnemyType == 2) deathFrames = 30;
+			enemyModel->PlayAnimation("dead", deathFrames, false);
 			enemyModel->SetSpeed(0);
 			
 			deathAnimationTimer = 1000 + t;
 
-			if (localEnemyType == 2) deathAnimationTimer = t; // no death animation
+			
 		}
 		else if(deathAnimationTimer < t) isDead = true;
 		

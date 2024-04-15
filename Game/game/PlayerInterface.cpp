@@ -101,7 +101,7 @@ void PlayerInterface::OnDraw(CGraphics* g)
 
 	if (currentSkillSelected == 0)
 	{
-		if(localPlayer->dashCoolDown < localTime)
+		if(localPlayer->curentDashAmount > 0)
 			sprintSkillLogoOn.Draw(g);
 		else
 			sprintSkillLogoOff.Draw(g);

@@ -44,8 +44,8 @@ void CMyGame::OnInitialize()
 	loadingScreen->init();
 
 	//music
-	mainBgMusic.Play("mainBg.wav");
-	mainBgMusic.SetVolume(35);
+	mainBgMusic.Play("mainBg2.wav", 5);
+	mainBgMusic.SetVolume(40);
 
 	//StartScreen Models
 	InitSpritesAndModels();
@@ -67,7 +67,7 @@ void CMyGame::OnInitialize()
 	enemyModelTwo->SetScale(15.5f);
 	enemyModelTwo->LoadTexture("enemies/65.png");
 
-	boss->LoadModel("enemies/boss02.md3");
+	boss->LoadModel("enemies/boss.md3");
 	boss->SetScale(30.5f);
 	boss->LoadTexture("enemies/boss2.png");
 }
@@ -136,10 +136,11 @@ void CMyGame::OnUpdate()
 	if (!cutscene->isCutscenePlaying && currentMenuState == CUTSCENE && cutscene->curentCutSceneNum == 0)
 	{
 		currentMenuState = IN_GAME;
+		mainBgMusic.Resume();
 		camera.rotation.y = YcameraInitRotation;
 		camera.position.z = 650;
 		rainBgEffect.Play("rain.wav", -1);
-		rainBgEffect.SetVolume(60);
+		rainBgEffect.SetVolume(85);
 	}
 
 	if (currentMenuState == CUTSCENE && gameStarted)
@@ -175,6 +176,7 @@ void CMyGame::OnUpdate()
 	if ( IsGameOver() || IsPaused() || IsMenuMode() || currentMenuState != IN_GAME) return; // IN GAME , when exit the game mode == exit rising bugs
 	
 
+	currentMousePos = ScreenToFloorCoordinate(currentMousePosVector.GetX(), currentMousePosVector.GetY());
 	//Enemy spawn
 	enemySpawn();
 
@@ -376,7 +378,7 @@ void CMyGame::MaiMenuDraw(CGraphics* g)
 		font.DrawText((float)Width / 2 - 100,	(float)Height / 2 + 280, "CONTROLS", CColor::White(), 52);
 		font.DrawText((float)Width / 2 - 220.f, (float)Height / 2 + 200, "LEFT MOUSE BTN. - SHOOT", CColor::White() , 22);
 		font.DrawText((float)Width / 2 - 220.f, (float)Height / 2 + 150, "W / S / A / D  - MOVE CHARACTER", CColor::White(), 22);
-		font.DrawText((float)Width / 2 - 220.f, (float)Height / 2 + 100, "Q - USE SKILL", CColor::White(), 22);
+		font.DrawText((float)Width / 2 - 220.f, (float)Height / 2 + 100, "SPACE - USE SKILL", CColor::White(), 22);
 		font.DrawText((float)Width / 2 - 220.f, (float)Height / 2 + 50, "MOUSE WHEEL - CHANGE SKILL", CColor::White(), 22);
 		font.DrawText((float)Width / 2 - 220.f, (float)Height / 2 , "E - INTERACT", CColor::White(), 22);
 		font.DrawText((float)Width / 2 - 220.f, (float)Height / 2 - 50, "C - CHARACTER STATS", CColor::White(), 22);
@@ -497,8 +499,8 @@ void CMyGame::enemySpawn()
 		{
 			if (enemy->OnSpawnHold) howManyEnemiesWasOnhold++;
 			enemy->OnSpawnHold = false;
-			totalEnemiesOnHold = 0;
 		}
+		totalEnemiesOnHold = 0;
 		totalEnemiesToSpawn += 2;
 		dialogBox->showBox(1, 9,9, 1, 3000); // speaker id , text id , priority
 	}
@@ -571,13 +573,21 @@ void CMyGame::MainMenuController(SDLKey sym)
 		cutscene->dialogNumber = 11; //skip dialog
 	}
 
-	else if (IsPaused() && sym == SDLK_ESCAPE  && gameStarted && (currentMenuState == MAIN_MENU || currentMenuState == CHAR_STATS || currentMenuState == SHOP) )
+	else if (IsPaused())
 	{
-		HideMouse();
-		SetGameMode(MODE_RUNNING);
-		currentMenuState = IN_GAME;
-		shop->isPlayerShoping = false;
+		if ( (sym == SDLK_ESCAPE && gameStarted && (currentMenuState == MAIN_MENU || currentMenuState == CHAR_STATS || currentMenuState == SHOP)) ||
+			 (sym == SDLK_c && gameStarted && currentMenuState == CHAR_STATS) ||
+			 (sym == SDLK_e && gameStarted && currentMenuState == SHOP)
+			)
+		{
+			HideMouse();
+			SetGameMode(MODE_RUNNING);
+			currentMenuState = IN_GAME;
+			shop->isPlayerShoping = false;
+		}
+
 	}
+
 
 
 	//LOADING COMPLETED
@@ -587,6 +597,7 @@ void CMyGame::MainMenuController(SDLKey sym)
 		StartGame();
 		gameStarted = true;
 		cutscene->startCutscene(0);
+		mainBgMusic.Pause();
 		currentMenuState = CUTSCENE;
 	}
 
@@ -645,7 +656,7 @@ void CMyGame::MainMenuController(SDLKey sym)
 
 void CMyGame::OnMouseMove(Uint16 x, Uint16 y, Sint16 relx, Sint16 rely, bool bLeft, bool bRight, bool bMiddle)
 {
-	currentMousePos = ScreenToFloorCoordinate(x, y);
+	currentMousePosVector = CVector(x, y, 0);
 	mousePointer.SetPosition(x, y);
 
 	//player rotation to mouse pos

@@ -70,6 +70,7 @@ public:
 
 	//Health , Enerrgy, Armor
 	float playerMaxHp, playerCurrentHp, maxEnergy, CurrentEnergy, playerCurrentArmor, playerMaxArmor;
+	int curentDashAmount, maxDashAmount;
 
 	//shooting
 	float playerDamage, chargedDamage;
